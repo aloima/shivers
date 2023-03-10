@@ -1,6 +1,5 @@
-#include <string.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <utils.h>
 
@@ -34,13 +33,13 @@ Split split(char *text, char *separator) {
 
 			strncat(*data, &ch, 1);
 		} else {
-			bool_t completed = 1;
+			bool_t completed = true;
 
 			size_t _i;
 
 			for (_i = 1; _i < separator_length; ++_i) {
 				if (separator[_i] != text[i + _i]) {
-					completed = 0;
+					completed = false;
 					_i = separator_length;
 				}
 			}
