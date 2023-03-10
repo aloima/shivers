@@ -14,7 +14,7 @@ char *join(char **value, size_t size, char *separator) {
 		bool has_separator = i != (size - 1);
 
 		result_length += length + (has_separator ? separator_length : 0);
-		result = allocate(result, sizeof(char), result_length + 1);
+		result = allocate(result, result_length + 1, sizeof(char));
 		strncat(result, data, length);
 
 		if (has_separator) {
