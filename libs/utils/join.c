@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdbool.h>
 
 #include <utils.h>
 
@@ -8,10 +7,12 @@ char *join(char **value, size_t size, char *separator) {
 	size_t result_length = 0;
 	size_t separator_length = strlen(separator);
 
-	for (size_t i = 0; i < size; ++i) {
+	size_t i;
+
+	for (i = 0; i < size; ++i) {
 		char *data = value[i];
 		size_t length = strlen(data);
-		bool has_separator = i != (size - 1);
+		bool_t has_separator = i != (size - 1);
 
 		result_length += length + (has_separator ? separator_length : 0);
 		result = allocate(result, result_length + 1, sizeof(char));

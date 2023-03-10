@@ -1,6 +1,8 @@
 #ifndef UTIL_H_
 	#define UTIL_H_
 
+	typedef unsigned char bool_t;
+
 	typedef struct {
 		char **data;
 		size_t size;

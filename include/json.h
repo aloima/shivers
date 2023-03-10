@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <stdbool.h>
+#include <utils.h>
 
 #ifndef JSON_H_
 	#define JSON_H_
@@ -14,19 +13,19 @@
 
 	typedef union {
 		char *string;
-		intmax_t number;
-		bool boolean;
+		long int number;
+		bool_t boolean;
 		void **object;
 		void **array;
-	} JSONValue;
+	} __attribute__((packed)) JSONValue;
 
 	typedef struct {
+		char type;
 		char *key;
 		void *value;
 		void *parent;
-		uint8_t type;
 		size_t size;
-	} JSONElement;
+	} __attribute__((packed)) JSONElement;
 
 	JSONElement *json_parse(char *text);
 	JSONElement *json_stringify(JSONElement *element);
