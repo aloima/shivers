@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include <json.h>
 #include <utils.h>
@@ -10,18 +11,16 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t value_length = 0;
-	bool_t parsing = false;
-	bool_t condition;
 
 	while (*i < length) {
 		char ch = text[*i];
 
-		if (!parsing) {
+		if ((*element)->type == JSON_UNSPECIFIED) {
 			if (ch == '"') {
-				parsing = true;
 				(*element)->type = JSON_STRING;
 			} else if (ch == '{') {
-				parsing = true;
+				bool condition;
+
 				(*element)->type = JSON_OBJECT;
 
 				condition = *i < length;
@@ -50,6 +49,10 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 				(*element)->type = JSON_OBJECT;
 				break;
+			} else if (isdigit(ch)) {
+				(*element)->type = JSON_NUMBER;
+				(*element)->value = allocate((*element)->value, 1, sizeof(long));
+				((long *) (*element)->value)[0] = ch - 48;
 			} else {
 				fprintf(stderr, "json_parse(): invalid value\n");
 				json_free(*element);
@@ -65,6 +68,28 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					++(*i);
 					break;
 				}
+			} else if ((*element)->type == JSON_NUMBER) {
+				if (isdigit(ch)) {
+					((long *) (*element)->value)[0] = (long) ((((long *) (*element)->value)[0] * 10) + (ch - 48));
+				} else {
+					long current = ((long *) (*element)->value)[0];
+
+					if (current < CHAR_MAX) {
+						(*element)->value = allocate((*element)->value, 1, sizeof(char));
+						((char *) (*element)->value)[0] = (char) current;
+					} else if (current < SHRT_MAX) {
+						(*element)->value = allocate((*element)->value, 1, sizeof(short));
+						((short *) (*element)->value)[0] = (short) current;
+					} else if (current < INT_MAX) {
+						(*element)->value = allocate((*element)->value, 1, sizeof(int));
+						((int *) (*element)->value)[0] = (int) current;
+					} else if (current < LONG_MAX) {
+						(*element)->value = allocate((*element)->value, 1, sizeof(long));
+						((long *) (*element)->value)[0] = (long) current;
+					}
+
+					break;
+				}
 			}
 		}
 
@@ -74,8 +99,8 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 static void parse_kv(JSONElement **parent, JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t key_length = 0;
-	bool_t parsing_key = false;
-	bool_t parsing_value = false;
+	bool parsing_key = false;
+	bool parsing_value = false;
 
 	*element = allocate(*element, 1, sizeof(JSONElement));
 	(*element)->parent = parent;

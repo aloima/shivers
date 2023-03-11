@@ -12,7 +12,7 @@ char *join(char **value, size_t size, char *separator) {
 	for (i = 0; i < size; ++i) {
 		char *data = value[i];
 		size_t length = strlen(data);
-		bool_t has_separator = i != (size - 1);
+		bool has_separator = i != (size - 1);
 
 		result_length += length + (has_separator ? separator_length : 0);
 		result = allocate(result, result_length + 1, sizeof(char));

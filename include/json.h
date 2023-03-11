@@ -13,8 +13,8 @@
 
 	typedef union {
 		char *string;
-		long int number;
-		bool_t boolean;
+		long number;
+		bool boolean;
 		void **object;
 		void **array;
 	} __attribute__((packed)) JSONValue;

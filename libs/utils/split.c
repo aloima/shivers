@@ -33,7 +33,7 @@ Split split(char *text, char *separator) {
 
 			strncat(*data, &ch, 1);
 		} else {
-			bool_t completed = true;
+			bool completed = true;
 
 			size_t _i;
 
