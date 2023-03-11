@@ -3,9 +3,6 @@
 #ifndef JSON_H_
 	#define JSON_H_
 
-	/* if you want to do long type allocation for all numbers, remove it */
-	#define JSON_NUMBER_ALLOCATION
-
 	#define JSON_UNSPECIFIED 0
 	#define JSON_BOOLEAN 1
 	#define JSON_NUMBER 2
@@ -15,11 +12,10 @@
 	#define JSON_NULL 6
 
 	typedef union {
+		char type;
 		char *string;
 		long number;
 		bool boolean;
-		void **object;
-		void **array;
 	} __attribute__((packed)) JSONValue;
 
 	typedef struct {
@@ -31,6 +27,7 @@
 	} __attribute__((packed)) JSONElement;
 
 	JSONElement *json_parse(char *text);
-	JSONElement *json_stringify(JSONElement *element);
+	char *json_stringify(JSONElement *element);
+	JSONValue json_get_val(JSONElement *element, char *search);
 	void json_free(JSONElement *element);
 #endif

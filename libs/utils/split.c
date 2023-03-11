@@ -29,7 +29,7 @@ Split split(char *text, char *separator) {
 
 		if (ch != separator[0]) {
 			++data_length;
-			*data = allocate(*data, data_length + 1, sizeof(char));
+			*data = allocate(data_length == 1 ? NULL : *data, data_length + 1, sizeof(char));
 
 			strncat(*data, &ch, 1);
 		} else {
