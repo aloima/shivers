@@ -16,7 +16,10 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 		char ch = text[*i];
 
 		if ((*element)->type == JSON_UNSPECIFIED) {
-			if (ch == '"') {
+			if (ch == ' ' || ch == '\t') {
+				++(*i);
+				continue;
+			} else if (ch == '"') {
 				(*element)->type = JSON_STRING;
 			} else if (ch == '{') {
 				bool condition;
@@ -28,6 +31,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 				while (condition) {
 					JSONElement *sub_element = NULL;
+					bool sub_condition = true;
 
 					condition = *i < length;
 					ch = text[*i];
@@ -38,12 +42,21 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
 					++(*i);
 
-					if (text[*i - 1] == '}') {
-						condition = false;
-					} else if (text[*i - 1] != ',') {
-						fprintf(stderr, "json_parse(): missing ending of object or comma\n");
-						json_free(*element);
-						break;
+					while (sub_condition) {
+						char sub_ch = text[*i - 1];
+
+						if (sub_ch == ' ' || sub_ch == '\t') {
+							++(*i);
+						} else if (sub_ch == ',') {
+							sub_condition = false;
+						} else if (sub_ch == '}') {
+							sub_condition = false;
+							condition = false;
+						} else {
+							fprintf(stderr, "json_parse(): missing ending of object or comma\n");
+							json_free(*element);
+							break;
+						}
 					}
 				}
 
@@ -57,8 +70,9 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 				while (condition) {
 					JSONElement *sub_element = allocate(NULL, 1, sizeof(JSONElement));
-					sub_element->parent = *element;
+					bool sub_condition = true;
 
+					sub_element->parent = *element;
 					condition = *i < length;
 					ch = text[*i];
 
@@ -68,12 +82,21 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
 					++(*i);
 
-					if (text[*i - 1] == ']') {
-						condition = false;
-					} else if (text[*i - 1] != ',') {
-						fprintf(stderr, "json_parse(): missing ending of array or comma\n");
-						json_free(*element);
-						break;
+					while (sub_condition) {
+						char sub_ch = text[*i - 1];
+
+						if (sub_ch == ' ' || sub_ch == '\t') {
+							++(*i);
+						} else if (sub_ch == ',') {
+							sub_condition = false;
+						} else if (sub_ch == ']') {
+							sub_condition = false;
+							condition = false;
+						} else {
+							fprintf(stderr, "json_parse(): missing ending of array or comma\n");
+							json_free(*element);
+							break;
+						}
 					}
 				}
 
@@ -140,6 +163,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 		char ch = text[*i];
 
 		if (!parsing_key && !parsing_value && (ch == ' ' || ch == '\t')) {
+			++(*i);
 			continue;
 		} else if (!parsing_key && (*element)->key == NULL) {
 			if (ch == '"') {
@@ -158,7 +182,10 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
-			if (ch == ':') {
+			if (ch == ' ' || ch == '\t') {
+				++(*i);
+				continue;
+			} else if (ch == ':') {
 				parsing_value = true;
 			} else if (parsing_value) {
 				parse_v(element, text, length, i);
