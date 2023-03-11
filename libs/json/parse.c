@@ -23,7 +23,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 				(*element)->type = JSON_OBJECT;
 
-				condition = *i < length;
+				condition = (*i < length);
 				++(*i);
 
 				while (condition) {
@@ -47,7 +47,36 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					}
 				}
 
-				(*element)->type = JSON_OBJECT;
+				break;
+			} else if (ch == '[') {
+				bool condition;
+
+				(*element)->type = JSON_ARRAY;
+				condition = (*i < length);
+				++(*i);
+
+				while (condition) {
+					JSONElement *sub_element = allocate(NULL, 1, sizeof(JSONElement));
+					sub_element->parent = *element;
+
+					condition = *i < length;
+					ch = text[*i];
+
+					++(*element)->size;
+					(*element)->value = allocate((*element)->value, (*element)->size, sizeof(JSONElement));
+					parse_v(&sub_element, text, length, i);
+					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
+					++(*i);
+
+					if (text[*i - 1] == ']') {
+						condition = false;
+					} else if (text[*i - 1] != ',') {
+						fprintf(stderr, "json_parse(): missing ending of array or comma\n");
+						json_free(*element);
+						break;
+					}
+				}
+
 				break;
 			} else if (isdigit(ch)) {
 				(*element)->type = JSON_NUMBER;
@@ -72,21 +101,23 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				if (isdigit(ch)) {
 					((long *) (*element)->value)[0] = (long) ((((long *) (*element)->value)[0] * 10) + (ch - 48));
 				} else {
-					long current = ((long *) (*element)->value)[0];
+					#ifdef JSON_NUMBER_ALLOCATION
+						long current = ((long *) (*element)->value)[0];
 
-					if (current < CHAR_MAX) {
-						(*element)->value = allocate((*element)->value, 1, sizeof(char));
-						((char *) (*element)->value)[0] = (char) current;
-					} else if (current < SHRT_MAX) {
-						(*element)->value = allocate((*element)->value, 1, sizeof(short));
-						((short *) (*element)->value)[0] = (short) current;
-					} else if (current < INT_MAX) {
-						(*element)->value = allocate((*element)->value, 1, sizeof(int));
-						((int *) (*element)->value)[0] = (int) current;
-					} else if (current < LONG_MAX) {
-						(*element)->value = allocate((*element)->value, 1, sizeof(long));
-						((long *) (*element)->value)[0] = (long) current;
-					}
+						if (current < CHAR_MAX) {
+							(*element)->value = allocate((*element)->value, 1, sizeof(char));
+							((char *) (*element)->value)[0] = (char) current;
+						} else if (current < SHRT_MAX) {
+							(*element)->value = allocate((*element)->value, 1, sizeof(short));
+							((short *) (*element)->value)[0] = (short) current;
+						} else if (current < INT_MAX) {
+							(*element)->value = allocate((*element)->value, 1, sizeof(int));
+							((int *) (*element)->value)[0] = (int) current;
+						} else if (current < LONG_MAX) {
+							(*element)->value = allocate((*element)->value, 1, sizeof(long));
+							((long *) (*element)->value)[0] = (long) current;
+						}
+					#endif
 
 					break;
 				}

@@ -3,6 +3,9 @@
 #ifndef JSON_H_
 	#define JSON_H_
 
+	/* if you want to do long type allocation for all numbers, remove it */
+	#define JSON_NUMBER_ALLOCATION
+
 	#define JSON_UNSPECIFIED 0
 	#define JSON_BOOLEAN 1
 	#define JSON_NUMBER 2
