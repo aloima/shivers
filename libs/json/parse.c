@@ -16,6 +16,10 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 		char ch = text[*i];
 
 		if ((*element)->type == JSON_UNSPECIFIED) {
+			bool is_true = (strncmp(text + *i, "true", 4) == 0);
+			bool is_false = (strncmp(text + *i, "false", 5) == 0);
+			bool is_null = (strncmp(text + *i, "null", 4) == 0);
+
 			if (ch == ' ' || ch == '\t') {
 				++(*i);
 				continue;
@@ -105,6 +109,24 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				(*element)->type = JSON_NUMBER;
 				(*element)->value = allocate((*element)->value, 1, sizeof(long));
 				((long *) (*element)->value)[0] = ch - 48;
+			} else if (is_true || is_false) {
+				(*element)->type = JSON_BOOLEAN;
+
+				if (is_true) {
+					*i += 4;
+					(*element)->value = allocate((*element)->value, 1, sizeof(bool));
+					((bool *) (*element)->value)[0] = 1;
+					break;
+				} else if (is_false) {
+					*i += 5;
+					(*element)->value = allocate((*element)->value, 1, sizeof(bool));
+					((bool *) (*element)->value)[0] = 0;
+					break;
+				}
+			} else if (is_null) {
+				*i += 4;
+				(*element)->type = JSON_NULL;
+				break;
 			} else {
 				fprintf(stderr, "json_parse(): invalid value\n");
 				json_free(*element);
