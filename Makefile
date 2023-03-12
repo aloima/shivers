@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = --optimize=3 --warn-everything --std=c89
+CFLAGS = --optimize=3 --warn-everything --std=c89 -lm
 
 .PHONY: compile clean
 
