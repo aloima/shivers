@@ -45,6 +45,10 @@ Split split(char *text, char *separator) {
 			}
 
 			if (completed) {
+				if (data_length == 0) {
+					result.data[result.size - 1] = allocate(NULL, 1, sizeof(char));
+				}
+
 				i += separator_length - 1;
 				data_length = 0;
 				++result.size;
