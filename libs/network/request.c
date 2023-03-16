@@ -14,6 +14,31 @@
 #include <network.h>
 #include <utils.h>
 
+static char check_config(RequestConfig config) {
+	char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
+	size_t i, allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
+	bool is_allowed_method = false;
+
+	if (config.method == NULL || config.url == NULL) {
+		fprintf(stderr, "request(): url and method members are necessary\n");
+		return 0;
+	}
+
+	for (i = 0; i < allowed_methods_length; ++i) {
+		if (strcmp(config.method, allowed_methods[i]) == 0) {
+			is_allowed_method = true;
+			break;
+		}
+	}
+
+	if (!is_allowed_method) {
+		fprintf(stderr, "request(): %s is invalid method\n", config.method);
+		return 0;
+	}
+
+	return 1;
+}
+
 static struct hostent *resolve_hostname(char *hostname) {
 	struct hostent *result = gethostbyname(hostname);
 
@@ -34,7 +59,7 @@ static void close_socket(bool tls, int *sockfd, SSL **ssl, SSL_CTX **ssl_ctx) {
 	close(*sockfd);
 }
 
-static void give_error(bool tls, char *value) {
+static void throw_error(bool tls, char *value) {
 	unsigned long tls_error;
 
 	if (errno != 0) {
@@ -61,7 +86,7 @@ void response_free(Response *response) {
 }
 
 Response request(RequestConfig config) {
-	Response response;
+	Response response = { false, { 0, NULL }, NULL, NULL, 0 };
 	int sockfd;
 	struct sockaddr_in addr;
 	struct hostent *host = NULL;
@@ -69,12 +94,14 @@ Response request(RequestConfig config) {
 	SSL_CTX *ssl_ctx = NULL;
 
 	Split splitter;
-	char hostname[16384], path[49152], *_path = NULL;
+	char hostname[1024] = {0}, path[3072] = {0}, *_path = NULL;
 	bool tls;
 	short port;
 
-	memset(&splitter, 0, sizeof(splitter));
-	memset(&response, 0, sizeof(response));
+	if (!check_config(config)) {
+		return response;
+	}
+
 	tls = (strncmp(config.url, "https", 5) == 0);
 	port = (tls ? 443 : 80);
 
@@ -85,25 +112,20 @@ Response request(RequestConfig config) {
 	free(_path);
 	split_free(&splitter);
 
-	memset(&addr, 0, sizeof(addr));
 	host = resolve_hostname(hostname);
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		give_error(tls, "socket()");
+		throw_error(tls, "socket()");
 		return response;
 	}
 
-	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(addr)) == 0) {
+	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
 		Split line_splitter, status_splitter, header_splitter;
-		char buffer[1024], *response_message = NULL, *request_message = NULL, tmp[262144];
+		char buffer[1024] = {0}, tmp[16384] = {0}, *response_message = NULL, *request_message = NULL;
 		size_t request_message_length, response_message_length = 0, nread, i, response_data_length = 0;
-		memset(&buffer, 0, 1024);
-		memset(&line_splitter, 0, sizeof(line_splitter));
-		memset(&status_splitter, 0, sizeof(status_splitter));
-		memset(&header_splitter, 0, sizeof(header_splitter));
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -117,24 +139,24 @@ Response request(RequestConfig config) {
 		}
 
 		request_message_length = (size_t) sprintf(tmp,
-			"GET %s HTTP/1.1\r\n"
+			"%s %s HTTP/1.1\r\n"
 			"Host: %s:%d\r\n"
 			"Accept: */*\r\n"
 			"Connection: close\r\n\r\n"
-		, path, hostname, port);
+		, config.method, path, hostname, port);
 
 		request_message = allocate(request_message, request_message_length + 1, sizeof(char));
 		strncpy(request_message, tmp, request_message_length);
 
 		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
-			give_error(tls, "write()");
+			throw_error(tls, "write()");
 			close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 			return response;
 		}
 
 		while ((nread = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
-				give_error(tls, "read()");
+				throw_error(tls, "read()");
 				close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 				return response;
 			} else {
@@ -171,11 +193,11 @@ Response request(RequestConfig config) {
 			}
 		}
 
-		for (; i < line_splitter.size; ++i) {
+		while (i < line_splitter.size) {
 			if (line_splitter.data[i][0] != 0) {
 				bool last_line = ((i + 1) == line_splitter.size);
 				size_t line_length = strlen(line_splitter.data[i]);
-				response_data_length += line_length + (!last_line ? 2 : 0);
+				response_data_length += (line_length + (!last_line ? 2 : 0));
 				response.data = allocate(response.data, response_data_length + 1, sizeof(char));
 				strncat(response.data, line_splitter.data[i], line_length);
 
@@ -183,6 +205,8 @@ Response request(RequestConfig config) {
 					strncat(response.data, "\r\n", 2);
 				}
 			}
+
+			++i;
 		}
 
 		split_free(&line_splitter);
@@ -191,7 +215,7 @@ Response request(RequestConfig config) {
 
 		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 	} else {
-		give_error(tls, "connect()");
+		throw_error(tls, "connect()");
 	}
 
 	return response;

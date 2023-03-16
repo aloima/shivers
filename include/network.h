@@ -10,6 +10,7 @@
 
 	typedef struct {
 		char *url;
+		char *method;
 		Header *headers;
 		size_t header_size;
 	} __attribute__((packed)) RequestConfig;
