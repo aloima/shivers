@@ -94,9 +94,9 @@ Response request(RequestConfig config) {
 	SSL_CTX *ssl_ctx = NULL;
 
 	Split splitter;
-	char hostname[1024] = {0}, path[3072] = {0}, *_path = NULL;
+	char hostname[1024] = {0}, *path = NULL;
 	bool tls;
-	short port;
+	unsigned short port;
 
 	if (!check_config(config)) {
 		return response;
@@ -106,10 +106,10 @@ Response request(RequestConfig config) {
 	port = (tls ? 443 : 80);
 
 	splitter = split(config.url, "/");
-	_path = join(splitter.data + 3, splitter.size - 3, "/");
+	path = allocate(path, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
+	path[0] = '/';
+	join(splitter.data + 3, path + 1, splitter.size - 3, "/");
 	strcpy(hostname, splitter.data[2]);
-	sprintf(path, "/%s", _path == NULL ? "" : _path);
-	free(_path);
 	split_free(&splitter);
 
 	host = resolve_hostname(hostname);
@@ -124,8 +124,10 @@ Response request(RequestConfig config) {
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
 		Split line_splitter, status_splitter, header_splitter;
-		char buffer[1024] = {0}, tmp[16384] = {0}, *response_message = NULL, *request_message = NULL;
-		size_t request_message_length, response_message_length = 0, nread, i, response_data_length = 0;
+		char buffer[1024] = {0}, *response_message = NULL, *request_message = NULL;
+		size_t request_message_length, status_message_length, nread, i;
+		size_t response_message_length = 0;
+		size_t response_data_length = 0;
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -138,15 +140,17 @@ Response request(RequestConfig config) {
 			SSL_connect(ssl);
 		}
 
-		request_message_length = (size_t) sprintf(tmp,
+		request_message_length = 55 + strlen(config.method) + strlen(path) + strlen(hostname) + sizeof(port);
+		request_message = allocate(request_message, request_message_length + 1, sizeof(char));
+
+		sprintf(request_message,
 			"%s %s HTTP/1.1\r\n"
 			"Host: %s:%d\r\n"
 			"Accept: */*\r\n"
 			"Connection: close\r\n\r\n"
 		, config.method, path, hostname, port);
 
-		request_message = allocate(request_message, request_message_length + 1, sizeof(char));
-		strncpy(request_message, tmp, request_message_length);
+		free(path);
 
 		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
 			throw_error(tls, "write()");
@@ -168,8 +172,10 @@ Response request(RequestConfig config) {
 
 		line_splitter = split(response_message, "\r\n");
 		status_splitter = split(line_splitter.data[0], " ");
+		status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
 		response.status.code = (short) atoi(status_splitter.data[1]);
-		response.status.message = join(status_splitter.data + 2, status_splitter.size - 2, " ");
+		response.status.message = allocate(response.status.message, status_message_length + 1, sizeof(char));
+		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 		split_free(&status_splitter);
 
 		for (i = 1; i < line_splitter.size; ++i) {
