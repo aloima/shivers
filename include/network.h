@@ -11,6 +11,7 @@
 	typedef struct {
 		char *url;
 		char *method;
+		unsigned short port;
 		Header *headers;
 		size_t header_size;
 	} __attribute__((packed)) RequestConfig;
@@ -28,7 +29,16 @@
 		size_t header_size;
 	} __attribute__((packed)) Response;
 
-	void response_free(Response *response);
+	typedef struct {
+		char *url;
+		unsigned short port;
+		void (*onstart)(void);
+		void (*onclose)(void);
+		void (*onmessage)(char *);
+	} __attribute__((packed)) Websocket;
 
+	void response_free(Response *response);
 	Response request(RequestConfig config);
+
+	void connect_websocket(Websocket *websocket);
 #endif

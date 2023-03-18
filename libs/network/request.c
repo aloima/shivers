@@ -21,7 +21,7 @@ static char check_config(RequestConfig config) {
 
 	if (config.method == NULL || config.url == NULL) {
 		fprintf(stderr, "request(): url and method members are necessary\n");
-		return 0;
+		exit(EXIT_FAILURE);
 	}
 
 	for (i = 0; i < allowed_methods_length; ++i) {
@@ -33,7 +33,7 @@ static char check_config(RequestConfig config) {
 
 	if (!is_allowed_method) {
 		fprintf(stderr, "request(): %s is invalid method\n", config.method);
-		return 0;
+		exit(EXIT_FAILURE);
 	}
 
 	return 1;
@@ -50,7 +50,7 @@ static struct hostent *resolve_hostname(char *hostname) {
 }
 
 static void close_socket(bool tls, int *sockfd, SSL **ssl, SSL_CTX **ssl_ctx) {
-	if (tls) {
+	if (tls && *ssl != NULL && *ssl_ctx != NULL) {
 		SSL_shutdown(*ssl);
 		SSL_CTX_free(*ssl_ctx);
 		SSL_free(*ssl);
@@ -59,16 +59,18 @@ static void close_socket(bool tls, int *sockfd, SSL **ssl, SSL_CTX **ssl_ctx) {
 	close(*sockfd);
 }
 
-static void throw_error(bool tls, char *value) {
+static void throw(bool tls, char *value) {
 	unsigned long tls_error;
 
 	if (errno != 0) {
 		perror(value);
+		exit(EXIT_FAILURE);
 	} else if (tls && (tls_error = ERR_get_error()) != 0) {
 		char message[1024];
 
 		ERR_error_string(tls_error, message);
 		fprintf(stderr, "%s: %s\n", value, message);
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -98,12 +100,10 @@ Response request(RequestConfig config) {
 	bool tls;
 	unsigned short port;
 
-	if (!check_config(config)) {
-		return response;
-	}
+	check_config(config);
 
 	tls = (strncmp(config.url, "https", 5) == 0);
-	port = (tls ? 443 : 80);
+	port = (config.port ? config.port : (tls ? 443 : 80));
 
 	splitter = split(config.url, "/");
 	path = allocate(path, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
@@ -118,8 +118,7 @@ Response request(RequestConfig config) {
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		throw_error(tls, "socket()");
-		return response;
+		throw(tls, "socket()");
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
@@ -153,16 +152,14 @@ Response request(RequestConfig config) {
 		free(path);
 
 		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
-			throw_error(tls, "write()");
 			close_socket(tls, &sockfd, &ssl, &ssl_ctx);
-			return response;
+			throw(tls, "write()");
 		}
 
 		while ((nread = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
-				throw_error(tls, "read()");
 				close_socket(tls, &sockfd, &ssl, &ssl_ctx);
-				return response;
+				throw(tls, "read()");
 			} else {
 				response_message_length += nread;
 				response_message = allocate(response_message, response_message_length + 1, sizeof(char));
@@ -221,7 +218,8 @@ Response request(RequestConfig config) {
 
 		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 	} else {
-		throw_error(tls, "connect()");
+		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
+		throw(tls, "connect()");
 	}
 
 	return response;
