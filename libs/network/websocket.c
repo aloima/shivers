@@ -72,10 +72,10 @@ static void parse_data(unsigned char *data) {
 	ends_at = 2;
 
 	if (payload_length == 126) {
-		payload_length = data[2] + data[3];
+		payload_length = (data[2] << 8)  + data[3];
 		ends_at = 3;
 	} else if (payload_length == 127) {
-		payload_length = data[2] + data[3] + data[4] + data[5] + data[6] + data[7] + data[8] + data[9];
+		payload_length = (data[2] << 56) + (data[3] << 48) + (data[4] << 40) + (data[5] << 32) + (data[6] << 24) + (data[7] << 16) + (data[8] << 8) + data[9];
 		ends_at = 9;
 	}
 
