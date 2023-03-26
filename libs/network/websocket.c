@@ -65,17 +65,17 @@ static void parse_data(unsigned char *data) {
 	websocket_data.rsv1 = ((data[0] >> 6) & 0x1);
 	websocket_data.rsv2 = ((data[0] >> 5) & 0x1);
 	websocket_data.rsv3 = ((data[0] >> 4) & 0x1);
-	websocket_data.opcode = (unsigned char) (data[0] - (websocket_data.fin ? 128 : 0) - (websocket_data.rsv1 ? 64 : 0) - (websocket_data.rsv2 ? 32 : 0) - (websocket_data.rsv3 ? 16 : 0));
+	websocket_data.opcode = (data[0] & 0xF);
 
 	websocket_data.mask = ((data[1] >> 7) & 0x1);
-	payload_length = (websocket_data.mask ? (data[1] - 128) : data[1]);
+	payload_length = (data[1] & 0x7F);
 	ends_at = 2;
 
 	if (payload_length == 126) {
-		payload_length = (data[2] << 8)  + data[3];
+		payload_length = (size_t) ((data[2] << 8) | data[3]);
 		ends_at = 3;
 	} else if (payload_length == 127) {
-		payload_length = (data[2] << 56) + (data[3] << 48) + (data[4] << 40) + (data[5] << 32) + (data[6] << 24) + (data[7] << 16) + (data[8] << 8) + data[9];
+		payload_length = (((unsigned long) data[2] << 56) | ((unsigned long) data[3] << 48) | ((unsigned long) data[4] << 40) | ((unsigned long) data[5] << 32) | ((unsigned long) data[6] << 24) | ((unsigned long) data[7] << 16) | ((unsigned long) data[8] << 8) | (unsigned long) data[9]);
 		ends_at = 9;
 	}
 
@@ -221,9 +221,9 @@ void connect_websocket(Websocket *websocket) {
 				++i;
 			}
 
-			if (websocket->onstart != NULL) {
+			if (websocket->onmessage != NULL) {
 				parse_data(data);
-				websocket->onmessage(payload);
+				websocket->onmessage(websocket_data.payload);
 
 				free(websocket_data.payload);
 			}
