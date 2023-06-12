@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <limits.h>
+#include <math.h>
 
 #include <json.h>
 #include <utils.h>
@@ -107,8 +109,9 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				break;
 			} else if (isdigit(ch)) {
 				(*element)->type = JSON_NUMBER;
+				(*element)->size = 1;
 				(*element)->value = allocate((*element)->value, 1, sizeof(long));
-				((long *) (*element)->value)[0] = ch - 48;
+				((long *) (*element)->value)[0] = (ch - 48);
 			} else if (is_true || is_false) {
 				(*element)->type = JSON_BOOLEAN;
 
@@ -144,7 +147,27 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				}
 			} else if ((*element)->type == JSON_NUMBER) {
 				if (isdigit(ch)) {
-					((long *) (*element)->value)[0] = (long) ((((long *) (*element)->value)[0] * 10) + (ch - 48));
+					((long *) (*element)->value)[0] = ((((long *) (*element)->value)[0] * 10) + (ch - 48));
+				} else if (ch == '.') {
+					(*element)->size = 2;
+					(*element)->value = allocate((*element)->value, 2, sizeof(long));
+					++(*i);
+
+					bool condition = (*i < length);
+
+					while (condition) {
+						ch = text[*i];
+
+						if (isdigit(ch)) {
+							++(*i);
+							((long *) (*element)->value)[1] = ((((long *) (*element)->value)[1] * 10) + (ch - 48));
+							condition = (*i < length);
+						} else {
+							condition = false;
+						}
+					}
+
+					break;
 				} else {
 					break;
 				}

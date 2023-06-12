@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <errno.h>
 
 #include <sys/socket.h>
@@ -16,7 +17,7 @@
 
 static char check_config(RequestConfig config) {
 	char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
-	size_t i, allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
+	size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
 	bool is_allowed_method = false;
 
 	if (config.method == NULL || config.url == NULL) {
@@ -24,7 +25,7 @@ static char check_config(RequestConfig config) {
 		exit(EXIT_FAILURE);
 	}
 
-	for (i = 0; i < allowed_methods_length; ++i) {
+	for (size_t i = 0; i < allowed_methods_length; ++i) {
 		if (strcmp(config.method, allowed_methods[i]) == 0) {
 			is_allowed_method = true;
 			break;
@@ -75,9 +76,7 @@ static void throw(bool tls, char *value) {
 }
 
 void response_free(Response *response) {
-	size_t i;
-
-	for (i = 0; i < response->header_size; ++i) {
+	for (size_t i = 0; i < response->header_size; ++i) {
 		free(response->headers[i].name);
 		free(response->headers[i].value);
 	}
@@ -95,17 +94,13 @@ Response request(RequestConfig config) {
 	SSL *ssl = NULL;
 	SSL_CTX *ssl_ctx = NULL;
 
-	Split splitter;
-	char hostname[1024] = {0}, *path = NULL;
-	bool tls;
-	unsigned short port;
-
 	check_config(config);
 
-	tls = (strncmp(config.url, "https", 5) == 0);
-	port = (config.port ? config.port : (tls ? 443 : 80));
+	Split splitter = split(config.url, "/");
+	char hostname[1024] = {0}, *path = NULL;
+	bool tls = (strncmp(config.url, "https", 5) == 0);
+	unsigned short port = (config.port ? config.port : (tls ? 443 : 80));
 
-	splitter = split(config.url, "/");
 	path = allocate(path, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
 	path[0] = '/';
 	join(splitter.data + 3, path + 1, splitter.size - 3, "/");
@@ -122,11 +117,12 @@ Response request(RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		Split line_splitter, status_splitter, header_splitter;
-		char buffer[1024] = {0}, *response_message = NULL, *request_message = NULL;
-		size_t request_message_length, status_message_length, nread, i;
-		size_t response_message_length = 0;
-		size_t response_data_length = 0;
+		size_t request_message_length = (55 + strlen(config.method) + strlen(path) + strlen(hostname) + sizeof(port));
+
+		char request_message[request_message_length + 1];
+		memset(&request_message, 0, sizeof(request_message));
+
+		char buffer[1024] = {0}, *response_message = NULL;
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -138,9 +134,6 @@ Response request(RequestConfig config) {
 
 			SSL_connect(ssl);
 		}
-
-		request_message_length = 55 + strlen(config.method) + strlen(path) + strlen(hostname) + sizeof(port);
-		request_message = allocate(request_message, request_message_length + 1, sizeof(char));
 
 		sprintf(request_message,
 			"%s %s HTTP/1.1\r\n"
@@ -156,34 +149,38 @@ Response request(RequestConfig config) {
 			throw(tls, "write()");
 		}
 
-		while ((nread = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
+		size_t read_size = 0;
+		size_t response_message_length = 0;
+
+		while ((read_size = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
 				close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 				throw(tls, "read()");
 			} else {
-				response_message_length += nread;
+				response_message_length += read_size;
 				response_message = allocate(response_message, response_message_length + 1, sizeof(char));
-				strncat(response_message, buffer, nread);
+				strncat(response_message, buffer, read_size);
 			}
 		}
 
-		line_splitter = split(response_message, "\r\n");
-		status_splitter = split(line_splitter.data[0], " ");
-		status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
+		Split line_splitter = split(response_message, "\r\n");
+		Split status_splitter = split(line_splitter.data[0], " ");
+		size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
 		response.status.code = (short) atoi(status_splitter.data[1]);
 		response.status.message = allocate(response.status.message, status_message_length + 1, sizeof(char));
 		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 		split_free(&status_splitter);
 
+		size_t i = 0;
+		size_t response_data_length = 0;
+
 		for (i = 1; i < line_splitter.size; ++i) {
 			if (line_splitter.data[i][0] == 0) {
 				break;
 			} else {
-				size_t name_length, value_length;
-
-				header_splitter = split(line_splitter.data[i], ": ");
-				name_length = strlen(header_splitter.data[0]);
-				value_length = strlen(header_splitter.data[1]);
+				Split header_splitter = split(line_splitter.data[i], ": ");
+				size_t name_length = strlen(header_splitter.data[0]);
+				size_t value_length = strlen(header_splitter.data[1]);
 
 				response.headers = allocate(response.headers, i, sizeof(Header));
 				response.headers[i - 1].name = allocate(NULL, name_length + 1, sizeof(char));
@@ -214,7 +211,6 @@ Response request(RequestConfig config) {
 
 		split_free(&line_splitter);
 		free(response_message);
-		free(request_message);
 
 		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
 	} else {

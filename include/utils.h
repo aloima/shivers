@@ -1,10 +1,6 @@
 #ifndef UTIL_H_
 	#define UTIL_H_
 
-	typedef unsigned char bool;
-	#define true 1
-	#define false 0
-
 	typedef struct {
 		char **data;
 		size_t size;

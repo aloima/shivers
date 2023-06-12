@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <errno.h>
 
 #include <sys/socket.h>
@@ -14,9 +15,7 @@
 #include <network.h>
 #include <utils.h>
 
-
 static bool fin, rsv1, rsv2, rsv3, mask;
-static char *payload = NULL;
 static unsigned char opcode;
 
 static struct hostent *resolve_hostname(char *hostname) {
@@ -34,10 +33,6 @@ static void close_socket(Websocket *websocket, bool tls, SSL **ssl, int sockfd) 
 		SSL_shutdown(*ssl);
 		SSL_CTX_free(SSL_get_SSL_CTX(*ssl));
 		SSL_free(*ssl);
-	}
-
-	if (payload != NULL) {
-		free(payload);
 	}
 
 	close(sockfd);
@@ -62,7 +57,7 @@ static void throw(char *value, bool tls) {
 	}
 }
 
-static void parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL **ssl, int sockfd) {
+static char *parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL **ssl, int sockfd) {
 	size_t payload_length;
 	unsigned char ends_at;
 
@@ -88,16 +83,19 @@ static void parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL 
 		ends_at += 4;
 	}
 
+	char payload[payload_length + 1];
+
 	switch (opcode) {
 		case 0x1:
-			payload = allocate(payload, payload_length + 1, sizeof(char));
 			strncpy(payload, ((char *) data) + ends_at, payload_length);
-			break;
+			return payload;
 
 		case 0x8:
 			close_socket(websocket, tls, ssl, sockfd);
 			break;
 	}
+
+	return NULL;
 }
 
 void connect_websocket(Websocket *websocket) {
@@ -238,11 +236,7 @@ void connect_websocket(Websocket *websocket) {
 			}
 
 			if (websocket->onmessage != NULL) {
-				parse_data(data, tls, websocket, &ssl, sockfd);
-				websocket->onmessage(payload);
-
-				free(payload);
-				payload = NULL;
+				websocket->onmessage(parse_data(data, tls, websocket, &ssl, sockfd));
 			}
 
 			split_free(&line_splitter);

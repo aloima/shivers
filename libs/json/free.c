@@ -3,9 +3,7 @@
 #include <json.h>
 
 void json_free(JSONElement *element) {
-	size_t i;
-
-	for (i = 0; i < element->size; ++i) {
+	for (size_t i = 0; i < element->size; ++i) {
 		json_free(((JSONElement **) element->value)[i]);
 	}
 

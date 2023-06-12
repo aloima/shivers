@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <math.h>
 
 #include <json.h>
@@ -12,24 +14,37 @@ char *json_stringify(JSONElement *element) {
 	if (element->type == JSON_STRING) {
 		size_t length = strlen(element->value);
 		result = allocate(result, length + 3, sizeof(char));
-		strncat(result, "\"", 1);
+		result[0] = '"';
 		strncat(result, element->value, length);
-		strncat(result, "\"", 1);
+		result[length] = '"';
 	} else if (element->type == JSON_NUMBER) {
-		long double number = (long double) ((long *) element->value)[0];
-		double digit_count = 1.00;
+		long number = ((long *) element->value)[0];
+		size_t digit_count = (floor(log10(number)) + 1);
+		size_t i = digit_count;
 
-		while ((number / (long double) pow(10, digit_count)) >= 1) {
-			++digit_count;
+		result = allocate(result, (digit_count + 1), sizeof(char));
+
+		while (i != 0) {
+			int8_t digit = floor(number / pow(10, (i - 1)));
+			char ch = (digit + 48);
+			strncat(result, &ch, 1);
+			number -= (digit * pow(10, (i - 1)));
+			--i;
 		}
 
-		result = allocate(result, (size_t) (digit_count + 1), sizeof(char));
+		if (element->size == 2) {
+			number = ((long *) element->value)[1];
+			size_t fractional_digit_count = floorl(log10(floorf(number))) + 1;
+			result = allocate(result, (digit_count + fractional_digit_count + 2), sizeof(char));
+			result[digit_count] = '.';
 
-		while ((size_t) digit_count != 0) {
-			double digit = floor((double) (number / (long double) pow(10, (digit_count - 1))));
-			sprintf(result, "%s%0.0f", result, digit);
-			number -= (long double) (digit * pow(10, (digit_count - 1)));
-			--digit_count;
+			while (fractional_digit_count != 0) {
+				int8_t digit = floor(number / pow(10, (fractional_digit_count - 1)));
+				char ch = (digit + 48);
+				strncat(result, &ch, 1);
+				number -= (digit * pow(10, (fractional_digit_count - 1)));
+				--fractional_digit_count;
+			}
 		}
 	} else if (element->type == JSON_BOOLEAN) {
 		bool value = ((bool *) element->value)[0];
