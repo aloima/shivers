@@ -1,5 +1,7 @@
 #include <stdbool.h>
 
+#include <openssl/ssl.h>
+
 #include <utils.h>
 
 #ifndef NETWORK_H_
@@ -32,8 +34,12 @@
 	} Response;
 
 	typedef struct {
+		int sockfd;
+		SSL *ssl;
+
 		char *url;
 		unsigned short port;
+
 		void (*onstart)(void);
 		void (*onclose)(void);
 		void (*onmessage)(char *);

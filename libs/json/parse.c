@@ -13,6 +13,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t value_length = 0;
+	bool escaping = false;
 
 	while (*i < length) {
 		char ch = text[*i];
@@ -137,10 +138,16 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			}
 		} else {
 			if ((*element)->type == JSON_STRING) {
-				if (ch != '"') {
+				if (ch != '"' || escaping) {
 					++value_length;
 					(*element)->value = allocate((*element)->value, value_length + 1, sizeof(char));
 					strncat((*element)->value, &ch, 1);
+
+					if (ch == '\\') {
+						escaping = true;
+					} else {
+						escaping = false;
+					}
 				} else {
 					++(*i);
 					break;

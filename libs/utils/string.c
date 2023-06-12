@@ -10,7 +10,7 @@ void strtolower(char *source, char *dest) {
 		char ch = dest[i];
 
 		if (isupper(ch)) {
-			source[i] = (ch - 32);
+			source[i] = tolower(ch);
 		} else {
 			source[i] = ch;
 		}
@@ -24,7 +24,7 @@ void strtoupper(char *source, char *dest) {
 		char ch = dest[i];
 
 		if (islower(ch)) {
-			source[i] = (ch + 32);
+			source[i] = toupper(ch);
 		} else {
 			source[i] = ch;
 		}

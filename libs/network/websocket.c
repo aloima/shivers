@@ -28,14 +28,14 @@ static struct hostent *resolve_hostname(char *hostname) {
 	return result;
 }
 
-static void close_socket(Websocket *websocket, bool tls, SSL **ssl, int sockfd) {
-	if (tls && *ssl != NULL) {
-		SSL_shutdown(*ssl);
-		SSL_CTX_free(SSL_get_SSL_CTX(*ssl));
-		SSL_free(*ssl);
+static void close_socket(Websocket *websocket) {
+	if (websocket->ssl != NULL) {
+		SSL_shutdown(websocket->ssl);
+		SSL_CTX_free(SSL_get_SSL_CTX(websocket->ssl));
+		SSL_free(websocket->ssl);
 	}
 
-	close(sockfd);
+	close(websocket->sockfd);
 
 	if (websocket->onclose) {
 		websocket->onclose();
@@ -57,7 +57,7 @@ static void throw(char *value, bool tls) {
 	}
 }
 
-static char *parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL **ssl, int sockfd) {
+static char *parse_data(unsigned char *data, Websocket *websocket) {
 	size_t payload_length;
 	unsigned char ends_at;
 
@@ -83,7 +83,7 @@ static char *parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL
 		ends_at += 4;
 	}
 
-	char payload[payload_length + 1];
+	char *payload = calloc(payload_length + 1, sizeof(char));
 
 	switch (opcode) {
 		case 0x1:
@@ -91,48 +91,56 @@ static char *parse_data(unsigned char *data, bool tls, Websocket *websocket, SSL
 			return payload;
 
 		case 0x8:
-			close_socket(websocket, tls, ssl, sockfd);
+			close_socket(websocket);
 			break;
 	}
 
 	return NULL;
 }
 
+void send_websocket_message(Websocket *websocket, const char *message) {
+	int res;
+
+	if (websocket->ssl != NULL) {
+		res = SSL_write(websocket->ssl, message, strlen(message));
+	} else {
+		res = write(websocket->sockfd, message, strlen(message));
+	}
+
+	if (res < 0) {
+		throw("send_websocket_message()", !!(websocket->ssl));
+	}
+}
+
 void connect_websocket(Websocket *websocket) {
-	int sockfd;
-	struct sockaddr_in addr;
-	struct hostent *host = NULL;
+	char hostname[1024] = {0};
 
-	SSL *ssl = NULL;
-	SSL_CTX *ssl_ctx = NULL;
+	Split splitter = split(websocket->url, "/");
+	bool tls = (strncmp(websocket->url, "wss", 3) == 0);
+	unsigned short port = (websocket->port ? websocket->port : (tls ? 443 : 80));
 
-	Split splitter;
-	char hostname[1024] = {0}, *path = NULL;
-	bool tls;
-	unsigned short port;
-
-	tls = (strncmp(websocket->url, "wss", 3) == 0);
-	port = (websocket->port ? websocket->port : (tls ? 443 : 80));
-
-	splitter = split(websocket->url, "/");
-	path = allocate(path, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
+	char *path = allocate(NULL, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
 	path[0] = '/';
+
 	join(splitter.data + 3, path + 1, splitter.size - 3, "/");
 	strcpy(hostname, splitter.data[2]);
 	split_free(&splitter);
 
-	host = resolve_hostname(hostname);
+	struct hostent *host = resolve_hostname(hostname);
+
+	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
+
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	websocket->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (websocket->sockfd == -1) {
 		throw("socket()", tls);
 	}
 
-	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		Split line_splitter, header_splitter;
-
+	if (connect(websocket->sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
 		char buffer[1024] = {0};
 		char status_str[4] = {0};
 		char accept_key[512] = {0};
@@ -142,17 +150,16 @@ void connect_websocket(Websocket *websocket) {
 		size_t request_message_length, nread, i;
 		size_t response_message_length = 0;
 
-		unsigned short status;
+		websocket->ssl = NULL;
 
 		if (tls) {
 			SSL_load_error_strings();
 			SSL_library_init();
 
-			ssl_ctx = SSL_CTX_new(TLS_client_method());
-			ssl = SSL_new(ssl_ctx);
-			SSL_set_fd(ssl, sockfd);
+			websocket->ssl = SSL_new(SSL_CTX_new(TLS_client_method()));
+			SSL_set_fd(websocket->ssl, websocket->sockfd);
 
-			SSL_connect(ssl);
+			SSL_connect(websocket->ssl);
 		}
 
 		request_message_length = 200 + strlen(path) + strlen(hostname) + sizeof(port);
@@ -170,14 +177,14 @@ void connect_websocket(Websocket *websocket) {
 
 		free(path);
 
-		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
-			close_socket(websocket, tls, &ssl, sockfd);
+		if ((tls ? SSL_write(websocket->ssl, request_message, (int) request_message_length) : write(websocket->sockfd, request_message, request_message_length)) <= 0) {
+			close_socket(websocket);
 			throw("write()", tls);
 		}
 
-		while ((nread = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
+		while ((nread = (size_t) (tls ? SSL_read(websocket->ssl, buffer, 1023) : read(websocket->sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
-				close_socket(websocket, tls, &ssl, sockfd);
+				close_socket(websocket);
 				throw("read()", tls);
 			} else {
 				response_message_length += nread;
@@ -186,9 +193,11 @@ void connect_websocket(Websocket *websocket) {
 			}
 		}
 
-		line_splitter = split(response_message, "\r\n");
+		Split header_splitter;
+		Split line_splitter = split(response_message, "\r\n");
 		strncpy(status_str, line_splitter.data[0] + 9, 3);
-		status = (unsigned short) atoi(status_str);
+
+		unsigned short status = atoi(status_str);
 
 		if (status == 101) {
 			unsigned char *data = NULL;
@@ -236,7 +245,9 @@ void connect_websocket(Websocket *websocket) {
 			}
 
 			if (websocket->onmessage != NULL) {
-				websocket->onmessage(parse_data(data, tls, websocket, &ssl, sockfd));
+				char *message = parse_data(data, websocket);
+				websocket->onmessage(message);
+				free(message);
 			}
 
 			split_free(&line_splitter);
@@ -244,15 +255,15 @@ void connect_websocket(Websocket *websocket) {
 			free(response_message);
 			free(data);
 
-			close_socket(websocket, tls, &ssl, sockfd);
+			close_socket(websocket);
 		} else {
 			split_free(&line_splitter);
 			free(request_message);
 
-			close_socket(websocket, tls, &ssl, sockfd);
+			close_socket(websocket);
 		}
 	} else {
-		close_socket(websocket, tls, &ssl, sockfd);
+		close_socket(websocket);
 		throw("connect()", tls);
 	}
 }
