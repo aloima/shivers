@@ -4,9 +4,8 @@
 #include <network.h>
 
 void onmessage(char *message) {
-	printf("%s\n", message);
-
 	JSONElement *data = json_parse(message);
+	json_free(data);
 }
 
 void connect_gateway(const char *token) {
