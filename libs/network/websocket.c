@@ -10,50 +10,18 @@
 #include <netdb.h>
 
 #include <openssl/ssl.h>
-#include <openssl/err.h>
 
 #include <network.h>
 #include <utils.h>
 
-static bool fin, rsv1, rsv2, rsv3, mask;
+static bool fin, rsv[3], mask;
 static unsigned char opcode;
 
-static struct hostent *resolve_hostname(char *hostname) {
-	struct hostent *result = gethostbyname(hostname);
-
-	if (result == NULL && strncmp(hostname, "www.", 4) == 0) {
-		result = gethostbyname(hostname + 4);
-	}
-
-	return result;
-}
-
-static void close_socket(Websocket *websocket) {
-	if (websocket->ssl != NULL) {
-		SSL_shutdown(websocket->ssl);
-		SSL_CTX_free(SSL_get_SSL_CTX(websocket->ssl));
-		SSL_free(websocket->ssl);
-	}
-
-	close(websocket->sockfd);
+static void close_websocket(Websocket *websocket) {
+	close_socket(websocket->sockfd, websocket->ssl);
 
 	if (websocket->onclose) {
 		websocket->onclose();
-	}
-}
-
-static void throw(char *value, bool tls) {
-	unsigned long tls_error;
-
-	if (errno != 0) {
-		perror(value);
-		exit(EXIT_FAILURE);
-	} else if (tls && (tls_error = ERR_get_error()) != 0) {
-		char message[1024];
-
-		ERR_error_string(tls_error, message);
-		fprintf(stderr, "%s: %s\n", value, message);
-		exit(EXIT_FAILURE);
 	}
 }
 
@@ -62,9 +30,9 @@ static char *parse_data(unsigned char *data, Websocket *websocket) {
 	unsigned char ends_at;
 
 	fin = ((data[0] >> 7) & 0x1);
-	rsv1 = ((data[0] >> 6) & 0x1);
-	rsv2 = ((data[0] >> 5) & 0x1);
-	rsv3 = ((data[0] >> 4) & 0x1);
+	rsv[0] = ((data[0] >> 6) & 0x1);
+	rsv[1] = ((data[0] >> 5) & 0x1);
+	rsv[2] = ((data[0] >> 4) & 0x1);
 	opcode = (data[0] & 0xF);
 
 	mask = ((data[1] >> 7) & 0x1);
@@ -91,7 +59,7 @@ static char *parse_data(unsigned char *data, Websocket *websocket) {
 			return payload;
 
 		case 0x8:
-			close_socket(websocket);
+			close_websocket(websocket);
 			break;
 	}
 
@@ -100,6 +68,7 @@ static char *parse_data(unsigned char *data, Websocket *websocket) {
 
 void send_websocket_message(Websocket *websocket, const char *message) {
 	int res;
+	printf("yollandı! za");
 
 	if (websocket->ssl != NULL) {
 		res = SSL_write(websocket->ssl, message, strlen(message));
@@ -178,13 +147,13 @@ void connect_websocket(Websocket *websocket) {
 		free(path);
 
 		if ((tls ? SSL_write(websocket->ssl, request_message, (int) request_message_length) : write(websocket->sockfd, request_message, request_message_length)) <= 0) {
-			close_socket(websocket);
+			close_websocket(websocket);
 			throw("write()", tls);
 		}
 
 		while ((nread = (size_t) (tls ? SSL_read(websocket->ssl, buffer, 1023) : read(websocket->sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
-				close_socket(websocket);
+				close_websocket(websocket);
 				throw("read()", tls);
 			} else {
 				response_message_length += nread;
@@ -255,15 +224,15 @@ void connect_websocket(Websocket *websocket) {
 			free(response_message);
 			free(data);
 
-			close_socket(websocket);
+			close_websocket(websocket);
 		} else {
 			split_free(&line_splitter);
 			free(request_message);
 
-			close_socket(websocket);
+			close_websocket(websocket);
 		}
 	} else {
-		close_socket(websocket);
+		close_websocket(websocket);
 		throw("connect()", tls);
 	}
 }

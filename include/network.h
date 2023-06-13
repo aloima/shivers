@@ -42,11 +42,17 @@
 
 		void (*onstart)(void);
 		void (*onclose)(void);
-		void (*onmessage)(char *);
+		void (*onmessage)(const char *message);
 	} Websocket;
 
 	void response_free(Response *response);
 	Response request(RequestConfig config);
 
+	struct hostent *resolve_hostname(char *hostname);
+	void close_socket(int sockfd, SSL *ssl);
+	void throw(const char *value, bool tls);
+
 	void connect_websocket(Websocket *websocket);
+	void send_websocket_message(Websocket *websocket, const char *message);
+	void *message_thread(void *ptr);
 #endif

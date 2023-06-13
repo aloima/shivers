@@ -40,41 +40,6 @@ static char check_config(RequestConfig config) {
 	return 1;
 }
 
-static struct hostent *resolve_hostname(char *hostname) {
-	struct hostent *result = gethostbyname(hostname);
-
-	if (result == NULL && strncmp(hostname, "www.", 4) == 0) {
-		result = gethostbyname(hostname + 4);
-	}
-
-	return result;
-}
-
-static void close_socket(bool tls, int *sockfd, SSL **ssl, SSL_CTX **ssl_ctx) {
-	if (tls && *ssl != NULL && *ssl_ctx != NULL) {
-		SSL_shutdown(*ssl);
-		SSL_CTX_free(*ssl_ctx);
-		SSL_free(*ssl);
-	}
-
-	close(*sockfd);
-}
-
-static void throw(bool tls, char *value) {
-	unsigned long tls_error;
-
-	if (errno != 0) {
-		perror(value);
-		exit(EXIT_FAILURE);
-	} else if (tls && (tls_error = ERR_get_error()) != 0) {
-		char message[1024];
-
-		ERR_error_string(tls_error, message);
-		fprintf(stderr, "%s: %s\n", value, message);
-		exit(EXIT_FAILURE);
-	}
-}
-
 void response_free(Response *response) {
 	for (size_t i = 0; i < response->header_size; ++i) {
 		free(response->headers[i].name);
@@ -113,7 +78,7 @@ Response request(RequestConfig config) {
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		throw(tls, "socket()");
+		throw("socket()", tls);
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
@@ -145,8 +110,8 @@ Response request(RequestConfig config) {
 		free(path);
 
 		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
-			close_socket(tls, &sockfd, &ssl, &ssl_ctx);
-			throw(tls, "write()");
+			close_socket(sockfd, ssl);
+			throw("write()", tls);
 		}
 
 		size_t read_size = 0;
@@ -154,8 +119,8 @@ Response request(RequestConfig config) {
 
 		while ((read_size = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
-				close_socket(tls, &sockfd, &ssl, &ssl_ctx);
-				throw(tls, "read()");
+				close_socket(sockfd, ssl);
+				throw("read()", tls);
 			} else {
 				response_message_length += read_size;
 				response_message = allocate(response_message, response_message_length + 1, sizeof(char));
@@ -212,10 +177,10 @@ Response request(RequestConfig config) {
 		split_free(&line_splitter);
 		free(response_message);
 
-		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
+		close_socket(sockfd, ssl);
 	} else {
-		close_socket(tls, &sockfd, &ssl, &ssl_ctx);
-		throw(tls, "connect()");
+		close_socket(sockfd, ssl);
+		throw("connect()", tls);
 	}
 
 	return response;

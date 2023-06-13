@@ -30,6 +30,6 @@
 
 	JSONElement *json_parse(char *text);
 	char *json_stringify(JSONElement *element);
-	JSONValue json_get_val(JSONElement *element, char *search);
+	JSONValue json_get_val(JSONElement *element, const char *search);
 	void json_free(JSONElement *element);
 #endif

@@ -6,8 +6,8 @@
 #include <json.h>
 #include <utils.h>
 
-JSONValue json_get_val(JSONElement *element, char *search) {
-	Split splitter = split(search, ".");
+JSONValue json_get_val(JSONElement *element, const char *search) {
+	Split splitter = split((char *) search, ".");
 	JSONElement *value = element;
 	JSONValue result;
 
