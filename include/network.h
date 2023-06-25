@@ -8,6 +8,13 @@
 	#define NETWORK_H_
 
 	typedef struct {
+		char *protocol;
+		char *hostname;
+		char *path;
+		unsigned short port;
+	} URL;
+
+	typedef struct {
 		char *name;
 		char *value;
 	} Header;
@@ -33,26 +40,41 @@
 		size_t header_size;
 	} Response;
 
-	typedef struct {
-		int sockfd;
-		SSL *ssl;
-
-		char *url;
-		unsigned short port;
-
-		void (*onstart)(void);
-		void (*onclose)(void);
-		void (*onmessage)(const char *message);
-	} Websocket;
-
-	void response_free(Response *response);
 	Response request(RequestConfig config);
+	void response_free(Response *response);
 
-	struct hostent *resolve_hostname(char *hostname);
-	void close_socket(int sockfd, SSL *ssl);
 	void throw(const char *value, bool tls);
 
-	void connect_websocket(Websocket *websocket);
+	URL parse_url(const char *data);
+	void free_url(URL url);
+
+	bool set_nonblocking(int sockfd);
+	struct hostent *resolve_hostname(char *hostname);
+	void close_socket(int sockfd, SSL *ssl);
+
+	// Websocket Headers
+	typedef struct {
+		bool fin, rsv[3], mask;
+		unsigned char opcode;
+		char *payload;
+		size_t payload_length;
+	} WebsocketFrame;
+
+	typedef struct {
+		void (*onstart)(void);
+		void (*onmessage)(const WebsocketFrame frame);
+		void (*onclose)(void);
+	} WebsocketMethods;
+
+	typedef struct {
+		int sockfd;
+		int epollfd;
+		SSL *ssl;
+		URL url;
+		WebsocketMethods methods;
+		bool connected;
+	} Websocket;
+
+	Websocket create_websocket(const char *url, const WebsocketMethods methods);
 	void send_websocket_message(Websocket *websocket, const char *message);
-	void *message_thread(void *ptr);
 #endif

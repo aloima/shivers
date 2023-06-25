@@ -24,23 +24,17 @@ static void send_identify() {
 			"\"browser\":\"shivers\","
 			"\"device\":\"shivers\""
 		"},"
-		"\"intents\":%ld,"
-		"\"presence\":{"
-      "\"activities\":[{"
-        "\"name\":\"A game\","
-        "\"type\":0"
-      "}],"
-      "\"status\":\"dnd\","
-      "\"afk\":false"
-    "}"
-	"}", token, (long) (1 << 0 | 1 << 1 | 1 << 9));
+		"\"intents\":%d"
+	"}", token, (1 << 0 | 1 << 1 | 1 << 9));
 
 	send_websocket_message(&ws, identify_message);
 }
 
-void onmessage(const char *message) {
-	JSONElement *data = json_parse((char *) message);
+void onmessage(const WebsocketFrame frame) {
+	JSONElement *data = json_parse((char *) frame.payload);
 	unsigned short op = (unsigned short) json_get_val(data, "op").number;
+
+	puts(frame.payload);
 
 	switch (op) {
 		case 0:
@@ -57,9 +51,9 @@ void onmessage(const char *message) {
 }
 
 void connect_gateway(const char *bot_token) {
-	ws.url = "wss://gateway.discord.gg/?v=10&encoding=json";
-	ws.onmessage = onmessage;
-
 	strcpy(token, bot_token);
-	connect_websocket(&ws);
+
+	create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (WebsocketMethods) {
+		.onmessage = onmessage
+	});
 }
