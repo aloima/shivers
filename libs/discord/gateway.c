@@ -5,7 +5,7 @@
 #include <json.h>
 #include <network.h>
 
-static Websocket ws;
+static Websocket websocket;
 
 static unsigned int heartbeat_interval;
 static int last_sequence;
@@ -27,7 +27,7 @@ static void send_identify() {
 		"\"intents\":%d"
 	"}", token, (1 << 0 | 1 << 1 | 1 << 9));
 
-	send_websocket_message(&ws, identify_message);
+	send_websocket_message(&websocket, identify_message);
 }
 
 void onmessage(const WebsocketFrame frame) {
@@ -51,7 +51,9 @@ void onmessage(const WebsocketFrame frame) {
 void connect_gateway(const char *bot_token) {
 	strcpy(token, bot_token);
 
-	create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (WebsocketMethods) {
+	websocket = create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (WebsocketMethods) {
 		.onmessage = onmessage
 	});
+
+	connect_websocket(&websocket);
 }

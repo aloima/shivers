@@ -24,7 +24,6 @@ static void switch_protocols(Websocket *websocket);
 static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
-static void connect_websocket(Websocket *websocket);
 static void close_websocket(Websocket *websocket);
 
 
@@ -216,7 +215,6 @@ Websocket create_websocket(const char *url, const WebsocketMethods methods) {
 	websocket.methods = methods;
 	initialize_websocket(&websocket, url);
 	create_epoll(&websocket);
-	connect_websocket(&websocket);
 
 	return websocket;
 }
@@ -239,7 +237,7 @@ static void initialize_websocket(Websocket *websocket, const char *url) {
 	}
 }
 
-static void connect_websocket(Websocket *websocket) {
+void connect_websocket(Websocket *websocket) {
 	struct hostent *host = resolve_hostname(websocket->url.hostname);
 
 	struct sockaddr_in addr;

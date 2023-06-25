@@ -76,5 +76,6 @@
 	} Websocket;
 
 	Websocket create_websocket(const char *url, const WebsocketMethods methods);
+	void connect_websocket(Websocket *websocket);
 	void send_websocket_message(Websocket *websocket, const char *message);
 #endif
