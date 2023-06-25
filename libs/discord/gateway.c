@@ -34,8 +34,6 @@ void onmessage(const WebsocketFrame frame) {
 	JSONElement *data = json_parse((char *) frame.payload);
 	unsigned short op = (unsigned short) json_get_val(data, "op").number;
 
-	puts(frame.payload);
-
 	switch (op) {
 		case 0:
 			last_sequence = (int) json_get_val(data, "s").number;

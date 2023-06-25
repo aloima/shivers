@@ -77,6 +77,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 					} else if (websocket->methods.onmessage) {
 						WebsocketFrame frame = parse_data((unsigned char *) message, websocket);
 						websocket->methods.onmessage(frame);
+						free(frame.payload);
 					}
 
 					message_length = 0;
@@ -147,7 +148,7 @@ static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
 	switch (frame.opcode) {
 		case 0x1:
 			strncpy(frame.payload, ((char *) data) + ends_at, frame.payload_length);
-			return frame;
+			break;
 
 		case 0x8:
 			close_websocket(websocket);
@@ -198,6 +199,8 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	} else {
 		err = (write(websocket->sockfd, data, data_length) < 0);
 	}
+
+	free(data);
 
 	if (err) {
 		throw("send_websocket_message()", !!websocket->ssl);
@@ -253,10 +256,10 @@ static void connect_websocket(Websocket *websocket) {
 
 		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
 
-		while (1) {
+		do {
 			int num_events = epoll_wait(websocket->epollfd, events, 16, -1);
 			handle_events(websocket, websocket->epollfd, events, num_events);
-		}
+		} while (websocket->connected);
 	} else {
 		throw("connect()", !!websocket->ssl);
 	}
@@ -264,6 +267,10 @@ static void connect_websocket(Websocket *websocket) {
 
 static void close_websocket(Websocket *websocket) {
 	close_socket(websocket->sockfd, websocket->ssl);
+	close(websocket->epollfd);
+	free_url(websocket->url);
+
+	websocket->connected = 0;
 
 	if (websocket->methods.onclose) {
 		websocket->methods.onclose();
