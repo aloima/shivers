@@ -61,9 +61,14 @@
 	} WebsocketFrame;
 
 	typedef struct {
+		char *data;
+		size_t size;
+	} WebsocketTBS;
+
+	typedef struct {
 		void (*onstart)(void);
 		void (*onmessage)(const WebsocketFrame frame);
-		void (*onclose)(void);
+		void (*onclose)(const short close_code);
 	} WebsocketMethods;
 
 	typedef struct {
@@ -73,6 +78,9 @@
 		URL url;
 		WebsocketMethods methods;
 		bool connected;
+
+		WebsocketTBS *tbs; // to be sent
+		size_t tbs_size;
 	} Websocket;
 
 	Websocket create_websocket(const char *url, const WebsocketMethods methods);

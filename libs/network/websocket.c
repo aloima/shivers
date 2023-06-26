@@ -24,7 +24,7 @@ static void switch_protocols(Websocket *websocket);
 static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
-static void close_websocket(Websocket *websocket);
+static void close_websocket(Websocket *websocket, short close_code);
 
 
 
@@ -89,6 +89,31 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 		} else if (event & EPOLLOUT) {
 			if (!websocket->connected) {
 				switch_protocols(websocket);
+			} else if (websocket->tbs_size != 0) {
+				WebsocketTBS tbs = websocket->tbs[0];
+				bool err;
+
+				if (websocket->ssl != NULL) {
+					err = (SSL_write(websocket->ssl, tbs.data, tbs.size) <= 0);
+				} else {
+					err = (write(websocket->sockfd, tbs.data, tbs.size) < 0);
+				}
+
+				for (int i = 0; i < websocket->tbs_size; ++i) {
+					if ((i + 1) != websocket->tbs_size) {
+						websocket->tbs[i].data = allocate(websocket->tbs[i].data, websocket->tbs[i + 1].size + 1, sizeof(char));
+						websocket->tbs[i].size = websocket->tbs[i + 1].size;
+						memcpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
+					}
+				}
+
+				free(websocket->tbs[websocket->tbs_size - 1].data);
+				websocket->tbs = allocate(websocket->tbs, websocket->tbs_size - 1, sizeof(WebsocketTBS));
+				--websocket->tbs_size;
+
+				if (err) {
+					throw("send_websocket_message()", !!websocket->ssl);
+				}
 			}
 		}
 	}
@@ -108,7 +133,7 @@ static void switch_protocols(Websocket *websocket) {
 	, websocket->url.path, websocket->url.hostname, websocket->url.port);
 
 	if ((websocket->ssl ? SSL_write(websocket->ssl, request_message, 512) : write(websocket->sockfd, request_message, 512)) <= 0) {
-		close_websocket(websocket);
+		close_websocket(websocket, 0);
 		throw("write()", !!websocket->ssl);
 	}
 
@@ -149,9 +174,13 @@ static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
 			strncpy(frame.payload, ((char *) data) + ends_at, frame.payload_length);
 			break;
 
-		case 0x8:
-			close_websocket(websocket);
+		case 0x8: {
+			short close_code = 0;
+			close_code |= (data[ends_at] << 8);
+			close_code |= (data[ends_at + 1] & 0xFF);
+			close_websocket(websocket, close_code);
 			break;
+		}
 	}
 
 	return frame;
@@ -159,14 +188,15 @@ static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
 
 void send_websocket_message(Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;	
-	size_t message_length = strlen(message), data_length = message_length;
+	size_t message_length = strlen(message);
+	size_t data_length = message_length;
 
 	if (message_length > 65535) {
 		data_length += 10;
 		data = allocate(data, data_length, sizeof(char));
 		data[0] = 0x81; // fin (1) + rsvs (000) + op (0001)
 		data[1] = 127; // mask (0) | length specifier 127 (1111111)
-		data[2] = message_length >> 56;
+		data[2] = (message_length >> 56) & 0xFF;
 		data[3] = (message_length >> 48) & 0xFF;
 		data[4] = (message_length >> 40) & 0xFF;
 		data[5] = (message_length >> 32) & 0xFF;
@@ -180,7 +210,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 		data = allocate(data, data_length, sizeof(char));
 		data[0] = 0x81; // fin (1) | rsvs (000) | op (0001)
 		data[1] = 126; // mask (0) | length specifier 126 (1111110)
-		data[2] = message_length >> 8;
+		data[2] = (message_length >> 8) & 0xFF;
 		data[3] = message_length & 0xFF;
 		strncpy(((char *) data) + 4, message, message_length);
 	} else {
@@ -191,19 +221,13 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 		strncpy(((char *) data) + 2, message, message_length);
 	}
 
-	bool err;
-
-	if (websocket->ssl != NULL) {
-		err = (SSL_write(websocket->ssl, data, data_length) <= 0);
-	} else {
-		err = (write(websocket->sockfd, data, data_length) < 0);
-	}
+	++websocket->tbs_size;
+	websocket->tbs = allocate(websocket->tbs, websocket->tbs_size, sizeof(WebsocketTBS));
+	websocket->tbs[websocket->tbs_size - 1].data = allocate(NULL, data_length, sizeof(char));
+	websocket->tbs[websocket->tbs_size - 1].size = data_length;
+	memcpy(websocket->tbs[websocket->tbs_size - 1].data, data, data_length);
 
 	free(data);
-
-	if (err) {
-		throw("send_websocket_message()", !!websocket->ssl);
-	}
 }
 
 
@@ -263,7 +287,7 @@ void connect_websocket(Websocket *websocket) {
 	}
 }
 
-static void close_websocket(Websocket *websocket) {
+static void close_websocket(Websocket *websocket, short close_code) {
 	close_socket(websocket->sockfd, websocket->ssl);
 	close(websocket->epollfd);
 	free_url(websocket->url);
@@ -271,6 +295,6 @@ static void close_websocket(Websocket *websocket) {
 	websocket->connected = 0;
 
 	if (websocket->methods.onclose) {
-		websocket->methods.onclose();
+		websocket->methods.onclose((const short) close_code);
 	}
 }
