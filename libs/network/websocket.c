@@ -128,7 +128,7 @@ static void switch_protocols(Websocket *websocket) {
 		"Accept: */*\r\n"
 		"Connection: Upgrade\r\n"
 		"Upgrade: websocket\r\n"
-		"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+		"Sec-WebSocket-Key: YSBkaXNjb3JkIG5vbmNl\r\n"
 		"Sec-WebSocket-Version: 13\r\n\r\n"
 	, websocket->url.path, websocket->url.hostname, websocket->url.port);
 
@@ -194,32 +194,25 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	if (message_length > 65535) {
 		data_length += 10;
 		data = allocate(data, data_length, sizeof(char));
-		data[0] = 0x81; // fin (1) + rsvs (000) + op (0001)
-		data[1] = 127; // mask (0) | length specifier 127 (1111111)
-		data[2] = (message_length >> 56) & 0xFF;
-		data[3] = (message_length >> 48) & 0xFF;
-		data[4] = (message_length >> 40) & 0xFF;
-		data[5] = (message_length >> 32) & 0xFF;
-		data[6] = (message_length >> 24) & 0xFF;
-		data[7] = (message_length >> 16) & 0xFF;
-		data[8] = (message_length >> 8) & 0xFF;
-		data[9] = message_length & 0xFF;
-		strncpy(((char *) data) + 10, message, message_length);
+		data[1] = 127;
+
+		for (int i = 0; i < 8; ++i) {
+			data[2 + i] = (message_length >> ((7 - i) * 8)) & 0xFF;
+		}
 	} else if (message_length > 125) {
 		data_length += 4;
 		data = allocate(data, data_length, sizeof(char));
-		data[0] = 0x81; // fin (1) | rsvs (000) | op (0001)
-		data[1] = 126; // mask (0) | length specifier 126 (1111110)
+		data[1] = 126;
 		data[2] = (message_length >> 8) & 0xFF;
 		data[3] = message_length & 0xFF;
-		strncpy(((char *) data) + 4, message, message_length);
 	} else {
 		data_length += 2;
 		data = allocate(data, data_length, sizeof(char));
-		data[0] = 0x81; // fin (1) | rsvs (000) | op (0001)
-		data[1] = message_length; // mask (0) | length
-		strncpy(((char *) data) + 2, message, message_length);
+		data[1] = message_length;
 	}
+
+	data[0] = WEBSOCKET_FRAME_MAGIC;
+	strncpy(((char *) data) + data_length - message_length, message, message_length);
 
 	++websocket->tbs_size;
 	websocket->tbs = allocate(websocket->tbs, websocket->tbs_size, sizeof(WebsocketTBS));

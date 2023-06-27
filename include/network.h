@@ -53,6 +53,8 @@
 	void close_socket(int sockfd, SSL *ssl);
 
 	// Websocket Headers
+	#define WEBSOCKET_FRAME_MAGIC 0x81;
+
 	typedef struct {
 		bool fin, rsv[3], mask;
 		unsigned char opcode;
