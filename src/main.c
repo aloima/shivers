@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 
+#include <utils.h>
 #include <discord.h>
 
 int main(void) {

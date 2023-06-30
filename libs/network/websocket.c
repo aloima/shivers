@@ -54,65 +54,71 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 	for (int i = 0; i < num_events; ++i) {
 		uint32_t event = events[i].events;
 
-		if (event & EPOLLERR || event & EPOLLHUP) {
-			throw("socket error or hang up", false);
-		} else if (event & EPOLLIN) {
-			size_t received = (websocket->ssl ? SSL_read(websocket->ssl, buffer, 4095) : read(websocket->sockfd, buffer, 4095));
+		if (events[i].data.fd == websocket->sockfd) {
+			if (event & EPOLLERR || event & EPOLLHUP) {
+				throw("socket error or hang up", false);
+			} else if (event & EPOLLIN) {
+				size_t received = (websocket->ssl ? SSL_read(websocket->ssl, buffer, 4095) : read(websocket->sockfd, buffer, 4095));
 
-			if (received > 0) {
-				message_length += received;
-				message = allocate(message, message_length + 1, sizeof(char));
-				strncpy(message, buffer, received);
+				if (received > 0) {
+					message_length += received;
+					message = allocate(message, message_length + 1, sizeof(char));
+					strncpy(message, buffer, received);
 
-				if ((i + 1) == num_events) {
-					if (strncmp(message, "HTTP", 4) == 0) {
-						if (strncmp(message + 9, "101", 3) == 0) {
-							if (websocket->methods.onstart) {
-								websocket->methods.onstart();
+					if ((i + 1) == num_events) {
+						if (strncmp(message, "HTTP", 4) == 0) {
+							if (strncmp(message + 9, "101", 3) == 0) {
+								if (websocket->methods.onstart) {
+									websocket->methods.onstart();
+								}
+							} else {
+								throw("invalid http status code", !!websocket->ssl);
 							}
 						} else {
-							throw("invalid http status code", !!websocket->ssl);
+							WebsocketFrame frame = parse_data((unsigned char *) message, websocket);
+
+							if (websocket->methods.onmessage) {
+								websocket->methods.onmessage(frame);
+							}
+
+							free(frame.payload);
 						}
-					} else if (websocket->methods.onmessage) {
-						WebsocketFrame frame = parse_data((unsigned char *) message, websocket);
-						websocket->methods.onmessage(frame);
-						free(frame.payload);
 					}
 
 					message_length = 0;
 					free(message);
 					message = NULL;
-				}
-			} else {
-				throw("failed to receive data", false);
-			}
-		} else if (event & EPOLLOUT) {
-			if (!websocket->connected) {
-				switch_protocols(websocket);
-			} else if (websocket->tbs_size != 0) {
-				WebsocketTBS tbs = websocket->tbs[0];
-				bool err;
-
-				if (websocket->ssl != NULL) {
-					err = (SSL_write(websocket->ssl, tbs.data, tbs.size) <= 0);
 				} else {
-					err = (write(websocket->sockfd, tbs.data, tbs.size) < 0);
+					throw("failed to receive data", true);
 				}
+			} else if (event & EPOLLOUT) {
+				if (!websocket->connected) {
+					switch_protocols(websocket);
+				} else if (websocket->tbs_size != 0) {
+					WebsocketTBS tbs = websocket->tbs[0];
+					bool err;
 
-				for (int i = 0; i < websocket->tbs_size; ++i) {
-					if ((i + 1) != websocket->tbs_size) {
-						websocket->tbs[i].data = allocate(websocket->tbs[i].data, websocket->tbs[i + 1].size + 1, sizeof(char));
-						websocket->tbs[i].size = websocket->tbs[i + 1].size;
-						memcpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
+					if (websocket->ssl != NULL) {
+						err = (SSL_write(websocket->ssl, tbs.data, tbs.size) <= 0);
+					} else {
+						err = (write(websocket->sockfd, tbs.data, tbs.size) < 0);
 					}
-				}
 
-				free(websocket->tbs[websocket->tbs_size - 1].data);
-				websocket->tbs = allocate(websocket->tbs, websocket->tbs_size - 1, sizeof(WebsocketTBS));
-				--websocket->tbs_size;
+					for (int i = 0; i < websocket->tbs_size; ++i) {
+						if ((i + 1) != websocket->tbs_size) {
+							websocket->tbs[i].data = allocate(websocket->tbs[i].data, websocket->tbs[i + 1].size + 1, sizeof(char));
+							websocket->tbs[i].size = websocket->tbs[i + 1].size;
+							memcpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
+						}
+					}
 
-				if (err) {
-					throw("send_websocket_message()", !!websocket->ssl);
+					free(websocket->tbs[websocket->tbs_size - 1].data);
+					websocket->tbs = allocate(websocket->tbs, websocket->tbs_size - 1, sizeof(WebsocketTBS));
+					--websocket->tbs_size;
+
+					if (err) {
+						throw("send_websocket_message()", !!websocket->ssl);
+					}
 				}
 			}
 		}
@@ -125,10 +131,9 @@ static void switch_protocols(Websocket *websocket) {
 	sprintf(request_message,
 		"GET %s HTTP/1.1\r\n"
 		"Host: %s:%d\r\n"
-		"Accept: */*\r\n"
-		"Connection: Upgrade\r\n"
 		"Upgrade: websocket\r\n"
-		"Sec-WebSocket-Key: YSBkaXNjb3JkIG5vbmNl\r\n"
+		"Connection: Upgrade\r\n"
+		"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
 		"Sec-WebSocket-Version: 13\r\n\r\n"
 	, websocket->url.path, websocket->url.hostname, websocket->url.port);
 
@@ -269,11 +274,14 @@ void connect_websocket(Websocket *websocket) {
 
 		struct epoll_event events[16];
 
-		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
+		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
 
 		do {
 			int num_events = epoll_wait(websocket->epollfd, events, 16, -1);
-			handle_events(websocket, websocket->epollfd, events, num_events);
+
+			if (num_events != 0) {
+				handle_events(websocket, websocket->epollfd, events, num_events);
+			}
 		} while (websocket->connected);
 	} else {
 		throw("connect()", !!websocket->ssl);
@@ -285,7 +293,7 @@ static void close_websocket(Websocket *websocket, short close_code) {
 	close(websocket->epollfd);
 	free_url(websocket->url);
 
-	websocket->connected = 0;
+	websocket->connected = false;
 
 	if (websocket->methods.onclose) {
 		websocket->methods.onclose((const short) close_code);
