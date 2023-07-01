@@ -1,5 +1,4 @@
 #include <string.h>
-#include <math.h>
 
 #include <utils.h>
 
@@ -7,10 +6,26 @@ char *base64_encode(const char *data) {
 	char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	size_t data_length = strlen(data);
 	char m3 = (data_length % 3);
-	size_t loop_limit = ((m3 == 0) ? (data_length / 3) : (floor(data_length / 3) + 1));
-	short padding_count = ((m3 == 0) ? ((3 - m3) * 2) : 0);
+	size_t d3 = ((data_length - m3) / 3);
+	size_t loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
 
-	char *response = allocate(NULL, data_length + padding_count + 1, sizeof(char));
+	size_t response_length;
+
+	switch (m3) {
+		case 0:
+			response_length = (d3 * 4);
+			break;
+
+		case 1:
+			response_length = ((d3 + 1) * 4);
+			break;
+
+		case 2:
+			response_length = ((d3 + 1) * 4);
+			break;
+	}
+
+	char *response = allocate(NULL, response_length + 1, sizeof(char));
 
 	for (int i = 0; i < loop_limit; ++i) {
 		size_t number = 0;
@@ -33,7 +48,7 @@ char *base64_encode(const char *data) {
 			strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
 			strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
 			strncat(response, &base64_alphabet[number & 0x3F], 1);
-			strncat(response, "=", 2);
+			strncat(response, "=", 1);
 		} else if (m3 == 1) {
 			number |= data[di];
 			number = number << 4;
