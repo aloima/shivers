@@ -32,17 +32,17 @@ char *base64_encode(const char *data) {
 		int di = i * 3;
 
 		if (m3 == 0 || (i + 1) != loop_limit) {
-			number |= data[di] << 16;
-			number |= data[di + 1] << 8;
-			number |= data[di + 2];
+			number |= (unsigned char) data[di] << 16;
+			number |= (unsigned char) data[di + 1] << 8;
+			number |= (unsigned char) data[di + 2];
 
 			strncat(response, &base64_alphabet[(number >> 18) & 0x3F], 1);
 			strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
 			strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
 			strncat(response, &base64_alphabet[number & 0x3F], 1);
 		} else if (m3 == 2) {
-			number |= data[di] << 8;
-			number |= data[di + 1];
+			number |= (unsigned char) data[di] << 8;
+			number |= (unsigned char) data[di + 1];
 			number = number << 2;
 
 			strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
@@ -50,7 +50,7 @@ char *base64_encode(const char *data) {
 			strncat(response, &base64_alphabet[number & 0x3F], 1);
 			strncat(response, "=", 1);
 		} else if (m3 == 1) {
-			number |= data[di];
+			number |= (unsigned char) data[di];
 			number = number << 4;
 
 			strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);

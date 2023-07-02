@@ -17,8 +17,8 @@ static void send_heartbeat() {
 
 	if (last_sequence == -1) {
 		sprintf(heartbeat_message, "{"
-			"\"op\": 1,"
-			"\"d\": null"
+			"\"op\":1,"
+			"\"d\":null"
 		"}");
 	} else {
 		sprintf(heartbeat_message, "{"

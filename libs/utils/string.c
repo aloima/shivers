@@ -30,3 +30,13 @@ void strtoupper(char *source, char *dest) {
 		}
 	}
 }
+
+char *ltrim(char *src) {
+	size_t i = 0;
+
+	while (isblank(src[i])) {
+		++i;
+	}
+
+	return (src + i);
+}

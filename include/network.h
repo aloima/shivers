@@ -80,6 +80,7 @@
 		URL url;
 		WebsocketMethods methods;
 		bool connected;
+		char *key;
 
 		WebsocketTBS *tbs; // to be sent
 		size_t tbs_size;

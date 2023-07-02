@@ -11,6 +11,7 @@
 #include <netdb.h>
 
 #include <openssl/ssl.h>
+#include <openssl/sha.h>
 #include <openssl/err.h>
 
 #include <network.h>
@@ -21,6 +22,7 @@ static void register_events(int epoll_fd, Websocket *websocket, uint32_t event_f
 static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events);
 
 static void switch_protocols(Websocket *websocket);
+static void check_response(const char *response, const char *key);
 static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
@@ -68,6 +70,9 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 					if ((i + 1) == num_events) {
 						if (strncmp(message, "HTTP", 4) == 0) {
 							if (strncmp(message + 9, "101", 3) == 0) {
+								check_response(message, websocket->key);
+								free(websocket->key);
+
 								if (websocket->methods.onstart) {
 									websocket->methods.onstart();
 								}
@@ -125,17 +130,68 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 	}
 }
 
+static void check_response(const char *response, const char *key) {
+	Split splitter = split((char *) response, "\r\n");
+
+	for (int i = 0; i < splitter.size; ++i) {
+		if (strstr(splitter.data[i], ":") != NULL) {
+			Split line_splitter = split(splitter.data[i], ":");
+			char header_name[128] = {0};
+			strtolower(header_name, line_splitter.data[0]);
+
+			if (strcmp(header_name, "sec-websocket-accept") == 0) {
+				char *value = ltrim(line_splitter.data[1]);
+
+				const char* websocket_guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+				size_t final_length = strlen(key) + strlen(websocket_guid);
+				char *final = allocate(NULL, final_length + 1, sizeof(char));
+				strcat(final, key);
+				strcat(final, websocket_guid);
+
+				unsigned char *sha1_hash = allocate(NULL, SHA_DIGEST_LENGTH + 1, sizeof(char));
+				SHA1((unsigned char *) final, final_length, sha1_hash);
+				char *result = base64_encode((char *) sha1_hash);
+
+				if (strcmp(result, value) != 0) {
+					throw("switch_protocols(): unmatched websocket keys", false);
+				}
+
+				free(sha1_hash);
+				free(final);
+				free(result);
+
+				split_free(&line_splitter);
+				break;
+			}
+
+			split_free(&line_splitter);
+		}
+	}
+
+	split_free(&splitter);
+}
+
 static void switch_protocols(Websocket *websocket) {
-	char *request_message = allocate(NULL, 512, sizeof(char));
+	size_t key_data_size = rand();
+	FILE *file = fopen("/dev/urandom", "r");
+	char *key_data = allocate(NULL, key_data_size + 1, sizeof(char));
+	fgets(key_data, key_data_size, file);
+	fclose(file);
+
+	websocket->key = base64_encode(key_data);
+	free(key_data);
+
+	char *request_message = allocate(NULL, 512 + strlen(websocket->key), sizeof(char));
 
 	sprintf(request_message,
 		"GET %s HTTP/1.1\r\n"
 		"Host: %s:%d\r\n"
 		"Upgrade: websocket\r\n"
 		"Connection: Upgrade\r\n"
-		"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+		"Sec-WebSocket-Key: %s\r\n"
 		"Sec-WebSocket-Version: 13\r\n\r\n"
-	, websocket->url.path, websocket->url.hostname, websocket->url.port);
+	, websocket->url.path, websocket->url.hostname, websocket->url.port, websocket->key);
+	puts(request_message);
 
 	if ((websocket->ssl ? SSL_write(websocket->ssl, request_message, 512) : write(websocket->sockfd, request_message, 512)) <= 0) {
 		close_websocket(websocket, 0);
@@ -182,7 +238,7 @@ static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
 		case 0x8: {
 			short close_code = 0;
 			close_code |= (data[ends_at] << 8);
-			close_code |= (data[ends_at + 1] & 0xFF);
+			close_code |= data[ends_at + 1];
 			close_websocket(websocket, close_code);
 			break;
 		}
@@ -246,16 +302,22 @@ static void initialize_websocket(Websocket *websocket, const char *url) {
 	websocket->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	websocket->ssl = NULL;
 
+	if (websocket->sockfd == -1) {
+		throw("socket()", !!websocket->ssl);
+	}
+
+	int keepalive = 1;
+
+	if (setsockopt(websocket->sockfd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int)) == -1) {
+		throw("setsockopt()", !!websocket->ssl);
+	}
+
 	if (strcmp(websocket->url.protocol, "wss") == 0) {
 		SSL_load_error_strings();
 		SSL_library_init();
 
-		websocket->ssl = SSL_new(SSL_CTX_new(TLS_client_method()));
+		websocket->ssl = SSL_new(SSL_CTX_new(SSLv23_client_method()));
 		SSL_set_fd(websocket->ssl, websocket->sockfd);
-	}
-
-	if (websocket->sockfd == -1) {
-		throw("socket()", !!websocket->ssl);
 	}
 }
 

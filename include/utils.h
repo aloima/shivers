@@ -18,6 +18,7 @@
 
 	void strtolower(char *source, char *dest);
 	void strtoupper(char *source, char *dest);
+	char *ltrim(char *src);
 
 	char *base64_encode(const char *data);
 #endif

@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 
-#include <utils.h>
 #include <discord.h>
 
 int main(void) {
@@ -18,6 +18,8 @@ int main(void) {
 		fprintf(stderr, "startup: invalid token entry\n");
 		return EXIT_FAILURE;
 	} else {
+		srand(time(NULL));
+
 		FILE *token_file = fopen("token", "r");
 		char token[256] = {0};
 
