@@ -23,7 +23,9 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 
 static void switch_protocols(Websocket *websocket);
 static void check_response(const char *response, const char *key);
-static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket);
+
+static size_t _read(Websocket *websocket, char *buffer, size_t size);
+static size_t _write(Websocket *websocket, char *buffer, size_t size);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
 static void close_websocket(Websocket *websocket, short close_code);
@@ -49,10 +51,6 @@ static void register_events(int epoll_fd, Websocket *websocket, uint32_t event_f
 }
 
 static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events) {
-	char *message = NULL;
-	char buffer[4096] = {0};
-	size_t message_length = 0;
-
 	for (int i = 0; i < num_events; ++i) {
 		uint32_t event = events[i].events;
 
@@ -60,54 +58,77 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 			if (event & EPOLLERR || event & EPOLLHUP) {
 				throw("socket error or hang up", false);
 			} else if (event & EPOLLIN) {
-				size_t received = (websocket->ssl ? SSL_read(websocket->ssl, buffer, 4095) : read(websocket->sockfd, buffer, 4095));
+				if ((i + 1) == num_events) {
+					if (websocket->key) {
+						char buffer[4096] = {0};
+						_read(websocket, buffer, 4095);
 
-				if (received > 0) {
-					message_length += received;
-					message = allocate(message, message_length + 1, sizeof(char));
-					strncpy(message, buffer, received);
+						if (strncmp(buffer + 9, "101", 3) == 0) {
+							check_response(buffer, websocket->key);
+							free(websocket->key);
+							websocket->key = NULL;
 
-					if ((i + 1) == num_events) {
-						if (strncmp(message, "HTTP", 4) == 0) {
-							if (strncmp(message + 9, "101", 3) == 0) {
-								check_response(message, websocket->key);
-								free(websocket->key);
-
-								if (websocket->methods.onstart) {
-									websocket->methods.onstart();
-								}
-							} else {
-								throw("invalid http status code", !!websocket->ssl);
+							if (websocket->methods.onstart) {
+								websocket->methods.onstart();
 							}
 						} else {
-							WebsocketFrame frame = parse_data((unsigned char *) message, websocket);
-
-							if (websocket->methods.onmessage) {
-								websocket->methods.onmessage(frame);
-							}
-
-							free(frame.payload);
+							throw("invalid http status code", !!websocket->ssl);
 						}
-					}
+					} else {
+						WebsocketFrame frame;
+						unsigned char buffer[9] = {0};
 
-					message_length = 0;
-					free(message);
-					message = NULL;
-				} else {
-					throw("failed to receive data", true);
+						_read(websocket, (char *) buffer, 2);
+
+						frame.fin = ((buffer[0] >> 7) & 0x1);
+						frame.rsv[0] = ((buffer[0] >> 6) & 0x1);
+						frame.rsv[1] = ((buffer[0] >> 5) & 0x1);
+						frame.rsv[2] = ((buffer[0] >> 4) & 0x1);
+						frame.opcode = (buffer[0] & 0xF);
+
+						frame.mask = ((buffer[1] >> 7) & 0x1);
+						frame.payload_length = (buffer[1] & 0x7F);
+
+						if (frame.payload_length == 126) {
+							_read(websocket, (char *) buffer, 2);
+							frame.payload_length = combine_bytes(buffer, 2);
+						} else if (frame.payload_length == 127) {
+							_read(websocket, (char *) buffer, 8);
+							frame.payload_length = combine_bytes(buffer, 8);
+						}
+
+						if (frame.mask == 0x1) {
+							_read(websocket, (char *) buffer, 4);
+						}
+
+						frame.payload = allocate(NULL, frame.payload_length + 1, sizeof(char));
+
+						switch (frame.opcode) {
+							case 0x1:
+								_read(websocket, frame.payload, frame.payload_length);
+								break;
+
+							case 0x8: {
+								short close_code = combine_bytes((unsigned char *) frame.payload, 2);
+								close_websocket(websocket, close_code);
+								break;
+							}
+						}
+
+						if (websocket->methods.onmessage) {
+							websocket->methods.onmessage(frame);
+						}
+
+						free(frame.payload);
+					}
 				}
 			} else if (event & EPOLLOUT) {
 				if (!websocket->connected) {
 					switch_protocols(websocket);
 				} else if (websocket->tbs_size != 0) {
 					WebsocketTBS tbs = websocket->tbs[0];
-					bool err;
 
-					if (websocket->ssl != NULL) {
-						err = (SSL_write(websocket->ssl, tbs.data, tbs.size) <= 0);
-					} else {
-						err = (write(websocket->sockfd, tbs.data, tbs.size) < 0);
-					}
+					_write(websocket, tbs.data, tbs.size);
 
 					for (int i = 0; i < websocket->tbs_size; ++i) {
 						if ((i + 1) != websocket->tbs_size) {
@@ -120,10 +141,6 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 					free(websocket->tbs[websocket->tbs_size - 1].data);
 					websocket->tbs = allocate(websocket->tbs, websocket->tbs_size - 1, sizeof(WebsocketTBS));
 					--websocket->tbs_size;
-
-					if (err) {
-						throw("send_websocket_message()", !!websocket->ssl);
-					}
 				}
 			}
 		}
@@ -191,58 +208,9 @@ static void switch_protocols(Websocket *websocket) {
 		"Sec-WebSocket-Version: 13\r\n\r\n"
 	, websocket->url.path, websocket->url.hostname, websocket->url.port, websocket->key);
 
-	if ((websocket->ssl ? SSL_write(websocket->ssl, request_message, strlen(request_message)) : write(websocket->sockfd, request_message, strlen(request_message))) <= 0) {
-		close_websocket(websocket, 0);
-		throw("write()", !!websocket->ssl);
-	}
-
+	_write(websocket, request_message, strlen(request_message));
 	websocket->connected = true;
 	free(request_message);
-}
-
-static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
-	WebsocketFrame frame;
-	unsigned char ends_at;
-
-	frame.fin = ((data[0] >> 7) & 0x1);
-	frame.rsv[0] = ((data[0] >> 6) & 0x1);
-	frame.rsv[1] = ((data[0] >> 5) & 0x1);
-	frame.rsv[2] = ((data[0] >> 4) & 0x1);
-	frame.opcode = (data[0] & 0xF);
-
-	frame.mask = ((data[1] >> 7) & 0x1);
-	frame.payload_length = (data[1] & 0x7F);
-	ends_at = 2;
-
-	if (frame.payload_length == 126) {
-		frame.payload_length = (size_t) ((data[2] << 8) | data[3]);
-		ends_at = 4;
-	} else if (frame.payload_length == 127) {
-		frame.payload_length = (((unsigned long) data[2] << 56) | ((unsigned long) data[3] << 48) | ((unsigned long) data[4] << 40) | ((unsigned long) data[5] << 32) | ((unsigned long) data[6] << 24) | ((unsigned long) data[7] << 16) | ((unsigned long) data[8] << 8) | (unsigned long) data[9]);
-		ends_at = 10;
-	}
-
-	if (frame.mask == 0x1) {
-		ends_at += 4;
-	}
-
-	frame.payload = allocate(NULL, frame.payload_length + 1, sizeof(char));
-
-	switch (frame.opcode) {
-		case 0x1:
-			strcpy(frame.payload, ((char *) data) + ends_at);
-			break;
-
-		case 0x8: {
-			short close_code = 0;
-			close_code |= (data[ends_at] << 8);
-			close_code |= data[ends_at + 1];
-			close_websocket(websocket, close_code);
-			break;
-		}
-	}
-
-	return frame;
 }
 
 void send_websocket_message(Websocket *websocket, const char *message) {
@@ -292,6 +260,32 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	free(data);
 }
 
+static size_t _read(Websocket *websocket, char *buffer, size_t size) {
+	if (websocket->ssl) {
+		return SSL_read(websocket->ssl, buffer, size);
+	} else {
+		return read(websocket->sockfd, buffer, size);
+	}
+}
+
+static size_t _write(Websocket *websocket, char *buffer, size_t size) {
+	size_t result;
+	bool err = false;
+
+	if (websocket->ssl != NULL) {
+		result = SSL_write(websocket->ssl, buffer, size);
+		err = (result <= 0);
+	} else {
+		result = write(websocket->sockfd, buffer, size);
+		err = (result < 0);
+	}
+
+	if (err) {
+		throw("_write()", !!websocket->ssl);
+	}
+
+	return result;
+}
 
 
 Websocket create_websocket(const char *url, const WebsocketMethods methods) {
@@ -344,7 +338,7 @@ void connect_websocket(Websocket *websocket) {
 
 		struct epoll_event events[16];
 
-		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
+		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
 
 		do {
 			int num_events = epoll_wait(websocket->epollfd, events, 16, -1);

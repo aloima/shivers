@@ -92,12 +92,12 @@ void throw(const char *value, bool tls) {
 	}
 }
 
-bool set_nonblocking(int sockfd) {
-	int flags = fcntl(sockfd, F_GETFL, 0);
+unsigned long combine_bytes(unsigned char *bytes, size_t byte_count) {
+	unsigned long result = 0;
 
-	if (flags == -1) {
-		return false;
+	for (int i = 0; i < byte_count; ++i) {
+		result |= (bytes[i] << ((byte_count - i - 1) * 8));
 	}
 
-	return (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) == -1);
+	return result;
 }

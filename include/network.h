@@ -48,7 +48,7 @@
 	URL parse_url(const char *data);
 	void free_url(URL url);
 
-	bool set_nonblocking(int sockfd);
+	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
 	struct hostent *resolve_hostname(char *hostname);
 	void close_socket(int sockfd, SSL *ssl);
 
