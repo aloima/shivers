@@ -23,7 +23,9 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			bool is_false = (strncmp(text + *i, "false", 5) == 0);
 			bool is_null = (strncmp(text + *i, "null", 4) == 0);
 
-			if (ch == ' ' || ch == '\t') {
+			if (ch == ']') {
+				break;
+			} else if (ch == ' ' || ch == '\t') {
 				++(*i);
 				continue;
 			} else if (ch == '"') {
@@ -200,7 +202,9 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 			++(*i);
 			continue;
 		} else if (!parsing_key && (*element)->key == NULL) {
-			if (ch == '"') {
+			if (ch == '}') {
+				break;
+			} else if (ch == '"') {
 				parsing_key = true;
 			} else {
 				fprintf(stderr, "json_parse(): invalid starting of key\n");
