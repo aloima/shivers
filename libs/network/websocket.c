@@ -172,16 +172,15 @@ static void check_response(const char *response, const char *key) {
 }
 
 static void switch_protocols(Websocket *websocket) {
-	size_t key_data_size = rand();
-	FILE *file = fopen("/dev/urandom", "r");
-	char *key_data = allocate(NULL, key_data_size + 1, sizeof(char));
-	fgets(key_data, key_data_size, file);
-	fclose(file);
+	unsigned char key_data[17] = {0};
 
-	websocket->key = base64_encode(key_data);
-	free(key_data);
+	for (int i = 0; i < 16; ++i) {
+		key_data[i] = ((rand() % 255) + 1);
+	}
 
-	char *request_message = allocate(NULL, 512 + strlen(websocket->key), sizeof(char));
+	websocket->key = base64_encode((char *) key_data);
+
+	char *request_message = allocate(NULL, 512, sizeof(char));
 
 	sprintf(request_message,
 		"GET %s HTTP/1.1\r\n"
@@ -191,9 +190,8 @@ static void switch_protocols(Websocket *websocket) {
 		"Sec-WebSocket-Key: %s\r\n"
 		"Sec-WebSocket-Version: 13\r\n\r\n"
 	, websocket->url.path, websocket->url.hostname, websocket->url.port, websocket->key);
-	puts(request_message);
 
-	if ((websocket->ssl ? SSL_write(websocket->ssl, request_message, 512) : write(websocket->sockfd, request_message, 512)) <= 0) {
+	if ((websocket->ssl ? SSL_write(websocket->ssl, request_message, strlen(request_message)) : write(websocket->sockfd, request_message, strlen(request_message))) <= 0) {
 		close_websocket(websocket, 0);
 		throw("write()", !!websocket->ssl);
 	}
@@ -232,7 +230,7 @@ static WebsocketFrame parse_data(unsigned char *data, Websocket *websocket) {
 
 	switch (frame.opcode) {
 		case 0x1:
-			strncpy(frame.payload, ((char *) data) + ends_at, frame.payload_length);
+			strcpy(frame.payload, ((char *) data) + ends_at);
 			break;
 
 		case 0x8: {
@@ -251,29 +249,39 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;	
 	size_t message_length = strlen(message);
 	size_t data_length = message_length;
+	unsigned char masking_key[5] = {0};
+
+	for (int i = 0; i < 4; ++i) {
+		masking_key[i] = ((rand() % 255) + 1);
+	}
 
 	if (message_length > 65535) {
-		data_length += 10;
+		data_length += 14;
 		data = allocate(data, data_length, sizeof(char));
-		data[1] = 127;
+		data[1] = 255;
 
 		for (int i = 0; i < 8; ++i) {
 			data[2 + i] = (message_length >> ((7 - i) * 8)) & 0xFF;
 		}
 	} else if (message_length > 125) {
-		data_length += 4;
+		data_length += 8;
 		data = allocate(data, data_length, sizeof(char));
-		data[1] = 126;
+		data[1] = 254;
 		data[2] = (message_length >> 8) & 0xFF;
 		data[3] = message_length & 0xFF;
 	} else {
-		data_length += 2;
+		data_length += 6;
 		data = allocate(data, data_length, sizeof(char));
 		data[1] = message_length;
 	}
 
 	data[0] = WEBSOCKET_FRAME_MAGIC;
-	strncpy(((char *) data) + data_length - message_length, message, message_length);
+	strcpy(((char *) data) + data_length - message_length - 4, (char *) masking_key);
+
+	for (int i = 0; i < message_length; ++i) {
+		char ch = (message[i] ^ masking_key[i % 4]);
+		strncpy(((char *) data) + data_length - message_length + i, &ch, 1);
+	}
 
 	++websocket->tbs_size;
 	websocket->tbs = allocate(websocket->tbs, websocket->tbs_size, sizeof(WebsocketTBS));
