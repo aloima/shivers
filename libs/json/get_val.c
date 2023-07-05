@@ -44,6 +44,10 @@ JSONValue json_get_val(JSONElement *element, const char *search) {
 		result.string = value->value;
 	} else if (value->type == JSON_BOOLEAN) {
 		result.boolean = ((bool *) value->value)[0];
+	} else if (value->type == JSON_OBJECT) {
+		result.object = value;
+	} else if (value->type == JSON_ARRAY) {
+		result.array = value;
 	}
 
 	return result;

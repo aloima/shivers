@@ -13,13 +13,6 @@
 	#define JSON_ARRAY 5
 	#define JSON_NULL 6
 
-	typedef union {
-		char type;
-		char *string;
-		float number;
-		bool boolean;
-	} JSONValue;
-
 	typedef struct {
 		char type;
 		char *key;
@@ -27,6 +20,15 @@
 		void *parent;
 		size_t size;
 	} JSONElement;
+
+	typedef union {
+		char type;
+		char *string;
+		float number;
+		bool boolean;
+		JSONElement *object;
+		JSONElement *array;
+	} JSONValue;
 
 	JSONElement *json_parse(char *text);
 	char *json_stringify(JSONElement *element);
