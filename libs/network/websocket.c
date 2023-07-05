@@ -104,9 +104,19 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 						frame.payload = allocate(NULL, frame.payload_length + 1, sizeof(char));
 
 						switch (frame.opcode) {
-							case 0x1:
-								_read(websocket, frame.payload, frame.payload_length);
+							case 0x1: {
+								size_t received = 0;
+
+								while (received != frame.payload_length) {
+									received += _read(websocket, frame.payload + received, 512);
+								}
+
+								if (websocket->methods.onmessage) {
+									websocket->methods.onmessage(frame);
+								}
+
 								break;
+							}
 
 							case 0x8: {
 								_read(websocket, frame.payload, frame.payload_length);
@@ -116,10 +126,6 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 								close_websocket(websocket, code, (reason[0] == 0) ? NULL : reason);
 								break;
 							}
-						}
-
-						if (websocket->methods.onmessage) {
-							websocket->methods.onmessage(frame);
 						}
 
 						free(frame.payload);

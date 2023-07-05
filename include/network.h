@@ -70,7 +70,7 @@
 	typedef struct {
 		void (*onstart)(void);
 		void (*onmessage)(const WebsocketFrame frame);
-		void (*onclose)(const short close_code);
+		void (*onclose)(const short code, const char *reason);
 	} WebsocketMethods;
 
 	typedef struct {
