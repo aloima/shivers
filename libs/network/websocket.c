@@ -28,7 +28,7 @@ static size_t _read(Websocket *websocket, char *buffer, size_t size);
 static size_t _write(Websocket *websocket, char *buffer, size_t size);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
-static void close_websocket(Websocket *websocket, short close_code);
+static void close_websocket(Websocket *websocket, const short code, const char *reason);
 
 
 
@@ -109,8 +109,11 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 								break;
 
 							case 0x8: {
-								short close_code = combine_bytes((unsigned char *) frame.payload, 2);
-								close_websocket(websocket, close_code);
+								_read(websocket, frame.payload, frame.payload_length);
+
+								const short code = combine_bytes((unsigned char *) frame.payload, 2);
+								const char *reason = (frame.payload + 2);
+								close_websocket(websocket, code, (reason[0] == 0) ? NULL : reason);
 								break;
 							}
 						}
@@ -352,7 +355,7 @@ void connect_websocket(Websocket *websocket) {
 	}
 }
 
-static void close_websocket(Websocket *websocket, short close_code) {
+static void close_websocket(Websocket *websocket, const short code, const char *reason) {
 	close_socket(websocket->sockfd, websocket->ssl);
 	close(websocket->epollfd);
 	free_url(websocket->url);
@@ -360,6 +363,6 @@ static void close_websocket(Websocket *websocket, short close_code) {
 	websocket->connected = false;
 
 	if (websocket->methods.onclose) {
-		websocket->methods.onclose((const short) close_code);
+		websocket->methods.onclose(code, reason);
 	}
 }
