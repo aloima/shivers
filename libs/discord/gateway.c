@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <unistd.h>
 
@@ -12,6 +13,8 @@ static unsigned int heartbeat_interval;
 static int last_sequence = -1;
 
 static char token[256] = {0};
+static size_t ready_guild_size = 0;
+static bool handled_ready_guilds = false;
 
 static void send_heartbeat() {
 	char heartbeat_message[32];
@@ -54,7 +57,7 @@ static void send_identify() {
 				"\"device\":\"shivers\""
 			"}"
 		"}"
-	"}", token, (1 << 0 | 1 << 1 | 1 << 9));
+	"}", token, get_all_intents());
 
 	send_websocket_message(&websocket, identify_message);
 }
@@ -73,8 +76,19 @@ static void onmessage(const WebsocketFrame frame) {
 		case 0: {
 			last_sequence = (int) json_get_val(data, "s").number;
 
-			if (strcmp(event_name, "GUILD_CREATE") == 0) {
+			if (strcmp(event_name, "READY") == 0) {
+				ready_guild_size = json_get_val(data, "d.guilds").array->size;
+			} else if (strcmp(event_name, "GUILD_CREATE") == 0) {
 				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").string);
+
+				if (!handled_ready_guilds) {
+					--ready_guild_size;
+
+					if (ready_guild_size == 0) {
+						puts("Handled all guilds.");
+						handled_ready_guilds = true;
+					}
+				}
 			}
 
 			break;

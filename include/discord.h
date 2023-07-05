@@ -17,4 +17,6 @@
 	const char *get_cache_data_from_index(Cache *cache, size_t index);
 
 	Cache *get_guilds_cache();
+
+	const unsigned int get_all_intents();
 #endif
