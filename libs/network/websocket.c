@@ -249,7 +249,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	} else {
 		data_length += 6;
 		data = allocate(data, data_length, sizeof(char));
-		data[1] = message_length;
+		data[1] = 128 + message_length;
 	}
 
 	data[0] = WEBSOCKET_FRAME_MAGIC;
