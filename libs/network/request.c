@@ -89,12 +89,22 @@ Response request(RequestConfig config) {
 			SSL_connect(ssl);
 		}
 
+		char header_text[65536] = {0};
+
+		for (int i = 0; i < config.header_size; ++i) {
+			strcat(header_text, config.headers[i].name);
+			strcat(header_text, ": ");
+			strcat(header_text, config.headers[i].value);
+			strcat(header_text, "\r\n");
+		}
+
 		sprintf(request_message,
 			"%s %s HTTP/1.1\r\n"
 			"Host: %s:%d\r\n"
 			"Accept: */*\r\n"
-			"Connection: close\r\n\r\n"
-		, config.method, url.path, url.hostname, url.port);
+			"Connection: close\r\n"
+			"%s\r\n"
+		, config.method, url.path, url.hostname, url.port, header_text);
 
 		free_url(url);
 
