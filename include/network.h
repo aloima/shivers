@@ -22,7 +22,6 @@
 	typedef struct {
 		char *url;
 		char *method;
-		unsigned short port;
 		Header *headers;
 		size_t header_size;
 	} RequestConfig;

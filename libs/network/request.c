@@ -60,21 +60,12 @@ Response request(RequestConfig config) {
 	SSL_CTX *ssl_ctx = NULL;
 
 	check_config(config);
+	URL url = parse_url(config.url);
+	bool tls = (url.port == 443);
 
-	Split splitter = split(config.url, "/");
-	char hostname[1024] = {0}, *path = NULL;
-	bool tls = (strncmp(config.url, "https", 5) == 0);
-	unsigned short port = (config.port ? config.port : (tls ? 443 : 80));
-
-	path = allocate(path, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
-	path[0] = '/';
-	join(splitter.data + 3, path + 1, splitter.size - 3, "/");
-	strcpy(hostname, splitter.data[2]);
-	split_free(&splitter);
-
-	host = resolve_hostname(hostname);
+	host = resolve_hostname(url.hostname);
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
+	addr.sin_port = htons(url.port);
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -82,9 +73,7 @@ Response request(RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		size_t request_message_length = (55 + strlen(config.method) + strlen(path) + strlen(hostname) + sizeof(port));
-
-		char request_message[request_message_length + 1];
+		char request_message[512];
 		memset(&request_message, 0, sizeof(request_message));
 
 		char buffer[1024] = {0}, *response_message = NULL;
@@ -105,11 +94,13 @@ Response request(RequestConfig config) {
 			"Host: %s:%d\r\n"
 			"Accept: */*\r\n"
 			"Connection: close\r\n\r\n"
-		, config.method, path, hostname, port);
+		, config.method, url.path, url.hostname, url.port);
 
-		free(path);
+		free_url(url);
 
-		if ((tls ? SSL_write(ssl, request_message, (int) request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
+		size_t request_message_length = strlen(request_message);
+
+		if ((tls ? SSL_write(ssl, request_message, request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
 			close_socket(sockfd, ssl);
 			throw("write()", tls);
 		}
