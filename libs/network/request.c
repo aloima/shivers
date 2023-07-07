@@ -138,7 +138,6 @@ Response request(RequestConfig config) {
 		split_free(&status_splitter);
 
 		size_t i = 0;
-		size_t response_data_length = 0;
 
 		for (i = 1; i < line_splitter.size; ++i) {
 			if (line_splitter.data[i][0] == 0) {
@@ -159,20 +158,41 @@ Response request(RequestConfig config) {
 			}
 		}
 
-		while (i < line_splitter.size) {
-			if (line_splitter.data[i][0] != 0) {
-				bool last_line = ((i + 1) == line_splitter.size);
-				size_t line_length = strlen(line_splitter.data[i]);
-				response_data_length += (line_length + (!last_line ? 2 : 0));
-				response.data = allocate(response.data, response_data_length + 1, sizeof(char));
-				strncat(response.data, line_splitter.data[i], line_length);
+		bool chunked = (strcmp(get_header(response.headers, response.header_size, "transfer-encoding").value, "chunked") == 0);
+		size_t response_data_length = 0;
 
-				if (!last_line) {
-					strncat(response.data, "\r\n", 2);
-				}
+		if (chunked) {
+			size_t response_read_data_length = 0;
+			response_data_length = ahtoi(line_splitter.data[i + 1]);
+			response.data = allocate(response.data, response_data_length + 1, sizeof(char));
+			i += 2;
+
+			while (i < line_splitter.size && response_read_data_length != response_data_length) {
+				size_t line_length = strlen(line_splitter.data[i]);
+				strncat(response.data, line_splitter.data[i], line_length);
+				response_read_data_length += line_length;
+
+				++i;
 			}
 
-			++i;
+			response.data[response_data_length - 1] = '\0';
+			response.data = allocate(response.data, response_data_length, sizeof(char));
+		} else {
+			while (i < line_splitter.size) {
+				if (line_splitter.data[i][0] != 0) {
+					bool last_line = ((i + 1) == line_splitter.size);
+					size_t line_length = strlen(line_splitter.data[i]);
+					response_data_length += (line_length + (!last_line ? 1 : 0));
+					response.data = allocate(response.data, response_data_length + 1, sizeof(char));
+					strncat(response.data, line_splitter.data[i], line_length);
+
+					if (!last_line) {
+						strncat(response.data, "\n", 1);
+					}
+				}
+
+				++i;
+			}
 		}
 
 		split_free(&line_splitter);
