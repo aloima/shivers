@@ -101,3 +101,23 @@ unsigned long combine_bytes(unsigned char *bytes, size_t byte_count) {
 
 	return result;
 }
+
+Header get_header(Header *headers, size_t header_size, char *name) {
+	Header header;
+	memset(&header, 0, sizeof(header));
+
+	char header_name[1024] = {0};
+	strtolower(header_name, name);
+
+	for (size_t i = 0; i < header_size; ++i) {
+		char current_name[1024] = {0};
+		strtolower(current_name, headers[i].name);
+
+		if (strcmp(header_name, current_name) == 0) {
+			header = headers[i];
+			break;
+		}
+	}
+
+	return header;
+}

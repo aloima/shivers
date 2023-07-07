@@ -48,6 +48,7 @@
 	void free_url(URL url);
 
 	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
+	Header get_header(Header *headers, size_t header_size, char *name);
 	struct hostent *resolve_hostname(char *hostname);
 	void close_socket(int sockfd, SSL *ssl);
 
