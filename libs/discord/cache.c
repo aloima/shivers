@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include <discord.h>
 #include <utils.h>
@@ -7,6 +8,15 @@ static Cache *guilds;
 
 void create_caches() {
 	guilds = allocate(NULL, sizeof(Cache), 1);
+}
+
+void clear_cache(Cache *cache) {
+	for (size_t i = 0; i < cache->size; ++i) {
+		free(cache->data[i]);
+	}
+
+	free(cache->data);
+	cache->size = 0;
 }
 
 void add_to_cache(Cache *cache, const char *data) {

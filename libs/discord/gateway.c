@@ -10,11 +10,14 @@
 static Websocket websocket;
 
 static unsigned int heartbeat_interval;
+static pthread_t heartbeat_thread;
 static int last_sequence = -1;
 
 static char token[256] = {0};
 static size_t ready_guild_size = 0;
 static bool handled_ready_guilds = false;
+
+static Client client;
 
 static void send_heartbeat() {
 	char heartbeat_message[32];
@@ -64,7 +67,7 @@ static void send_identify() {
 
 static void onstart() {
 	create_caches();
-	puts("Started.");
+	puts("Websocket is started.");
 }
 
 static void onmessage(const WebsocketFrame frame) {
@@ -77,7 +80,12 @@ static void onmessage(const WebsocketFrame frame) {
 			last_sequence = (int) json_get_val(data, "s").number;
 
 			if (strcmp(event_name, "READY") == 0) {
+				Response response = api_request(token, "/users/@me", "GET", NULL);
+				client.user = json_parse(response.data);
+				client.token = token;
+
 				ready_guild_size = json_get_val(data, "d.guilds").array->size;
+				on_ready(client);
 			} else if (strcmp(event_name, "GUILD_CREATE") == 0) {
 				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").string);
 
@@ -89,6 +97,8 @@ static void onmessage(const WebsocketFrame frame) {
 						handled_ready_guilds = true;
 					}
 				}
+			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
+				on_message_create(client, json_get_val(data, "d").object);
 			}
 
 			break;
@@ -97,7 +107,6 @@ static void onmessage(const WebsocketFrame frame) {
 		case 10: {
 			heartbeat_interval = (unsigned short) json_get_val(data, "d.heartbeat_interval").number;
 			send_identify();
-			pthread_t heartbeat_thread;
 			pthread_create(&heartbeat_thread, NULL, start_heartbeat_thread, NULL);
 			pthread_detach(heartbeat_thread);
 			break;
@@ -113,6 +122,9 @@ static void onclose(const short code, const char *reason) {
 	} else {
 		printf("Closed: %d\n", code);
 	}
+
+	clear_cache(get_guilds_cache());
+	pthread_cancel(heartbeat_thread);
 }
 
 void connect_gateway(const char *bot_token) {
