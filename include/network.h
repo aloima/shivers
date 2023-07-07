@@ -24,6 +24,7 @@
 		char *method;
 		Header *headers;
 		size_t header_size;
+		char *body;
 	} RequestConfig;
 
 	typedef struct {

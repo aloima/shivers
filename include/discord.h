@@ -28,7 +28,8 @@
 	Cache *get_guilds_cache();
 
 	const unsigned int get_all_intents();
-	Response api_request(char *token, char *path, char *method, char *content);
+	Response api_request(char *token, char *path, char *method, char *body);
+	void send_content(Client client, const char *channel_id, const char *content);
 
 	void on_ready(Client client);
 	void on_message_create(Client client, JSONElement *message);

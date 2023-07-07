@@ -65,7 +65,7 @@ char *base64_encode(const char *data) {
 }
 
 size_t ahtoi(const char *data) {
-	char hex_alphabet[16] = "0123456789ABCDEF";
+	char hex_alphabet[17] = "0123456789ABCDEF";
 	size_t size = strlen(data);
 	size_t result = 0;
 

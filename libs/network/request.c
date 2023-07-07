@@ -98,13 +98,24 @@ Response request(RequestConfig config) {
 			strcat(header_text, "\r\n");
 		}
 
-		sprintf(request_message,
-			"%s %s HTTP/1.1\r\n"
-			"Host: %s:%d\r\n"
-			"Accept: */*\r\n"
-			"Connection: close\r\n"
-			"%s\r\n"
-		, config.method, url.path, url.hostname, url.port, header_text);
+		if (config.body) {
+			sprintf(request_message,
+				"%s %s HTTP/1.1\r\n"
+				"Host: %s:%d\r\n"
+				"Accept: */*\r\n"
+				"Connection: close\r\n"
+				"%s\r\n"
+				"%s"
+			, config.method, url.path, url.hostname, url.port, header_text, config.body);
+		} else {
+			sprintf(request_message,
+				"%s %s HTTP/1.1\r\n"
+				"Host: %s:%d\r\n"
+				"Accept: */*\r\n"
+				"Connection: close\r\n"
+				"%s\r\n"
+			, config.method, url.path, url.hostname, url.port, header_text);
+		}
 
 		free_url(url);
 
