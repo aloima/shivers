@@ -20,5 +20,8 @@
 	void strtoupper(char *source, char *dest);
 	char *ltrim(char *src);
 
+	size_t ahtoi(const char *data);
 	char *base64_encode(const char *data);
+
+	int char_at(const char *data, const char ch);
 #endif

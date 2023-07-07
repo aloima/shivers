@@ -1,4 +1,6 @@
 #include <string.h>
+#include <ctype.h>
+#include <math.h>
 
 #include <utils.h>
 
@@ -60,4 +62,17 @@ char *base64_encode(const char *data) {
 	}
 
 	return response;
+}
+
+size_t ahtoi(const char *data) {
+	char hex_alphabet[16] = "0123456789ABCDEF";
+	size_t size = strlen(data);
+	size_t result = 0;
+
+	for (int i = 0; i < size; ++i) {
+		size_t base = pow(16, (size - i - 1));
+		result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
+	}
+
+	return result;
 }
