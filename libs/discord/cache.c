@@ -22,7 +22,7 @@ void clear_cache(Cache *cache) {
 void add_to_cache(Cache *cache, const char *data) {
 	++cache->size;
 	cache->data = allocate(cache->data, cache->size, sizeof(char *));
-	cache->data[cache->size - 1] = allocate(cache->data[cache->size - 1], strlen(data) + 1, sizeof(char));
+	cache->data[cache->size - 1] = allocate(NULL, strlen(data) + 1, sizeof(char));
 	strcpy(cache->data[cache->size - 1], data);
 }
 
