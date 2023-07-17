@@ -48,6 +48,9 @@
 	URL parse_url(const char *data);
 	void free_url(URL url);
 
+	size_t _read(SSL *ssl, int sockfd, char *buffer, size_t size);
+	size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size);
+
 	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
 	Header get_header(Header *headers, size_t header_size, char *name);
 	struct hostent *resolve_hostname(char *hostname);
@@ -81,6 +84,7 @@
 		URL url;
 		WebsocketMethods methods;
 		bool connected;
+		bool closed;
 		char *key;
 
 		WebsocketTBS *tbs; // to be sent
@@ -89,5 +93,6 @@
 
 	Websocket create_websocket(const char *url, const WebsocketMethods methods);
 	void connect_websocket(Websocket *websocket);
+	void close_websocket(Websocket *websocket, const short code, const char *reason);
 	void send_websocket_message(Websocket *websocket, const char *message);
 #endif

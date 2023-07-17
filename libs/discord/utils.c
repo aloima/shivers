@@ -55,7 +55,10 @@ Response api_request(char *token, char *path, char *method, char *body) {
 		config.header_size = 2;
 	}
 
-	return request(config);
+	Response response = request(config);
+	free(config.headers);
+
+	return response;
 }
 
 void send_content(Client client, const char *channel_id, const char *content) {
@@ -64,6 +67,16 @@ void send_content(Client client, const char *channel_id, const char *content) {
 
 	char body[2048] = {0};
 	sprintf(body, "{\"content\":\"%s\"}", content);
+
+	api_request(client.token, path, "POST", body);
+}
+
+void send_embed(Client client, const char *channel_id, Embed embed) {
+	char path[64] = {0};
+	sprintf(path, "/channels/%s/messages", channel_id);
+
+	char body[4096] = {0};
+	sprintf(body, "{\"embeds\":[{\"description\":\"%s\",\"color\":%ld}]}", embed.description, embed.color);
 
 	api_request(client.token, path, "POST", body);
 }

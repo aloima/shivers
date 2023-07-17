@@ -121,3 +121,30 @@ Header get_header(Header *headers, size_t header_size, char *name) {
 
 	return header;
 }
+
+size_t _read(SSL *ssl, int sockfd, char *buffer, size_t size) {
+	if (ssl != NULL) {
+		return SSL_read(ssl, buffer, size);
+	} else {
+		return read(sockfd, buffer, size);
+	}
+}
+
+size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size) {
+	size_t result;
+	bool err = false;
+
+	if (ssl != NULL) {
+		result = SSL_write(ssl, buffer, size);
+		err = (result <= 0);
+	} else {
+		result = write(sockfd, buffer, size);
+		err = (result < 0);
+	}
+
+	if (err) {
+		throw("_write()", !!ssl);
+	}
+
+	return result;
+}

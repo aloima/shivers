@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <signal.h>
 
 #include <unistd.h>
 
+#include <shivers.h>
 #include <discord.h>
 #include <json.h>
 #include <network.h>
@@ -12,12 +15,25 @@ static Websocket websocket;
 static unsigned int heartbeat_interval;
 static pthread_t heartbeat_thread;
 static int last_sequence = -1;
+static bool heartbeat_waiting = false;
 
 static char token[256] = {0};
 static size_t ready_guild_size = 0;
 static bool handled_ready_guilds = false;
 
 static Client client;
+
+static void handle_exit(int sig) {
+	close_websocket(&websocket, -1, NULL);
+
+	if (client.user != NULL) {
+		json_free(client.user);
+	}
+
+	pthread_cancel(heartbeat_thread);
+	sleep(1);
+	exit(EXIT_SUCCESS);
+}
 
 static void send_heartbeat() {
 	char heartbeat_message[32];
@@ -39,11 +55,13 @@ static void send_heartbeat() {
 
 static void *start_heartbeat_thread() {
 	do {
+		heartbeat_waiting = true;
 		usleep(heartbeat_interval * 1000);
 		send_heartbeat();
-	} while (websocket.connected);
+		heartbeat_waiting = false;
+	} while (websocket.connected && !websocket.closed);
 
-	return NULL;
+	pthread_exit(NULL);
 }
 
 static void send_identify() {
@@ -67,6 +85,7 @@ static void send_identify() {
 
 static void onstart() {
 	create_caches();
+	memset(&client, 0, sizeof(Client));
 	puts("Websocket is started.");
 }
 
@@ -85,6 +104,8 @@ static void onmessage(const WebsocketFrame frame) {
 				client.token = token;
 
 				ready_guild_size = json_get_val(data, "d.guilds").array->size;
+
+				response_free(&response);
 				on_ready(client);
 			} else if (strcmp(event_name, "GUILD_CREATE") == 0) {
 				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").string);
@@ -98,7 +119,8 @@ static void onmessage(const WebsocketFrame frame) {
 					}
 				}
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
-				on_message_create(client, json_get_val(data, "d").object);
+				JSONElement *message = json_get_val(data, "d.message").object;
+				on_message_create(client, &message);
 			}
 
 			break;
@@ -109,6 +131,7 @@ static void onmessage(const WebsocketFrame frame) {
 			send_identify();
 			pthread_create(&heartbeat_thread, NULL, start_heartbeat_thread, NULL);
 			pthread_detach(heartbeat_thread);
+			signal(SIGINT, handle_exit);
 			break;
 		}
 	}
@@ -117,14 +140,15 @@ static void onmessage(const WebsocketFrame frame) {
 }
 
 static void onclose(const short code, const char *reason) {
-	if (reason) {
-		printf("Closed: %d\n%s\n", code, reason);
-	} else {
-		printf("Closed: %d\n", code);
+	if (code != -1) {
+		if (reason) {
+			printf("Closed: %d\n%s\n", code, reason);
+		} else {
+			printf("Closed: %d\n", code);
+		}
 	}
 
 	clear_cache(get_guilds_cache());
-	pthread_cancel(heartbeat_thread);
 }
 
 void connect_gateway(const char *bot_token) {

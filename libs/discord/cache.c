@@ -4,19 +4,22 @@
 #include <discord.h>
 #include <utils.h>
 
-static Cache *guilds;
+static Cache *guilds = NULL;
 
 void create_caches() {
-	guilds = allocate(NULL, sizeof(Cache), 1);
+	guilds = allocate(NULL, 1, sizeof(Cache));
 }
 
 void clear_cache(Cache *cache) {
-	for (size_t i = 0; i < cache->size; ++i) {
-		free(cache->data[i]);
-	}
+	if (cache != NULL) {
+		for (size_t i = 0; i < cache->size; ++i) {
+			free(cache->data[i]);
+		}
 
-	free(cache->data);
-	cache->size = 0;
+		free(cache->data);
+		cache->size = 0;
+		free(cache);
+	}
 }
 
 void add_to_cache(Cache *cache, const char *data) {
