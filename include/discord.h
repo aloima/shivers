@@ -29,6 +29,7 @@
 		char *description;
 		long color;
 		EmbedField *fields;
+		short field_size;
 	} Embed;
 
 	void create_caches();
