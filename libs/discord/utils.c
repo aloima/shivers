@@ -58,6 +58,10 @@ Response api_request(char *token, char *path, char *method, char *body) {
 	Response response = request(config);
 	free(config.headers);
 
+	if (body != NULL) {
+		free(config.body);
+	}
+
 	return response;
 }
 
@@ -68,7 +72,8 @@ void send_content(Client client, const char *channel_id, const char *content) {
 	char body[2048] = {0};
 	sprintf(body, "{\"content\":\"%s\"}", content);
 
-	api_request(client.token, path, "POST", body);
+	Response response = api_request(client.token, path, "POST", body);
+	response_free(&response);
 }
 
 void send_embed(Client client, const char *channel_id, Embed embed) {
@@ -78,5 +83,6 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	char body[4096] = {0};
 	sprintf(body, "{\"embeds\":[{\"description\":\"%s\",\"color\":%ld}]}", embed.description, embed.color);
 
-	api_request(client.token, path, "POST", body);
+	Response response = api_request(client.token, path, "POST", body);
+	response_free(&response);
 }

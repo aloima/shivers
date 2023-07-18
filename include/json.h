@@ -22,7 +22,6 @@
 	} JSONElement;
 
 	typedef union {
-		char type;
 		char *string;
 		float number;
 		bool boolean;
@@ -31,7 +30,10 @@
 	} JSONValue;
 
 	JSONElement *json_parse(char *text);
-	char *json_stringify(JSONElement *element);
-	JSONValue json_get_val(JSONElement *element, const char *search);
 	void json_free(JSONElement *element);
+
+	char *json_stringify(JSONElement *element);
+
+	JSONValue json_get_val(JSONElement *element, const char *search);
+	const char json_get_type(JSONElement *element, const char *search);
 #endif

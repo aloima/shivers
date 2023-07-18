@@ -5,7 +5,6 @@
 #include <discord.h>
 #include <utils.h>
 
-// TODO: fix unallocated variable: message
 void about(Client client, JSONElement **message) {
 	Embed embed;
 	memset(&embed, 0, sizeof(Embed));
@@ -14,4 +13,5 @@ void about(Client client, JSONElement **message) {
 	embed.color = COLOR;
 	strcpy(embed.description, "selam");
 	send_embed(client, json_get_val(*message, "d.channel_id").string, embed);
+	free(embed.description);
 }

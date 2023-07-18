@@ -31,8 +31,6 @@ JSONValue json_get_val(JSONElement *element, const char *search) {
 
 	split_free(&splitter);
 
-	result.type = value->type;
-
 	if (value->type == JSON_NUMBER) {
 		if (value->size == 2) {
 			int fractional_digit_count = floorl(log10(floorf(((long *) value->value)[1]))) + 1;
@@ -51,4 +49,29 @@ JSONValue json_get_val(JSONElement *element, const char *search) {
 	}
 
 	return result;
+}
+
+const char json_get_type(JSONElement *element, const char *search) {
+	Split splitter = split((char *) search, ".");
+	JSONElement *value = element;
+
+	for (size_t ki = 0; ki < splitter.size; ++ki) {
+		for (size_t i = 0; i < value->size; ++i) {
+			if (value->type == JSON_OBJECT) {
+				JSONElement *data = ((JSONElement **) value->value)[i];
+
+				if (strcmp(data->key, splitter.data[ki]) == 0) {
+					value = data;
+					i = value->size;
+				}
+			} else if (value->type == JSON_ARRAY) {
+				value = ((JSONElement **) value->value)[atoi(splitter.data[ki])];
+				i = value->size;
+			}
+		}
+	}
+
+	split_free(&splitter);
+
+	return value->type;
 }
