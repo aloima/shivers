@@ -182,7 +182,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 
 				unsigned char *sha1_hash = allocate(NULL, SHA_DIGEST_LENGTH + 1, sizeof(char));
 				SHA1((unsigned char *) final, final_length, sha1_hash);
-				char *result = base64_encode((char *) sha1_hash);
+				char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
 
 				free((char *) key);
 				free(sha1_hash);
@@ -217,7 +217,7 @@ static void switch_protocols(Websocket *websocket) {
 		key_data[i] = ((rand() % 255) + 1);
 	}
 
-	websocket->key = base64_encode((char *) key_data);
+	websocket->key = base64_encode((char *) key_data, 16);
 
 	char *request_message = allocate(NULL, 512, sizeof(char));
 
@@ -341,6 +341,8 @@ void connect_websocket(Websocket *websocket) {
 			if (num_events != 0) {
 				handle_events(websocket, websocket->epollfd, events, num_events);
 			}
+
+			usleep(3000);
 		} while (websocket->connected && !websocket->closed);
 	} else {
 		throw("connect()", !!websocket->ssl);

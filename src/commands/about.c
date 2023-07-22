@@ -20,13 +20,13 @@ void about(Client client, JSONElement **message) {
 	embed.field_size = 2;
 	embed.fields = allocate(NULL, 2, sizeof(EmbedField));
 	embed.fields[0] = (EmbedField) {
-		.name = "Geliştirici",
+		.name = "Developer",
 		.value = "<@840217542400409630>",
 		.inline_mode = true
 	};
 
 	embed.fields[1] = (EmbedField) {
-		.name = "Bellek kullanımı",
+		.name = "Memory usage",
 		.value = memory_usage,
 		.inline_mode = true
 	};

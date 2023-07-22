@@ -4,9 +4,8 @@
 
 #include <utils.h>
 
-char *base64_encode(const char *data) {
+char *base64_encode(const char *data, const size_t data_length) {
 	char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	size_t data_length = strlen(data);
 	char m3 = (data_length % 3);
 	size_t d3 = ((data_length - m3) / 3);
 	size_t loop_limit = ((m3 == 0) ? d3 : (d3 + 1));

@@ -21,7 +21,7 @@
 	char *ltrim(char *src);
 
 	size_t ahtoi(const char *data);
-	char *base64_encode(const char *data);
+	char *base64_encode(const char *data, const size_t data_length);
 
 	int char_at(const char *data, const char ch);
 #endif
