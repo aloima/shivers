@@ -36,4 +36,7 @@
 
 	JSONValue json_get_val(JSONElement *element, const char *search);
 	const char json_get_type(JSONElement *element, const char *search);
+
+	JSONElement *create_empty_json_object();
+	void add_json_element(JSONElement **object, const char *key, void *data, const char type); // use long for integers
 #endif
