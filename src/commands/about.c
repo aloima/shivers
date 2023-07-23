@@ -17,8 +17,11 @@ void about(Client client, JSONElement **message) {
 	getrusage(RUSAGE_SELF, &r_usage);
 	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
 
-	embed.field_size = 2;
-	embed.fields = allocate(NULL, 2, sizeof(EmbedField));
+	char guild_count[8];
+	sprintf(guild_count, "%ld", get_cache_size(get_guilds_cache()));
+
+	embed.field_size = 3;
+	embed.fields = allocate(NULL, 3, sizeof(EmbedField));
 	embed.fields[0] = (EmbedField) {
 		.name = "Developer",
 		.value = "<@840217542400409630>",
@@ -31,9 +34,14 @@ void about(Client client, JSONElement **message) {
 		.inline_mode = true
 	};
 
+	embed.fields[2] = (EmbedField) {
+		.name = "Guild count",
+		.value = guild_count,
+		.inline_mode = true
+	};
+
 	embed.color = COLOR;
 
-
-	send_embed(client, json_get_val(*message, "d.channel_id").string, embed);
+	send_embed(client, json_get_val(*message, "channel_id").string, embed);
 	free(embed.fields);
 }

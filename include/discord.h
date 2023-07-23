@@ -27,7 +27,8 @@
 	typedef struct {
 		char *title;
 		char *description;
-		long color;
+		unsigned int color;
+		char *image_url;
 		EmbedField *fields;
 		short field_size;
 	} Embed;

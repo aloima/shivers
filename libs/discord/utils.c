@@ -90,6 +90,14 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 		add_json_element(&embed_data, "color", &(embed.color), JSON_NUMBER);
 	}
 
+	if (embed.image_url) {
+		JSONElement *image = create_empty_json_element(false);
+		add_json_element(&image, "url", embed.image_url, JSON_STRING);
+		add_json_element(&embed_data, "image", image, JSON_OBJECT);
+
+		json_free(image);
+	}
+
 	if (embed.fields) {
 		JSONElement *fields = create_empty_json_element(true);
 

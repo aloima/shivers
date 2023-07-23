@@ -11,4 +11,5 @@
 	void on_message_create(Client client, JSONElement **message);
 
 	void about(Client client, JSONElement **message);
+	void avatar(Client client, JSONElement **message, Split args);
 #endif
