@@ -16,7 +16,7 @@ char *json_stringify(JSONElement *element) {
 		result = allocate(result, length + 3, sizeof(char));
 		result[0] = '"';
 		strncat(result, element->value, length);
-		result[length] = '"';
+		result[length + 1] = '"';
 	} else if (element->type == JSON_NUMBER) {
 		long number = ((long *) element->value)[0];
 		size_t digit_count = (floor(log10(number)) + 1);

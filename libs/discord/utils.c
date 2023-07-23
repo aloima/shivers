@@ -80,50 +80,45 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	char path[64] = {0};
 	sprintf(path, "/channels/%s/messages", channel_id);
 
-	char description[4096] = {0};
-	char color[128] = {0};
-	char fields[25 * 2048] = {0};
-
-	memset(&fields, 0, sizeof(fields));
+	JSONElement *embed_data = create_empty_json_element(false);
 
 	if (embed.description) {
-		sprintf(description, "\"description\":\"%s\"", embed.description);
+		add_json_element(&embed_data, "description", embed.description, JSON_STRING);
 	}
 
 	if (embed.color) {
-		sprintf(color, "\"color\":%ld", embed.color);
+		add_json_element(&embed_data, "color", &(embed.color), JSON_NUMBER);
 	}
 
-	if (embed.field_size != 0) {
-		strcat(fields, "\"fields\":[");
-		char field[2048] = {0};
+	if (embed.fields) {
+		JSONElement *fields = create_empty_json_element(true);
 
 		for (short i = 0; i < embed.field_size; ++i) {
-			if (embed.field_size == (i + 1)) {
-				sprintf(field, "{\"name\":\"%s\",\"value\":\"%s\",\"inline\":%s}", embed.fields[i].name, embed.fields[i].value, embed.fields[i].inline_mode ? "true" : "false");
-			} else {
-				sprintf(field, "{\"name\":\"%s\",\"value\":\"%s\",\"inline\":%s},", embed.fields[i].name, embed.fields[i].value, embed.fields[i].inline_mode ? "true" : "false");
-			}
+			JSONElement *field_data = create_empty_json_element(false);
+			EmbedField field = embed.fields[i];
 
-			strcat(fields, field);
-			memset(field, 0, sizeof(field));
+			add_json_element(&field_data, "name", field.name, JSON_STRING);
+			add_json_element(&field_data, "value", field.value, JSON_STRING);
+			add_json_element(&field_data, "inline", &(field.inline_mode), JSON_BOOLEAN);
+
+			add_json_element(&fields, NULL, field_data, JSON_OBJECT);
+
+			json_free(field_data);
 		}
 
-		strcat(fields, "]");
+		add_json_element(&embed_data, "fields", fields, JSON_ARRAY);
+		json_free(fields);
 	}
 
-	char *elements[3] = {color, description, fields};
-	char join_size = ((color[0] != 0) + (description[0] != 0) + (fields[0] != 0));
-
-	char *embed_text = allocate(NULL, calculate_join(elements, join_size, ",") + 1, sizeof(char));
-	join(elements, embed_text, join_size, ",");
+	char *embed_text = json_stringify(embed_data);
 
 	char *body = allocate(NULL, strlen(embed_text) + 128, sizeof(char));
-	sprintf(body, "{\"embeds\":[{%s}]}", embed_text);
+	sprintf(body, "{\"embeds\":[%s]}", embed_text);
 
 	Response response = api_request(client.token, path, "POST", body);
 	response_free(&response);
 
+	json_free(embed_data);
 	free(embed_text);
 	free(body);
 }
