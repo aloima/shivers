@@ -23,17 +23,17 @@ void avatar(Client client, JSONElement **message, Split args) {
 		Response response = api_request(client.token, path, "GET", NULL);
 		JSONElement *user = json_parse(response.data);
 
-		sprintf(avatar_url, "https://cdn.discordapp.com/avatars/%s/%s.png?size=1024", user_id, json_get_val(user, "avatar").string);
+		sprintf(avatar_url, "https://cdn.discordapp.com/avatars/%s/%s.png?size=1024", user_id, json_get_val(user, "avatar").value.string);
 
 		json_free(user);
 		response_free(&response);
 	} else {
 		sprintf(avatar_url, "https://cdn.discordapp.com/avatars/%s/%s.png?size=1024",
-			json_get_val(*message, "author.id").string, json_get_val(*message, "author.avatar").string);
+			json_get_val(*message, "author.id").value.string, json_get_val(*message, "author.avatar").value.string);
 	}
 
 	embed.color = COLOR;
 	embed.image_url = avatar_url;
 
-	send_embed(client, json_get_val(*message, "d.channel_id").string, embed);
+	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 }

@@ -91,24 +91,24 @@ static void onstart() {
 
 static void onmessage(const WebsocketFrame frame) {
 	JSONElement *data = json_parse((char *) frame.payload);
-	char *event_name = json_get_val(data, "t").string;
-	unsigned short op = (unsigned short) json_get_val(data, "op").number;
+	char *event_name = json_get_val(data, "t").value.string;
+	unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
 
 	switch (op) {
 		case 0: {
-			last_sequence = (int) json_get_val(data, "s").number;
+			last_sequence = (int) json_get_val(data, "s").value.number;
 
 			if (strcmp(event_name, "READY") == 0) {
 				Response response = api_request(token, "/users/@me", "GET", NULL);
 				client.user = json_parse(response.data);
 				client.token = token;
 
-				ready_guild_size = json_get_val(data, "d.guilds").array->size;
+				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
 				response_free(&response);
 				on_ready(client);
 			} else if (strcmp(event_name, "GUILD_CREATE") == 0) {
-				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").string);
+				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").value.string);
 
 				if (!handled_ready_guilds) {
 					--ready_guild_size;
@@ -119,7 +119,7 @@ static void onmessage(const WebsocketFrame frame) {
 					}
 				}
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
-				JSONElement *message = json_get_val(data, "d.message").object;
+				JSONElement *message = json_get_val(data, "d").value.object;
 				on_message_create(client, &message);
 			}
 
@@ -127,7 +127,7 @@ static void onmessage(const WebsocketFrame frame) {
 		}
 
 		case 10: {
-			heartbeat_interval = (unsigned short) json_get_val(data, "d.heartbeat_interval").number;
+			heartbeat_interval = (unsigned short) json_get_val(data, "d.heartbeat_interval").value.number;
 			send_identify();
 			pthread_create(&heartbeat_thread, NULL, start_heartbeat_thread, NULL);
 			pthread_detach(heartbeat_thread);

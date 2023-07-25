@@ -5,7 +5,7 @@
 #include <json.h>
 
 void on_message_create(Client client, JSONElement **message) {
-	char *content = json_get_val(*message, "content").string;
+	char *content = json_get_val(*message, "content").value.string;
 	size_t prefix_length = strlen(PREFIX);
 
 	if (content != NULL && strncmp(content, PREFIX, prefix_length) == 0) {

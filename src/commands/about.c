@@ -42,6 +42,6 @@ void about(Client client, JSONElement **message) {
 
 	embed.color = COLOR;
 
-	send_embed(client, json_get_val(*message, "channel_id").string, embed);
+	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 	free(embed.fields);
 }
