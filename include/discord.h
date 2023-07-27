@@ -46,4 +46,5 @@
 	Response api_request(char *token, char *path, char *method, char *body);
 	void send_content(Client client, const char *channel_id, const char *content);
 	void send_embed(Client client, const char *channel_id, Embed embed);
+	bool check_snowflake(char *snowflake);
 #endif

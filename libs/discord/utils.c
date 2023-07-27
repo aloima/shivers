@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 
 #include <discord.h>
 #include <network.h>
@@ -129,4 +131,23 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	json_free(embed_data);
 	free(embed_text);
 	free(body);
+}
+
+bool check_snowflake(char *snowflake) {
+	size_t length = strlen(snowflake);
+
+	if (length != 18) {
+		return false;
+	} else {
+		bool result = true;
+
+		for (short i = 0; i < length; ++i) {
+			if (!isdigit(snowflake[i])) {
+				result = false;
+				break;
+			}
+		}
+
+		return result;
+	}
 }
