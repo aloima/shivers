@@ -19,6 +19,8 @@ void on_message_create(Client client, JSONElement **message) {
 			about(client, message);
 		} else if (strcmp(splitted.data[0], "avatar") == 0) {
 			avatar(client, message, args);
+		} else if (strcmp(splitted.data[0], "github") == 0) {
+			github(client, message, args);
 		}
 
 		split_free(&splitted);

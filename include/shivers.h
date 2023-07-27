@@ -12,4 +12,5 @@
 
 	void about(Client client, JSONElement **message);
 	void avatar(Client client, JSONElement **message, Split args);
+	void github(Client client, JSONElement **message, Split args);
 #endif

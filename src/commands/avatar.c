@@ -1,11 +1,9 @@
 #include <string.h>
-#include <stdlib.h>
-
-#include <sys/resource.h>
 
 #include <shivers.h>
 #include <discord.h>
-#include <utils.h>
+#include <network.h>
+#include <json.h>
 
 void avatar(Client client, JSONElement **message, Split args) {
 	Embed embed;
