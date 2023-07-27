@@ -169,10 +169,10 @@ Response request(RequestConfig config) {
 			}
 		}
 
-		bool chunked = (strcmp(get_header(response.headers, response.header_size, "transfer-encoding").value, "chunked") == 0);
 		size_t response_data_length = 0;
+		char *te_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
-		if (chunked) {
+		if (te_value != NULL && strcmp(te_value, "chunked") == 0) {
 			size_t response_read_data_length = 0;
 			response_data_length = ahtoi(line_splitter.data[i + 1]);
 			response.data = allocate(response.data, response_data_length + 1, sizeof(char));
