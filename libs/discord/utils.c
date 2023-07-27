@@ -84,6 +84,10 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 
 	JSONElement *embed_data = create_empty_json_element(false);
 
+	if (embed.title) {
+		add_json_element(&embed_data, "title", embed.title, JSON_STRING);
+	}
+
 	if (embed.description) {
 		add_json_element(&embed_data, "description", embed.description, JSON_STRING);
 	}
