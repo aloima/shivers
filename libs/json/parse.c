@@ -25,7 +25,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 			if (ch == ']') {
 				break;
-			} else if (ch == ' ' || ch == '\t') {
+			} else if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);
 				continue;
 			} else if (ch == '"') {
@@ -54,7 +54,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					while (sub_condition) {
 						char sub_ch = text[*i - 1];
 
-						if (sub_ch == ' ' || sub_ch == '\t') {
+						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
 							++(*i);
 						} else if (sub_ch == ',') {
 							sub_condition = false;
@@ -94,7 +94,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					while (sub_condition) {
 						char sub_ch = text[*i - 1];
 
-						if (sub_ch == ' ' || sub_ch == '\t') {
+						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
 							++(*i);
 						} else if (sub_ch == ',') {
 							sub_condition = false;
@@ -198,7 +198,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 	while (*i < length) {
 		char ch = text[*i];
 
-		if (!parsing_key && !parsing_value && (ch == ' ' || ch == '\t')) {
+		if (!parsing_key && !parsing_value && (ch == ' ' || ch == '\t' || ch == '\n')) {
 			++(*i);
 			continue;
 		} else if (!parsing_key && (*element)->key == NULL) {
@@ -220,7 +220,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
-			if (ch == ' ' || ch == '\t') {
+			if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);
 				continue;
 			} else if (ch == ':') {
@@ -245,10 +245,6 @@ JSONElement *json_parse(char *text) {
 	size_t i = 0;
 
 	parse_v(&result, text, length, &i);
-
-	if (i != length) {
-		fprintf(stderr, "json_parse(): invalid ending of object\n");
-	}
 
 	return result;
 }
