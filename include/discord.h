@@ -25,10 +25,18 @@
 	} EmbedField;
 
 	typedef struct {
+		char *name;
+		char *url;
+		char *icon_url;
+	} EmbedAuthor;
+
+	typedef struct {
 		char *title;
 		char *description;
 		unsigned int color;
 		char *image_url;
+		char *thumbnail_url;
+		EmbedAuthor author;
 		EmbedField *fields;
 		short field_size;
 	} Embed;
@@ -48,6 +56,7 @@
 	void send_content(Client client, const char *channel_id, const char *content);
 	void send_embed(Client client, const char *channel_id, Embed embed);
 	void add_field_to_embed(Embed *embed, char *name, char *value, bool inline_mode);
+	void set_embed_author(Embed *embed, char *name, char *url, char *icon_url);
 
 	bool check_snowflake(char *snowflake);
 #endif

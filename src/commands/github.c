@@ -39,15 +39,26 @@ void github(Client client, JSONElement **message, Split args) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
 			} else {
 				JSONElement *user = json_parse(response.data);
+				JSONResult login_data = json_get_val(user, "login");
+				JSONResult name_data = json_get_val(user, "name");
+				char *github_url = json_get_val(user, "html_url").value.string;
+
 				char following[24] = {0};
 				char followers[24] = {0};
 				char repositories[24] = {0};
+				char name[128] = {0};
 				sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
 				sprintf(followers, "%ld", (unsigned long) json_get_val(user, "followers").value.number);
 				sprintf(repositories, "%ld", (unsigned long) json_get_val(user, "public_repos").value.number);
+				sprintf(name, "@%s", login_data.value.string);
 
-				embed.title = json_get_val(user, "login").value.string;
+				if (name_data.exist && (strcmp(login_data.value.string, name_data.value.string) != 0)) {
+					sprintf(name, "%s (@%s)", name_data.value.string, login_data.value.string);
+				}
+
+				embed.thumbnail_url = json_get_val(user, "avatar_url").value.string;
 				embed.color = COLOR;
+				set_embed_author(&embed, name, github_url, NULL);
 
 				add_field_to_embed(&embed, "Repositories", repositories, true);
 				add_field_to_embed(&embed, "Following", following, true);

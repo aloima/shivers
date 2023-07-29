@@ -104,6 +104,25 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 		json_free(image);
 	}
 
+	if (embed.thumbnail_url) {
+		JSONElement *thumbnail = create_empty_json_element(false);
+		add_json_element(&thumbnail, "url", embed.thumbnail_url, JSON_STRING);
+		add_json_element(&embed_data, "thumbnail", thumbnail, JSON_OBJECT);
+
+		json_free(thumbnail);
+	}
+
+	if (embed.author.name) {
+		JSONElement *author = create_empty_json_element(false);
+
+		add_json_element(&author, "name", embed.author.name, JSON_STRING);
+		if (embed.author.url) add_json_element(&author, "url", embed.author.url, JSON_STRING);
+		if (embed.author.icon_url) add_json_element(&author, "icon_url", embed.author.icon_url, JSON_STRING);
+
+		add_json_element(&embed_data, "author", author, JSON_OBJECT);
+		json_free(author);
+	}
+
 	if (embed.fields) {
 		JSONElement *fields = create_empty_json_element(true);
 
@@ -145,6 +164,14 @@ void add_field_to_embed(Embed *embed, char *name, char *value, bool inline_mode)
 		.name = name,
 		.value = value,
 		.inline_mode = inline_mode
+	};
+}
+
+void set_embed_author(Embed *embed, char *name, char *url, char *icon_url) {
+	embed->author = (EmbedAuthor) {
+		.name = name,
+		.url = url,
+		.icon_url = icon_url
 	};
 }
 
