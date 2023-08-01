@@ -148,6 +148,7 @@ static void onclose(const short code, const char *reason) {
 		}
 	}
 
+	on_force_close();
 	clear_cache(get_guilds_cache());
 }
 

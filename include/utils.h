@@ -24,4 +24,6 @@
 	char *base64_encode(const char *data, const size_t data_length);
 
 	int char_at(const char *data, const char ch);
+
+	unsigned long get_timestamp(void *val);
 #endif

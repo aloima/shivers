@@ -7,7 +7,7 @@
 #include <discord.h>
 #include <utils.h>
 
-void about(Client client, JSONElement **message) {
+void about(Client client, JSONElement **message, Split args) {
 	Embed embed;
 	memset(&embed, 0, sizeof(Embed));
 

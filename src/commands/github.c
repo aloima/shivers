@@ -26,6 +26,7 @@ void github(Client client, JSONElement **message, Split args) {
 		};
 
 		char url[256] = {0};
+		Response response;
 
 		if (char_at(args.data[0], '/') == -1) {
 			sprintf(url, "https://api.github.com/users/%s", args.data[0]);
@@ -33,7 +34,7 @@ void github(Client client, JSONElement **message, Split args) {
 			config.url = url;
 			config.method = "GET";
 
-			Response response = request(config);
+			response = request(config);
 
 			if (response.status.code == 404) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
@@ -68,15 +69,13 @@ void github(Client client, JSONElement **message, Split args) {
 				free(embed.fields);
 				json_free(user);
 			}
-
-			response_free(&response);
 		} else {
 			sprintf(url, "https://api.github.com/repos/%s", args.data[0]);
 
 			config.url = url;
 			config.method = "GET";
 
-			Response response = request(config);
+			response = request(config);
 
 			if (response.status.code == 404) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
@@ -100,10 +99,9 @@ void github(Client client, JSONElement **message, Split args) {
 				free(embed.fields);
 				json_free(repository);
 			}
-
-			response_free(&response);
 		}
 
+		response_free(&response);
 		free(config.headers);
 	}
 }
