@@ -157,8 +157,8 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 }
 
 void add_field_to_embed(Embed *embed, char *name, char *value, bool inline_mode) {
-	embed->fields = allocate(embed->fields, 3, sizeof(EmbedField));
 	++embed->field_size;
+	embed->fields = allocate(embed->fields, embed->field_size, sizeof(EmbedField));
 
 	embed->fields[embed->field_size - 1] = (EmbedField) {
 		.name = name,

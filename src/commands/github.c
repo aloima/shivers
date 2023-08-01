@@ -22,7 +22,7 @@ void github(Client client, JSONElement **message, Split args) {
 		config.headers = allocate(NULL, 1, sizeof(Header));
 		config.headers[0] = (Header) {
 			.name = "User-Agent",
-			.value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+			.value = "shivers"
 		};
 
 		char url[256] = {0};
@@ -81,19 +81,30 @@ void github(Client client, JSONElement **message, Split args) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
 			} else {
 				JSONElement *repository = json_parse(response.data);
+				JSONResult description = json_get_val(repository, "description");
+				JSONResult language = json_get_val(repository, "language");
+				JSONResult license = json_get_val(repository, "license");
+
 				char stars[24] = {0};
 				char watchers[24] = {0};
 				char forks[24] = {0};
 				sprintf(stars, "%ld", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
-				sprintf(watchers, "%ld", (unsigned long) json_get_val(repository, "watchers_count").value.number);
+				sprintf(watchers, "%ld", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
 				sprintf(forks, "%ld", (unsigned long) json_get_val(repository, "forks_count").value.number);
-
-				embed.title = json_get_val(repository, "full_name").value.string;
-				embed.color = COLOR;
 
 				add_field_to_embed(&embed, "Stars", stars, true);
 				add_field_to_embed(&embed, "Watchers", watchers, true);
 				add_field_to_embed(&embed, "Forks", forks, true);
+				add_field_to_embed(&embed, "Is archived?", json_get_val(repository, "archived").value.boolean ? "Yes" : "No", true);
+				add_field_to_embed(&embed, "Major language", language.type != JSON_NULL ? language.value.string : "None", true);
+				add_field_to_embed(&embed, "License", license.type != JSON_NULL ? json_get_val(license.value.object, "spdx_id").value.string : "None", true);
+
+				embed.color = COLOR;
+				set_embed_author(&embed, json_get_val(repository, "full_name").value.string, json_get_val(repository, "html_url").value.string, NULL);
+
+				if (description.type != JSON_NULL) {
+					embed.description = description.value.string;
+				}
 
 				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 				free(embed.fields);
