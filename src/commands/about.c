@@ -5,6 +5,7 @@
 
 #include <shivers.h>
 #include <discord.h>
+#include <json.h>
 #include <utils.h>
 
 void about(Client client, JSONElement **message, Split args) {
@@ -17,14 +18,23 @@ void about(Client client, JSONElement **message, Split args) {
 	getrusage(RUSAGE_SELF, &r_usage);
 	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
 
-	char guilds[8];
+	char guilds[8] = {0};
 	sprintf(guilds, "%ld", get_cache_size(get_guilds_cache()));
+
+	char latency[8] = {0};
+	sprintf(latency, "%dms", get_latency());
+
+	char add[128] = {0};
+	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
 
 	embed.color = COLOR;
 
 	add_field_to_embed(&embed, "Developer", "<@840217542400409630>", true);
 	add_field_to_embed(&embed, "Memory usage", memory_usage, true);
 	add_field_to_embed(&embed, "Guilds", guilds, true);
+	add_field_to_embed(&embed, "Latency", latency, true);
+	add_field_to_embed(&embed, "⠀", add, true);
+	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 	free(embed.fields);

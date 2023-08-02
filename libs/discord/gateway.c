@@ -23,6 +23,10 @@ static bool handled_ready_guilds = false;
 
 static Client client;
 
+static unsigned long previous_heartbeat_sent_at = 0;
+static unsigned long heartbeat_sent_at = 0;
+static unsigned long heartbeat_received_at = 0;
+
 static void handle_exit(int sig) {
 	close_websocket(&websocket, -1, NULL);
 
@@ -50,6 +54,7 @@ static void send_heartbeat() {
 		"}", last_sequence);
 	}
 
+	heartbeat_sent_at = get_timestamp(NULL);
 	send_websocket_message(&websocket, heartbeat_message);
 }
 
@@ -102,6 +107,7 @@ static void onmessage(const WebsocketFrame frame) {
 				Response response = api_request(token, "/users/@me", "GET", NULL);
 				client.user = json_parse(response.data);
 				client.token = token;
+				client.ready_at = get_timestamp(NULL);
 
 				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
@@ -129,9 +135,16 @@ static void onmessage(const WebsocketFrame frame) {
 		case 10: {
 			heartbeat_interval = (unsigned short) json_get_val(data, "d.heartbeat_interval").value.number;
 			send_identify();
+			send_heartbeat();
 			pthread_create(&heartbeat_thread, NULL, start_heartbeat_thread, NULL);
 			pthread_detach(heartbeat_thread);
 			signal(SIGINT, handle_exit);
+			break;
+		}
+
+		case 11: {
+			previous_heartbeat_sent_at = heartbeat_sent_at;
+			heartbeat_received_at = get_timestamp(NULL);
 			break;
 		}
 	}
@@ -162,4 +175,12 @@ void connect_gateway(const char *bot_token) {
 	});
 
 	connect_websocket(&websocket);
+}
+
+int get_latency() {
+	if (heartbeat_sent_at > heartbeat_received_at) {
+		return (heartbeat_received_at - previous_heartbeat_sent_at);
+	} else {
+		return (heartbeat_received_at - heartbeat_sent_at);
+	}
 }

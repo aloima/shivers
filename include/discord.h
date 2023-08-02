@@ -6,8 +6,6 @@
 #ifndef DISCORD_H_
 	#define DISCORD_H_
 
-	void connect_gateway(const char *token);
-
 	typedef struct {
 		char **data;
 		size_t size;
@@ -15,6 +13,7 @@
 
 	typedef struct {
 		JSONElement *user;
+		unsigned long ready_at;
 		char *token;
 	} Client;
 
@@ -40,6 +39,9 @@
 		EmbedField *fields;
 		short field_size;
 	} Embed;
+
+	void connect_gateway(const char *token);
+	int get_latency();
 
 	void create_caches();
 	void clear_cache(Cache *cache);
