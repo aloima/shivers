@@ -1,2 +1,4 @@
 /shivers
 /token
+/compile_commands.json
+.cache/
