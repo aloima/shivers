@@ -26,7 +26,7 @@ char *base64_encode(const char *data, const size_t data_length) {
 			break;
 	}
 
-	char *response = allocate(NULL, response_length + 1, sizeof(char));
+	char *response = allocate(NULL, 0, response_length + 1, sizeof(char));
 
 	for (int i = 0; i < loop_limit; ++i) {
 		size_t number = 0;

@@ -46,7 +46,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					ch = text[*i];
 
 					++(*element)->size;
-					(*element)->value = allocate((*element)->value, (*element)->size, sizeof(JSONElement));
+					(*element)->value = allocate((*element)->value, (*element)->size - 1, (*element)->size, sizeof(JSONElement));
 					parse_kv(element, &sub_element, text, length, i);
 					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
 					++(*i);
@@ -78,7 +78,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				++(*i);
 
 				while (condition) {
-					JSONElement *sub_element = allocate(NULL, 1, sizeof(JSONElement));
+					JSONElement *sub_element = allocate(NULL, 0, 1, sizeof(JSONElement));
 					bool sub_condition = true;
 
 					sub_element->parent = *element;
@@ -86,7 +86,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					ch = text[*i];
 
 					++(*element)->size;
-					(*element)->value = allocate((*element)->value, (*element)->size, sizeof(JSONElement));
+					(*element)->value = allocate((*element)->value, (*element)->size - 1, (*element)->size, sizeof(JSONElement));
 					parse_v(&sub_element, text, length, i);
 					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
 					++(*i);
@@ -113,19 +113,19 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			} else if (isdigit(ch)) {
 				(*element)->type = JSON_NUMBER;
 				(*element)->size = 1;
-				(*element)->value = allocate((*element)->value, 1, sizeof(long));
+				(*element)->value = allocate((*element)->value, 0, 1, sizeof(long));
 				((long *) (*element)->value)[0] = (ch - 48);
 			} else if (is_true || is_false) {
 				(*element)->type = JSON_BOOLEAN;
 
 				if (is_true) {
 					*i += 4;
-					(*element)->value = allocate((*element)->value, 1, sizeof(bool));
+					(*element)->value = allocate((*element)->value, 0, 1, sizeof(bool));
 					((bool *) (*element)->value)[0] = 1;
 					break;
 				} else if (is_false) {
 					*i += 5;
-					(*element)->value = allocate((*element)->value, 1, sizeof(bool));
+					(*element)->value = allocate((*element)->value, 0, 1, sizeof(bool));
 					((bool *) (*element)->value)[0] = 0;
 					break;
 				}
@@ -142,7 +142,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			if ((*element)->type == JSON_STRING) {
 				if (ch != '"' || escaping) {
 					++value_length;
-					(*element)->value = allocate((*element)->value, value_length + 1, sizeof(char));
+					(*element)->value = allocate((*element)->value, value_length, value_length + 1, sizeof(char));
 					strncat((*element)->value, &ch, 1);
 
 					if (ch == '\\') {
@@ -159,7 +159,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 					((long *) (*element)->value)[0] = ((((long *) (*element)->value)[0] * 10) + (ch - 48));
 				} else if (ch == '.') {
 					(*element)->size = 2;
-					(*element)->value = allocate((*element)->value, 2, sizeof(long));
+					(*element)->value = allocate((*element)->value, 1, 2, sizeof(long));
 					++(*i);
 
 					bool condition = (*i < length);
@@ -169,7 +169,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 
 						if (isdigit(ch)) {
 							++(*i);
-							((long *) (*element)->value)[1] = ((((long *) (*element)->value)[1] * 10) + (ch - 48));
+							((long *) (*element)->value)[1] = (long) ((((long *) (*element)->value)[1] * 10) + (ch - 48));
 							condition = (*i < length);
 						} else {
 							condition = false;
@@ -192,7 +192,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 	bool parsing_key = false;
 	bool parsing_value = false;
 
-	*element = allocate(*element, 1, sizeof(JSONElement));
+	*element = allocate(NULL, 0, 1, sizeof(JSONElement));
 	(*element)->parent = parent;
 
 	while (*i < length) {
@@ -216,7 +216,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 				parsing_key = false;
 			} else {
 				++key_length;
-				(*element)->key = allocate((*element)->key, key_length + 1, sizeof(char));
+				(*element)->key = allocate((*element)->key, key_length, key_length + 1, sizeof(char));
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
@@ -240,7 +240,7 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 }
 
 JSONElement *json_parse(char *text) {
-	JSONElement *result = allocate(NULL, 1, sizeof(JSONElement));
+	JSONElement *result = allocate(NULL, 0, 1, sizeof(JSONElement));
 	size_t length = strlen(text);
 	size_t i = 0;
 

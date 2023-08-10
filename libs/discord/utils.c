@@ -28,7 +28,7 @@ Response api_request(char *token, char *path, char *method, char *body) {
 
 	config.url = url;
 	config.method = method;
-	config.headers = allocate(NULL, 2 + (body ? 1 : 0), sizeof(Header));
+	config.headers = allocate(NULL, 0, 2 + (body ? 1 : 0), sizeof(Header));
 
 	config.headers[0] = (Header) {
 		.name = "Authorization",
@@ -42,7 +42,7 @@ Response api_request(char *token, char *path, char *method, char *body) {
 
 	if (body != NULL) {
 		size_t body_length = strlen(body);
-		config.body = allocate(NULL, body_length + 1, sizeof(char));
+		config.body = allocate(NULL, 0, body_length + 1, sizeof(char));
 		strcpy(config.body, body);
 
 		char length[5] = {0};
@@ -145,7 +145,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 
 	char *embed_text = json_stringify(embed_data);
 
-	char *body = allocate(NULL, strlen(embed_text) + 128, sizeof(char));
+	char *body = allocate(NULL, 0, strlen(embed_text) + 128, sizeof(char));
 	sprintf(body, "{\"embeds\":[%s]}", embed_text);
 
 	Response response = api_request(client.token, path, "POST", body);
@@ -158,7 +158,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 
 void add_field_to_embed(Embed *embed, char *name, char *value, bool inline_mode) {
 	++embed->field_size;
-	embed->fields = allocate(embed->fields, embed->field_size, sizeof(EmbedField));
+	embed->fields = allocate(embed->fields, embed->field_size - 1, embed->field_size, sizeof(EmbedField));
 
 	embed->fields[embed->field_size - 1] = (EmbedField) {
 		.name = name,

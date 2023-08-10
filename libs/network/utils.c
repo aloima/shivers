@@ -21,10 +21,10 @@ URL parse_url(const char *data) {
 	Split hostname_splitter = split(splitter.data[2], ":");
 
 	size_t protocol_length = strlen(splitter.data[0]);
-	url.protocol = allocate(NULL, protocol_length, sizeof(char));
+	url.protocol = allocate(NULL, 0, protocol_length, sizeof(char));
 	strncpy(url.protocol, splitter.data[0], protocol_length - 1);
 
-	url.hostname = allocate(NULL, strlen(hostname_splitter.data[0]) + 1, sizeof(char));
+	url.hostname = allocate(NULL, 0, strlen(hostname_splitter.data[0]) + 1, sizeof(char));
 	strcpy(url.hostname, hostname_splitter.data[0]);
 
 	if (hostname_splitter.size == 2) {
@@ -37,7 +37,7 @@ URL parse_url(const char *data) {
 		}
 	}
 
-	url.path = allocate(NULL, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
+	url.path = allocate(NULL, 0, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
 	url.path[0] = '/';
 	join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
 

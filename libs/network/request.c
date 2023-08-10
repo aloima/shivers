@@ -73,7 +73,7 @@ Response request(RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message[512];
+		char request_message[2048] = {0};
 		memset(&request_message, 0, sizeof(request_message));
 
 		char buffer[1024] = {0}, *response_message = NULL;
@@ -135,7 +135,7 @@ Response request(RequestConfig config) {
 				throw("read()", tls);
 			} else {
 				response_message_length += read_size;
-				response_message = allocate(response_message, response_message_length + 1, sizeof(char));
+				response_message = allocate(response_message, response_message_length - read_size + 1, response_message_length + 1, sizeof(char));
 				strncat(response_message, buffer, read_size);
 			}
 		}
@@ -144,7 +144,7 @@ Response request(RequestConfig config) {
 		Split status_splitter = split(line_splitter.data[0], " ");
 		size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
 		response.status.code = (short) atoi(status_splitter.data[1]);
-		response.status.message = allocate(response.status.message, status_message_length + 1, sizeof(char));
+		response.status.message = allocate(NULL, 0, status_message_length + 1, sizeof(char));
 		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 		split_free(&status_splitter);
 
@@ -158,9 +158,9 @@ Response request(RequestConfig config) {
 				size_t name_length = strlen(header_splitter.data[0]);
 				size_t value_length = strlen(header_splitter.data[1]);
 
-				response.headers = allocate(response.headers, i, sizeof(Header));
-				response.headers[i - 1].name = allocate(NULL, name_length + 1, sizeof(char));
-				response.headers[i - 1].value = allocate(NULL, value_length + 1, sizeof(char));
+				response.headers = allocate(response.headers, i - 1, i, sizeof(Header));
+				response.headers[i - 1].name = allocate(NULL, 0, name_length + 1, sizeof(char));
+				response.headers[i - 1].value = allocate(NULL, 0, value_length + 1, sizeof(char));
 				strncpy(response.headers[i - 1].name, header_splitter.data[0], name_length);
 				strncpy(response.headers[i - 1].value, header_splitter.data[1], value_length);
 				++response.header_size;
@@ -175,7 +175,7 @@ Response request(RequestConfig config) {
 		if (te_value != NULL && strcmp(te_value, "chunked") == 0) {
 			size_t response_read_data_length = 0;
 			response_data_length = ahtoi(line_splitter.data[i + 1]);
-			response.data = allocate(response.data, response_data_length + 1, sizeof(char));
+			response.data = allocate(NULL, 0, response_data_length + 1, sizeof(char));
 			i += 2;
 
 			while (i < line_splitter.size && response_read_data_length != response_data_length) {
@@ -187,14 +187,14 @@ Response request(RequestConfig config) {
 			}
 
 			response.data[response_data_length - 1] = '\0';
-			response.data = allocate(response.data, response_data_length, sizeof(char));
+			response.data = allocate(response.data, response_data_length, response_data_length, sizeof(char));
 		} else {
 			while (i < line_splitter.size) {
 				if (line_splitter.data[i][0] != 0) {
 					bool last_line = ((i + 1) == line_splitter.size);
 					size_t line_length = strlen(line_splitter.data[i]);
 					response_data_length += (line_length + (!last_line ? 1 : 0));
-					response.data = allocate(response.data, response_data_length + 1, sizeof(char));
+					response.data = allocate(response.data, response_data_length - line_length - !last_line + 1, response_data_length + 1, sizeof(char));
 					strncat(response.data, line_splitter.data[i], line_length);
 
 					if (!last_line) {

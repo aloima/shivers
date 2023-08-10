@@ -47,42 +47,42 @@ void about(Client client, JSONElement **message, Split args) {
 
 	if (years != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi yrs", years);
 	}
 
 	if (months != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mths", months);
 	}
 
 	if (days != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi days", days);
 	}
 
 	if (hours != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mins", minutes);
 	}
 	if (seconds != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count, sizeof(char *));
-		uptime[uptime_element_count - 1] = allocate(NULL, 8, sizeof(char));
+		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
+		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%ld secs", seconds);
 	}
 

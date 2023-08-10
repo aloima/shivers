@@ -22,7 +22,7 @@ void github(Client client, JSONElement **message, Split args) {
 		memset(&config, 0, sizeof(RequestConfig));
 
 		config.header_size = 1;
-		config.headers = allocate(NULL, 1, sizeof(Header));
+		config.headers = allocate(NULL, 0, 1, sizeof(Header));
 		config.headers[0] = (Header) {
 			.name = "User-Agent",
 			.value = "shivers"

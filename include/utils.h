@@ -11,7 +11,7 @@
 	Split split(char *text, char *separator);
 	void split_free(Split *value);
 
-	void *allocate(void *value, size_t count, size_t size);
+	void *allocate(void *value, size_t old_count, size_t new_count, size_t size);
 
 	size_t join(char **value, char *source, size_t size, char *separator);
 	size_t calculate_join(char **value, size_t size, char *separator);
