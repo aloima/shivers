@@ -33,4 +33,6 @@
 	void about(Client client, JSONElement **message, Split args);
 	void avatar(Client client, JSONElement **message, Split args);
 	void github(Client client, JSONElement **message, Split args);
+	void help(Client client, JSONElement **message, Split args);
+	void wikipedia(Client client, JSONElement **message, Split args);
 #endif

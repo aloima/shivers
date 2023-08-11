@@ -16,14 +16,19 @@ void on_message_create(Client client, JSONElement **message) {
 			.size = splitted.size - 1
 		};
 
+		const char *command = splitted.data[0];
 		char *user_id = json_get_val(*message, "author.id").value.string;
 
-		if (strcmp(splitted.data[0], "about") == 0) {
+		if (strcmp(command, "about") == 0) {
 			run_with_cooldown(user_id, about, client, message, args);
-		} else if (strcmp(splitted.data[0], "avatar") == 0) {
+		} else if (strcmp(command, "avatar") == 0) {
 			run_with_cooldown(user_id, avatar, client, message, args);
-		} else if (strcmp(splitted.data[0], "github") == 0) {
+		} else if (strcmp(command, "github") == 0) {
 			run_with_cooldown(user_id, github, client, message, args);
+		} else if (strcmp(command, "help") == 0) {
+			run_with_cooldown(user_id, help, client, message, args);
+		} else if (strcmp(command, "wikipedia") == 0) {
+			run_with_cooldown(user_id, wikipedia, client, message, args);
 		}
 
 		split_free(&splitted);
