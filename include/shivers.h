@@ -17,6 +17,17 @@
 		size_t size;
 	};
 
+	struct Command {
+		void (*execute)(Client client, JSONElement **message, Split args);
+		char *name;
+		char *description;
+		char **args;
+	};
+
+	void setup_commands();
+	const struct Command *get_commands();
+	const size_t get_command_size();
+
 	void setup_cooldown_memory();
 	void free_cooldown_memory();
 	void run_with_cooldown(char *user_id, void (*command)(Client client, JSONElement **message, Split args), Client client, JSONElement **message, Split args);
@@ -30,9 +41,9 @@
 	void on_force_close();
 	void on_message_create(Client client, JSONElement **message);
 
-	void about(Client client, JSONElement **message, Split args);
-	void avatar(Client client, JSONElement **message, Split args);
-	void github(Client client, JSONElement **message, Split args);
-	void help(Client client, JSONElement **message, Split args);
-	void wikipedia(Client client, JSONElement **message, Split args);
+	extern struct Command about;
+	extern struct Command avatar;
+	extern struct Command github;
+	extern struct Command help;
+	extern struct Command wikipedia;
 #endif

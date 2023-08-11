@@ -5,7 +5,7 @@
 #include <network.h>
 #include <json.h>
 
-void avatar(Client client, JSONElement **message, Split args) {
+static void execute(Client client, JSONElement **message, Split args) {
 	Embed embed;
 	memset(&embed, 0, sizeof(Embed));
 
@@ -59,3 +59,10 @@ void avatar(Client client, JSONElement **message, Split args) {
 
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 }
+
+struct Command avatar = {
+	.execute = execute,
+	.name = "avatar",
+	.description = "Sends the avatar of the user",
+	.args = NULL
+};

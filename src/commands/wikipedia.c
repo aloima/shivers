@@ -6,7 +6,7 @@
 #include <network.h>
 #include <utils.h>
 
-void wikipedia(Client client, JSONElement **message, Split args) {
+static void execute(Client client, JSONElement **message, Split args) {
 	if (args.size != 1) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
@@ -56,3 +56,10 @@ void wikipedia(Client client, JSONElement **message, Split args) {
 		json_free(info_data);
 	}
 }
+
+struct Command wikipedia = {
+	.execute = execute,
+	.name = "wikipedia",
+	.description = "Sends short info from Wikipedia",
+	.args = NULL
+};

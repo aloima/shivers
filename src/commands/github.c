@@ -10,7 +10,7 @@
 #include <utils.h>
 #include <json.h>
 
-void github(Client client, JSONElement **message, Split args) {
+static void execute(Client client, JSONElement **message, Split args) {
 	if (args.size != 1) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
@@ -146,3 +146,10 @@ void github(Client client, JSONElement **message, Split args) {
 		free(config.headers);
 	}
 }
+
+struct Command github = {
+	.execute = execute,
+	.name = "github",
+	.description = "Fetches data from GitHub and sends them",
+	.args = NULL
+};

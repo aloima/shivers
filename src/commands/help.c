@@ -5,7 +5,7 @@
 #include <shivers.h>
 #include <utils.h>
 
-void help(Client client, JSONElement **message, Split args) {
+static void execute(Client client, JSONElement **message, Split args) {
 	Embed embed;
 	memset(&embed, 0, sizeof(Embed));
 
@@ -19,8 +19,9 @@ void help(Client client, JSONElement **message, Split args) {
 		"+ github    | Fetches data from GitHub and sends them\\n"
 		"+ help      | Sends help page\\n"
 		"+ wikipedia | Sends short info from Wikipedia\\n\\n"
+
 		"If character before command is +, this command accepts/requires usage of argument(s), if it is -, the command does not.\\n"
-		"To see list of arguments, use `help [command]`.\\n"
+		"To see usage of a command, use `help [command]`.\\n"
 		"```"
 	));
 
@@ -28,3 +29,10 @@ void help(Client client, JSONElement **message, Split args) {
 	embed.description = text;
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 }
+
+struct Command help = {
+	.execute = execute,
+	.name = "help",
+	.description = "Sends help page",
+	.args = NULL
+};

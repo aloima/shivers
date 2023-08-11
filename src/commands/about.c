@@ -15,7 +15,7 @@
 #define SECONDS_IN_HOUR (60 * 60)
 #define SECONDS_IN_MINUTE (60)
 
-void about(Client client, JSONElement **message, Split args) {
+static void execute(Client client, JSONElement **message, Split args) {
 	Embed embed;
 	memset(&embed, 0, sizeof(Embed));
 
@@ -111,3 +111,10 @@ void about(Client client, JSONElement **message, Split args) {
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 	free(embed.fields);
 }
+
+struct Command about = {
+	.execute = execute,
+	.name = "about",
+	.description = "Sends bot information",
+	.args = NULL
+};
