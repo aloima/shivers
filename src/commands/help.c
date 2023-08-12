@@ -6,28 +6,65 @@
 #include <utils.h>
 
 static void execute(Client client, JSONElement **message, Split args) {
-	Embed embed;
-	memset(&embed, 0, sizeof(Embed));
+	const struct Command *commands = get_commands();
+	const size_t command_size = get_command_size();
 
-	char text[4096] = {0};
-	sprintf(text, (
-		"```\\n"
-		"Help page\\n"
-		"---------\\n\\n"
-		"- about     | Sends bot information\\n"
-		"+ avatar    | Sends an avatar image\\n"
-		"+ github    | Fetches data from GitHub and sends them\\n"
-		"+ help      | Sends help page\\n"
-		"+ wikipedia | Sends short info from Wikipedia\\n\\n"
+	if (args.size == 1) {
+		struct Command command = {0};
 
-		"If character before command is +, this command accepts/requires usage of argument(s), if it is -, the command does not.\\n"
-		"To see usage of a command, use `help [command]`.\\n"
-		"```"
-	));
+		for (size_t i = 0; i < command_size; ++i) {
+			if (strcmp(args.data[0], commands[i].name) == 0) {
+				command = commands[i];
+				break;
+			}
+		}
 
-	embed.color = COLOR;
-	embed.description = text;
-	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+		if (command.name != NULL) {
+			Embed embed = {0};
+			set_embed_author(&embed, command.name, NULL, NULL);
+			embed.description = command.description;
+			embed.color = COLOR;
+
+			send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+		} else {
+			send_content(client, json_get_val(*message, "channel_id").value.string, "Unknown command, please use `help` command to get list of the commands.");
+		}
+	} else {
+		Embed embed = {0};
+
+		char text[4096] = {0};
+		sprintf(text, (
+			"```\\n"
+			"Help page\\n"
+			"---------\\n\\n"
+		));
+
+		size_t max_length = 0;
+
+		for (size_t i = 0; i < command_size; ++i) {
+			const size_t length = strlen(commands[i].name);
+
+			if (length > max_length) {
+				max_length = length;
+			}
+		}
+
+		for (size_t i = 0; i < command_size; ++i) {
+			struct Command command = commands[i];
+
+			char blanks[64] = {0};
+			char line[256] = {0};
+			memset(blanks, ' ', max_length - strlen(command.name));
+			sprintf(line, "%s%s | %s\\n", command.name, blanks, command.description);
+			strcat(text, line);
+		}
+
+		strcat(text, "```");
+
+		embed.color = COLOR;
+		embed.description = text;
+		send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+	}
 }
 
 struct Command help = {
