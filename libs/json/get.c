@@ -15,34 +15,30 @@ JSONResult json_get_val(JSONElement *element, const char *search) {
 	result.exist = true;
 
 	for (size_t ki = 0; ki < splitter.size; ++ki) {
-		for (size_t i = 0; i < value->size; ++i) {
-			if (value->type == JSON_OBJECT) {
+		if (value->type == JSON_ARRAY) {
+			int index = atoi(splitter.data[ki]);
+
+			if (value->size > index) {
+				value = ((JSONElement **) value->value)[index];
+			} else {
+				ki = splitter.size;
+				result.exist = false;
+			}
+		} else if (value->type == JSON_OBJECT) {
+			for (size_t i = 0; i < value->size; ++i) {
 				JSONElement *data = ((JSONElement **) value->value)[i];
 
 				if (strcmp(data->key, splitter.data[ki]) == 0) {
 					value = data;
 					i = value->size;
 				} else if ((i + 1) == value->size) {
-					i = value->size;
 					ki = splitter.size;
 					result.exist = false;
 				}
-			} else if (value->type == JSON_ARRAY) {
-				int index = atoi(splitter.data[ki]);
-
-				if ((value->size - 1) == index) {
-					value = ((JSONElement **) value->value)[index];
-					i = value->size;
-				} else {
-					i = value->size;
-					ki = splitter.size;
-					result.exist = false;
-				}
-			} else {
-				i = value->size;
-				ki = splitter.size;
-				result.exist = false;
 			}
+		} else {
+			ki = splitter.size;
+			result.exist = false;
 		}
 	}
 

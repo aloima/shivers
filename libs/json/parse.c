@@ -11,6 +11,7 @@
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i);
 static void parse_kv(JSONElement **parent, JSONElement **element, char *text, size_t length, size_t *i);
 
+// TODO: extended syntax validator
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t value_length = 0;
 	bool escaping = false;
@@ -61,6 +62,10 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 						} else if (sub_ch == '}') {
 							sub_condition = false;
 							condition = false;
+
+							if (sub_element->type == JSON_UNSPECIFIED) {
+								--(*element)->size;
+							}
 						} else {
 							fprintf(stderr, "json_parse(): missing ending of object or comma\n");
 							json_free(*element);
@@ -101,6 +106,10 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 						} else if (sub_ch == ']') {
 							sub_condition = false;
 							condition = false;
+
+							if (sub_element->type == JSON_UNSPECIFIED) {
+								--(*element)->size;
+							}
 						} else {
 							fprintf(stderr, "json_parse(): missing ending of array or comma\n");
 							json_free(*element);
