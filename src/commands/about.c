@@ -1,13 +1,12 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 
 #include <sys/resource.h>
 
 #include <shivers.h>
 #include <discord.h>
-#include <json.h>
 #include <utils.h>
+#include <json.h>
 
 #define SECONDS_IN_YEAR (60 * 60 * 24 * 30 * 12)
 #define SECONDS_IN_MONTH (60 * 60 * 24 * 30)
@@ -16,8 +15,7 @@
 #define SECONDS_IN_MINUTE (60)
 
 static void execute(Client client, JSONElement **message, Split args) {
-	Embed embed;
-	memset(&embed, 0, sizeof(Embed));
+	Embed embed = {0};
 
 	struct rusage r_usage;
 	char memory_usage[32] = {0};

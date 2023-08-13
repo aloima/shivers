@@ -15,11 +15,8 @@ static void execute(Client client, JSONElement **message, Split args) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
 	} else {
-		Embed embed;
-		memset(&embed, 0, sizeof(Embed));
-
-		RequestConfig config;
-		memset(&config, 0, sizeof(RequestConfig));
+		Embed embed = {0};
+		RequestConfig config = {0};
 
 		config.header_size = 1;
 		config.headers = allocate(NULL, 0, 1, sizeof(Header));
@@ -67,11 +64,10 @@ static void execute(Client client, JSONElement **message, Split args) {
 				json_free(stars_json);
 
 				char joined_at[32] = {0};
-				struct tm tm;
-				memset(&tm, 0, sizeof(tm));
+				struct tm tm = {0};
 
 				strptime(json_get_val(user, "created_at").value.string, "%Y-%m-%dT%H:%M:%SZ", &tm);
-				strftime(joined_at, sizeof(joined_at), "%d %B %Y %H:%M", &tm);
+				strftime(joined_at, sizeof(joined_at), "%d %B %Y", &tm);
 
 				char name[128] = {0};
 				sprintf(name, "@%s", login_data.value.string);

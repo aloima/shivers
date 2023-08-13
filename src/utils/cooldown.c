@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <utils.h>
 #include <shivers.h>
+#include <utils.h>
 
 struct CooldownMemory *cooldown_memory = NULL;
 

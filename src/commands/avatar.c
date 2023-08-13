@@ -5,9 +5,10 @@
 #include <network.h>
 #include <json.h>
 
+#define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
+
 static void execute(Client client, JSONElement **message, Split args) {
-	Embed embed;
-	memset(&embed, 0, sizeof(Embed));
+	Embed embed = {0};
 
 	char avatar_url[128] = {0};
 
@@ -38,24 +39,24 @@ static void execute(Client client, JSONElement **message, Split args) {
 				Response response = api_request(client.token, path, "GET", NULL);
 				JSONElement *user = json_parse(response.data);
 				char *avatar_hash = json_get_val(user, "avatar").value.string;
-				bool animated = (strncmp(avatar_hash, "a_", 2) == 0);
+				char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
 
-				sprintf(avatar_url, "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024", user_id, avatar_hash, animated ? "gif" : "png");
+				sprintf(avatar_url, AVATAR_URL,  user_id, avatar_hash, extension);
 
 				json_free(user);
 				response_free(&response);
 			}
 		}
 	} else {
+		char *user_id = json_get_val(*message, "author.id").value.string;
 		char *avatar_hash = json_get_val(*message, "author.avatar").value.string;
-		bool animated = (strncmp(avatar_hash, "a_", 2) == 0);
+		char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
 
-		sprintf(avatar_url, "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024",
-			json_get_val(*message, "author.id").value.string, avatar_hash, animated ? "gif" : "png");
+		sprintf(avatar_url, AVATAR_URL, user_id, avatar_hash, extension);
 	}
 
-	embed.color = COLOR;
 	embed.image_url = avatar_url;
+	embed.color = COLOR;
 
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 }

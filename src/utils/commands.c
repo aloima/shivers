@@ -13,6 +13,10 @@ void setup_commands() {
 	memcpy(commands, command_array, sizeof(command_array));
 }
 
+void free_commands() {
+	free(commands);
+}
+
 const struct Command *get_commands() {
 	return commands;
 }

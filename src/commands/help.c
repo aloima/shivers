@@ -1,9 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <json.h>
 #include <shivers.h>
 #include <utils.h>
+#include <json.h>
 
 static void execute(Client client, JSONElement **message, Split args) {
 	const struct Command *commands = get_commands();

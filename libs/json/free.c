@@ -2,6 +2,7 @@
 
 #include <json.h>
 
+// TODO: freeing for empty objects and arrays
 void json_free(JSONElement *element) {
 	if (element->type != JSON_NUMBER) {
 		for (size_t i = 0; i < element->size; ++i) {

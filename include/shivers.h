@@ -25,6 +25,7 @@
 	};
 
 	void setup_commands();
+	void free_commands();
 	const struct Command *get_commands();
 	const size_t get_command_size();
 
