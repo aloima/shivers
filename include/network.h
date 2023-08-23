@@ -43,7 +43,7 @@
 	Response request(RequestConfig config);
 	void response_free(Response *response);
 
-	void throw(const char *value, bool tls);
+	void throw_network(const char *value, bool tls);
 
 	URL parse_url(const char *data);
 	void free_url(URL url);

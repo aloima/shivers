@@ -33,7 +33,7 @@ static void create_epoll(Websocket *websocket) {
 	websocket->epollfd = epoll_create1(0);
 
 	if (websocket->epollfd == -1) {
-		throw("epoll_create1()", false);
+		throw_network("epoll_create1()", false);
 	}
 }
 
@@ -43,7 +43,7 @@ static void register_events(int epoll_fd, Websocket *websocket, uint32_t event_f
 	event.events = event_flags;
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, websocket->sockfd, &event) == -1) {
-		throw("epoll_ctl()", !!websocket->ssl);
+		throw_network("epoll_ctl()", !!websocket->ssl);
 	}
 }
 
@@ -53,7 +53,7 @@ static void unregister_events(int epoll_fd, Websocket *websocket, uint32_t event
 	event.events = event_flags;
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, websocket->sockfd, &event) == -1) {
-		throw("epoll_ctl()", !!websocket->ssl);
+		throw_network("epoll_ctl()", !!websocket->ssl);
 	}
 }
 
@@ -63,7 +63,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 
 		if (events[i].data.fd == websocket->sockfd) {
 			if (event & EPOLLERR || event & EPOLLHUP) {
-				throw("socket error or hang up", false);
+				throw_network("socket error or hang up", false);
 			} else if (event & EPOLLIN) {
 				if ((i + 1) == num_events) {
 					if (websocket->key) {
@@ -78,7 +78,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 								websocket->methods.onstart();
 							}
 						} else {
-							throw("invalid http status code", !!websocket->ssl);
+							throw_network("invalid http status code", !!websocket->ssl);
 						}
 					} else {
 						WebsocketFrame frame;
@@ -172,7 +172,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 			strtolower(header_name, line_splitter.data[0]);
 
 			if (strcmp(header_name, "sec-websocket-accept") == 0) {
-				char *value = ltrim(line_splitter.data[1]);
+				const char *value = ltrim(line_splitter.data[1]);
 
 				const char* websocket_guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 				size_t final_length = strlen(key) + strlen(websocket_guid);
@@ -194,7 +194,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 					split_free(&splitter);
 					close_websocket(websocket, -1, NULL);
 
-					throw("switch_protocols(): unmatched websocket keys", false);
+					throw_network("switch_protocols(): unmatched websocket keys", false);
 				}
 
 				free(result);
@@ -300,13 +300,13 @@ static void initialize_websocket(Websocket *websocket, const char *url) {
 	websocket->ssl = NULL;
 
 	if (websocket->sockfd == -1) {
-		throw("socket()", !!websocket->ssl);
+		throw_network("socket()", !!websocket->ssl);
 	}
 
 	int keepalive = 1;
 
 	if (setsockopt(websocket->sockfd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int)) == -1) {
-		throw("setsockopt()", !!websocket->ssl);
+		throw_network("setsockopt()", !!websocket->ssl);
 	}
 
 	if (strcmp(websocket->url.protocol, "wss") == 0) {
@@ -336,7 +336,7 @@ void connect_websocket(Websocket *websocket) {
 		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
 
 		do {
-			int num_events = epoll_wait(websocket->epollfd, events, 16, -1);
+			int num_events = epoll_wait(websocket->epollfd, events, 32, -1);
 
 			if (num_events != 0) {
 				handle_events(websocket, websocket->epollfd, events, num_events);
@@ -345,7 +345,7 @@ void connect_websocket(Websocket *websocket) {
 			usleep(3000);
 		} while (websocket->connected && !websocket->closed);
 	} else {
-		throw("connect()", !!websocket->ssl);
+		throw_network("connect()", !!websocket->ssl);
 	}
 }
 

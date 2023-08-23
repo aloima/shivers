@@ -74,7 +74,7 @@ void close_socket(int sockfd, SSL *ssl) {
 	close(sockfd);
 }
 
-void throw(const char *value, bool tls) {
+void throw_network(const char *value, bool tls) {
 	unsigned long tls_error;
 
 	if (errno != 0) {
@@ -143,7 +143,7 @@ size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size) {
 	}
 
 	if (err) {
-		throw("_write()", !!ssl);
+		throw_network("_write()", !!ssl);
 	}
 
 	return result;

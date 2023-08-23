@@ -13,7 +13,7 @@ const unsigned int get_all_intents() {
 		result |= (1 << i);
 	}
 
-	return (const unsigned int) result;
+	return result;
 }
 
 Response api_request(char *token, char *path, char *method, char *body) {
@@ -23,9 +23,7 @@ Response api_request(char *token, char *path, char *method, char *body) {
 	char authorization[128] = {0};
 	sprintf(authorization, "Bot %s", token);
 
-	RequestConfig config;
-	memset(&config, 0, sizeof(RequestConfig));
-
+	RequestConfig config = {0};
 	config.url = url;
 	config.method = method;
 	config.headers = allocate(NULL, 0, 2 + (body ? 1 : 0), sizeof(Header));

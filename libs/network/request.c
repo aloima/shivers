@@ -69,7 +69,7 @@ Response request(RequestConfig config) {
 	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		throw("socket()", tls);
+		throw_network("socket()", tls);
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
@@ -123,7 +123,7 @@ Response request(RequestConfig config) {
 
 		if ((tls ? SSL_write(ssl, request_message, request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
 			close_socket(sockfd, ssl);
-			throw("write()", tls);
+			throw_network("write()", tls);
 		}
 
 		size_t read_size = 0;
@@ -132,7 +132,7 @@ Response request(RequestConfig config) {
 		while ((read_size = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
 			if (errno != 0) {
 				close_socket(sockfd, ssl);
-				throw("read()", tls);
+				throw_network("read()", tls);
 			} else {
 				response_message_length += read_size;
 				response_message = allocate(response_message, response_message_length - read_size + 1, response_message_length + 1, sizeof(char));
@@ -212,7 +212,7 @@ Response request(RequestConfig config) {
 		close_socket(sockfd, ssl);
 	} else {
 		close_socket(sockfd, ssl);
-		throw("connect()", tls);
+		throw_network("connect()", tls);
 	}
 
 	return response;

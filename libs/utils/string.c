@@ -3,7 +3,7 @@
 
 #include <utils.h>
 
-void strtolower(char *source, char *dest) {
+void strtolower(char *source, const char *dest) {
 	size_t length = strlen(dest);
 
 	for (size_t i = 0; i < length; ++i) {
@@ -17,7 +17,7 @@ void strtolower(char *source, char *dest) {
 	}
 }
 
-void strtoupper(char *source, char *dest) {
+void strtoupper(char *source, const char *dest) {
 	size_t length = strlen(dest);
 
 	for (size_t i = 0; i < length; ++i) {
@@ -31,7 +31,7 @@ void strtoupper(char *source, char *dest) {
 	}
 }
 
-char *ltrim(char *src) {
+const char *ltrim(const char *src) {
 	size_t i = 0;
 
 	while (isblank(src[i])) {

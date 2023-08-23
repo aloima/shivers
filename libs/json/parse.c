@@ -3,15 +3,16 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include <json.h>
 #include <utils.h>
 
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i);
-static void parse_kv(JSONElement **parent, JSONElement **element, char *text, size_t length, size_t *i);
+static void parse_kv(JSONElement *parent, JSONElement **element, char *text, size_t length, size_t *i);
 
-// TODO: extended syntax validator
+// TODO: partial recursive freeing
 static void parse_v(JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t value_length = 0;
 	bool escaping = false;
@@ -24,32 +25,23 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			bool is_false = (strncmp(text + *i, "false", 5) == 0);
 			bool is_null = (strncmp(text + *i, "null", 4) == 0);
 
-			if (ch == ']') {
-				break;
-			} else if (ch == ' ' || ch == '\t' || ch == '\n') {
+			if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);
 				continue;
 			} else if (ch == '"') {
 				(*element)->type = JSON_STRING;
 			} else if (ch == '{') {
-				bool condition;
-
-				(*element)->type = JSON_OBJECT;
-
-				condition = (*i < length);
 				++(*i);
+				(*element)->type = JSON_OBJECT;
+				bool condition = (*i < length);
 
 				while (condition) {
 					JSONElement *sub_element = NULL;
 					bool sub_condition = true;
 
-					condition = *i < length;
-					ch = text[*i];
+					condition = (*i < length);
 
-					++(*element)->size;
-					(*element)->value = allocate((*element)->value, (*element)->size - 1, (*element)->size, sizeof(JSONElement));
-					parse_kv(element, &sub_element, text, length, i);
-					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
+					parse_kv(*element, &sub_element, text, length, i);
 					++(*i);
 
 					while (sub_condition) {
@@ -62,38 +54,44 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 						} else if (sub_ch == '}') {
 							sub_condition = false;
 							condition = false;
-
-							if (sub_element->type == JSON_UNSPECIFIED) {
-								--(*element)->size;
-							}
 						} else {
-							fprintf(stderr, "json_parse(): missing ending of object or comma\n");
 							json_free(*element);
-							break;
+							throw("json_parse(): expected value ',' or '}', but received '%c'", sub_ch);
 						}
 					}
 				}
 
 				break;
 			} else if (ch == '[') {
-				bool condition;
-
-				(*element)->type = JSON_ARRAY;
-				condition = (*i < length);
 				++(*i);
+				(*element)->type = JSON_ARRAY;
+				bool condition = (*i < length);
+				bool waiting_new_element = false;
 
 				while (condition) {
 					JSONElement *sub_element = allocate(NULL, 0, 1, sizeof(JSONElement));
 					bool sub_condition = true;
 
 					sub_element->parent = *element;
-					condition = *i < length;
-					ch = text[*i];
+					condition = (*i < length);
 
-					++(*element)->size;
-					(*element)->value = allocate((*element)->value, (*element)->size - 1, (*element)->size, sizeof(JSONElement));
-					parse_v(&sub_element, text, length, i);
-					((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
+					if (text[*i] != ']') {
+						++(*element)->size;
+						(*element)->value = allocate((*element)->value, (*element)->size - 1, (*element)->size, sizeof(JSONElement));
+						parse_v(&sub_element, text, length, i);
+						((JSONElement **) (*element)->value)[(*element)->size - 1] = sub_element;
+					} else {
+						free(sub_element);
+						condition = false;
+
+						if (waiting_new_element) {
+							json_free(*element);
+							throw("json_parse(): expected element, but received ']'");
+						}
+
+						break;
+					}
+
 					++(*i);
 
 					while (sub_condition) {
@@ -102,18 +100,15 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
 							++(*i);
 						} else if (sub_ch == ',') {
+							waiting_new_element = true;
 							sub_condition = false;
 						} else if (sub_ch == ']') {
 							sub_condition = false;
 							condition = false;
-
-							if (sub_element->type == JSON_UNSPECIFIED) {
-								--(*element)->size;
-							}
 						} else {
-							fprintf(stderr, "json_parse(): missing ending of array or comma\n");
 							json_free(*element);
-							break;
+							json_free(sub_element);
+							throw("json_parse(): expected value ',' or ']', but received '%c'", sub_ch);
 						}
 					}
 				}
@@ -130,12 +125,12 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				if (is_true) {
 					*i += 4;
 					(*element)->value = allocate((*element)->value, 0, 1, sizeof(bool));
-					((bool *) (*element)->value)[0] = 1;
+					((bool *) (*element)->value)[0] = true;
 					break;
 				} else if (is_false) {
 					*i += 5;
 					(*element)->value = allocate((*element)->value, 0, 1, sizeof(bool));
-					((bool *) (*element)->value)[0] = 0;
+					((bool *) (*element)->value)[0] = false;
 					break;
 				}
 			} else if (is_null) {
@@ -143,9 +138,18 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 				(*element)->type = JSON_NULL;
 				break;
 			} else {
-				fprintf(stderr, "json_parse(): invalid value\n");
+				JSONElement *parent = (*element)->parent;
+
+				if (parent) {
+					if (parent->type == JSON_ARRAY) {
+						--parent->size;
+					}
+
+					json_free(parent);
+				}
+
 				json_free(*element);
-				break;
+				throw("json_parse(): expected element, but received '%c'", ch);
 			}
 		} else {
 			if ((*element)->type == JSON_STRING) {
@@ -166,7 +170,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 			} else if ((*element)->type == JSON_NUMBER) {
 				if (isdigit(ch)) {
 					((long *) (*element)->value)[0] = ((((long *) (*element)->value)[0] * 10) + (ch - 48));
-				} else if (ch == '.') {
+				} else if ((*element)->size != 2 && ch == '.') {
 					(*element)->size = 2;
 					(*element)->value = allocate((*element)->value, 1, 2, sizeof(long));
 					++(*i);
@@ -196,7 +200,7 @@ static void parse_v(JSONElement **element, char *text, size_t length, size_t *i)
 	}
 }
 
-static void parse_kv(JSONElement **parent, JSONElement **element, char *text, size_t length, size_t *i) {
+static void parse_kv(JSONElement *parent, JSONElement **element, char *text, size_t length, size_t *i) {
 	size_t key_length = 0;
 	bool parsing_key = false;
 	bool parsing_value = false;
@@ -211,14 +215,15 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 			++(*i);
 			continue;
 		} else if (!parsing_key && (*element)->key == NULL) {
-			if (ch == '}') {
-				break;
-			} else if (ch == '"') {
+			if (ch == '"') {
 				parsing_key = true;
-			} else {
-				fprintf(stderr, "json_parse(): invalid starting of key\n");
+			} else if (ch == '}') {
 				json_free(*element);
 				break;
+			} else {
+				json_free(parent);
+				json_free(*element);
+				throw("json_parse(): expected value '\"', but received '%c'", ch);
 			}
 		} else if (parsing_key) {
 			if (ch == '"') {
@@ -235,12 +240,15 @@ static void parse_kv(JSONElement **parent, JSONElement **element, char *text, si
 			} else if (ch == ':') {
 				parsing_value = true;
 			} else if (parsing_value) {
+				++parent->size;
+				parent->value = allocate(parent->value, parent->size - 1, parent->size, sizeof(JSONElement));
 				parse_v(element, text, length, i);
+				((JSONElement **) parent->value)[parent->size - 1] = *element;
 				break;
 			} else {
-				fprintf(stderr, "json_parse(): missing colons\n");
+				json_free(parent);
 				json_free(*element);
-				break;
+				throw("json_parse(): expected value ':', but received '%c'", ch);
 			}
 		}
 

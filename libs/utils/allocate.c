@@ -2,7 +2,7 @@
 
 #include <utils.h>
 
-void *allocate(void *value, size_t old_count, size_t new_count, size_t size) {
+void *allocate(void *value, const size_t old_count, const size_t new_count, const size_t size) {
 	if (value == NULL) {
 		return calloc(new_count, size);
 	} else {
