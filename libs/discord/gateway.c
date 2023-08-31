@@ -95,7 +95,7 @@ static void onstart() {
 }
 
 static void onmessage(const WebsocketFrame frame) {
-	JSONElement *data = json_parse((char *) frame.payload);
+	jsonelement_t *data = json_parse((char *) frame.payload);
 	char *event_name = json_get_val(data, "t").value.string;
 	unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
 
@@ -125,7 +125,7 @@ static void onmessage(const WebsocketFrame frame) {
 					}
 				}
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
-				JSONElement *message = json_get_val(data, "d").value.object;
+				jsonelement_t *message = json_get_val(data, "d").value.object;
 				on_message_create(client, &message);
 			}
 

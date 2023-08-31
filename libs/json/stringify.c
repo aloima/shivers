@@ -8,7 +8,7 @@
 #include <json.h>
 #include <utils.h>
 
-char *json_stringify(JSONElement *element) {
+char *json_stringify(jsonelement_t *element) {
 	char *result = NULL;
 
 	if (element->type == JSON_STRING) {
@@ -67,7 +67,7 @@ char *json_stringify(JSONElement *element) {
 		strncat(result, "{", 1);
 
 		for (i = 0; i < element->size; ++i) {
-			JSONElement *data = ((JSONElement **) element->value)[i];
+			jsonelement_t *data = ((jsonelement_t **) element->value)[i];
 			char *value = json_stringify(data);
 			size_t key_length = strlen(data->key);
 			size_t value_length = strlen(value);
@@ -96,7 +96,7 @@ char *json_stringify(JSONElement *element) {
 		strncat(result, "[", 1);
 
 		for (i = 0; i < element->size; ++i) {
-			JSONElement *data = ((JSONElement **) element->value)[i];
+			jsonelement_t *data = ((jsonelement_t **) element->value)[i];
 			char *value = json_stringify(data);
 			size_t value_length = strlen(value);
 			bool has_comma = (element->size != (i + 1));

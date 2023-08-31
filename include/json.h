@@ -13,35 +13,37 @@
 	#define JSON_ARRAY 5
 	#define JSON_NULL 6
 
-	typedef struct {
+	struct JSONElement {
 		char type;
 		char *key;
 		void *value;
-		void *parent;
+		struct JSONElement *parent;
 		size_t size;
-	} JSONElement;
+	};
+
+	typedef struct JSONElement jsonelement_t;
 
 	typedef union {
 		char *string;
 		float number;
 		bool boolean;
-		JSONElement *object;
-		JSONElement *array;
-	} JSONValue;
+		struct JSONElement *object;
+		struct JSONElement *array;
+	} jsonvalue_t;
 
 	typedef struct {
-		JSONValue value;
+		jsonvalue_t value;
 		bool exist;
 		char type;
-	} JSONResult;
+	} jsonresult_t;
 
-	JSONElement *json_parse(char *text);
-	void json_free(JSONElement *element);
+	jsonelement_t *json_parse(const char *text);
+	void json_free(jsonelement_t *element);
 
-	char *json_stringify(JSONElement *element);
+	char *json_stringify(jsonelement_t *element);
 
-	JSONResult json_get_val(JSONElement *element, const char *search);
+	jsonresult_t json_get_val(jsonelement_t *element, const char *search);
 
-	JSONElement *create_empty_json_element(bool is_array);
-	void add_json_element(JSONElement **object, const char *key, void *data, const char type); // use long for integers
+	jsonelement_t *create_empty_json_element(bool is_array);
+	void add_json_element(jsonelement_t **object, const char *key, void *data, const char type);
 #endif

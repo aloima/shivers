@@ -12,7 +12,7 @@
 	} Cache;
 
 	typedef struct {
-		JSONElement *user;
+		jsonelement_t *user;
 		unsigned long ready_at;
 		char *token;
 	} Client;

@@ -1,23 +1,50 @@
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <json.h>
 
-void json_free(JSONElement *element) {
-	if (element->type != JSON_NUMBER) {
-		for (size_t i = 0; i < element->size; ++i) {
-			json_free(((JSONElement **) element->value)[i]);
+static void free_elements(jsonelement_t *parent) {
+	for (size_t i = 0; i < parent->size; ++i) {
+		jsonelement_t *element = ((jsonelement_t **) parent->value)[i];
+
+		if (element) {
+			if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {
+				free_elements(element);
+			} else {
+				if (element->key) {
+					free(element->key);
+				}
+
+				if (element->value) {
+					free(element->value);
+				}
+
+				free(element);
+			}
 		}
 	}
 
-	if (element->key) {
-		free(element->key);
+	if (parent->key) {
+		free(parent->key);
 	}
 
-	if (element->value) {
-		free(element->value);
+	if (parent->value) {
+		free(parent->value);
 	}
 
-	if (element) {
-		free(element);
+	free(parent);
+}
+
+void json_free(jsonelement_t *element) {
+	jsonelement_t *top = element;
+
+	while (true) {
+		if (top->parent) {
+			top = top->parent;
+		} else {
+			break;
+		}
 	}
+
+	free_elements(top);
 }

@@ -80,7 +80,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	char path[64] = {0};
 	sprintf(path, "/channels/%s/messages", channel_id);
 
-	JSONElement *embed_data = create_empty_json_element(false);
+	jsonelement_t *embed_data = create_empty_json_element(false);
 
 	if (embed.title) {
 		add_json_element(&embed_data, "title", embed.title, JSON_STRING);
@@ -95,7 +95,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	}
 
 	if (embed.image_url) {
-		JSONElement *image = create_empty_json_element(false);
+		jsonelement_t *image = create_empty_json_element(false);
 		add_json_element(&image, "url", embed.image_url, JSON_STRING);
 		add_json_element(&embed_data, "image", image, JSON_OBJECT);
 
@@ -103,7 +103,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	}
 
 	if (embed.thumbnail_url) {
-		JSONElement *thumbnail = create_empty_json_element(false);
+		jsonelement_t *thumbnail = create_empty_json_element(false);
 		add_json_element(&thumbnail, "url", embed.thumbnail_url, JSON_STRING);
 		add_json_element(&embed_data, "thumbnail", thumbnail, JSON_OBJECT);
 
@@ -111,7 +111,7 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	}
 
 	if (embed.author.name) {
-		JSONElement *author = create_empty_json_element(false);
+		jsonelement_t *author = create_empty_json_element(false);
 
 		add_json_element(&author, "name", embed.author.name, JSON_STRING);
 		if (embed.author.url) add_json_element(&author, "url", embed.author.url, JSON_STRING);
@@ -122,10 +122,10 @@ void send_embed(Client client, const char *channel_id, Embed embed) {
 	}
 
 	if (embed.fields) {
-		JSONElement *fields = create_empty_json_element(true);
+		jsonelement_t *fields = create_empty_json_element(true);
 
 		for (short i = 0; i < embed.field_size; ++i) {
-			JSONElement *field_data = create_empty_json_element(false);
+			jsonelement_t *field_data = create_empty_json_element(false);
 			EmbedField field = embed.fields[i];
 
 			add_json_element(&field_data, "name", field.name, JSON_STRING);

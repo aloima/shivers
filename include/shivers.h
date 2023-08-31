@@ -18,7 +18,7 @@
 	};
 
 	struct Command {
-		void (*execute)(Client client, JSONElement **message, Split args);
+		void (*execute)(Client client, jsonelement_t **message, Split args);
 		char *name;
 		char *description;
 		char **args;
@@ -31,7 +31,7 @@
 
 	void setup_cooldown_memory();
 	void free_cooldown_memory();
-	void run_with_cooldown(char *user_id, void (*command)(Client client, JSONElement **message, Split args), Client client, JSONElement **message, Split args);
+	void run_with_cooldown(char *user_id, void (*command)(Client client, jsonelement_t **message, Split args), Client client, jsonelement_t **message, Split args);
 
 	void add_cooldown(char *user_id);
 	void remove_cooldown(char *user_id);
@@ -40,7 +40,7 @@
 
 	void on_ready(Client client);
 	void on_force_close();
-	void on_message_create(Client client, JSONElement **message);
+	void on_message_create(Client client, jsonelement_t **message);
 
 	extern struct Command about;
 	extern struct Command avatar;

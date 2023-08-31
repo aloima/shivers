@@ -4,7 +4,7 @@
 #include <utils.h>
 #include <json.h>
 
-void on_message_create(Client client, JSONElement **message) {
+void on_message_create(Client client, jsonelement_t **message) {
 	char *content = json_get_val(*message, "content").value.string;
 	size_t prefix_length = strlen(PREFIX);
 

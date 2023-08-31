@@ -5,7 +5,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(Client client, JSONElement **message, Split args) {
+static void execute(Client client, jsonelement_t **message, Split args) {
 	const struct Command *commands = get_commands();
 	const size_t command_size = get_command_size();
 

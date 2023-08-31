@@ -7,7 +7,7 @@
 
 #define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
 
-static void execute(Client client, JSONElement **message, Split args) {
+static void execute(Client client, jsonelement_t **message, Split args) {
 	Embed embed = {0};
 
 	char avatar_url[128] = {0};
@@ -37,7 +37,7 @@ static void execute(Client client, JSONElement **message, Split args) {
 				sprintf(path, "/users/%s", user_id);
 
 				Response response = api_request(client.token, path, "GET", NULL);
-				JSONElement *user = json_parse(response.data);
+				jsonelement_t *user = json_parse(response.data);
 				char *avatar_hash = json_get_val(user, "avatar").value.string;
 				char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
 

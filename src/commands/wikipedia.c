@@ -6,7 +6,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(Client client, JSONElement **message, Split args) {
+static void execute(Client client, jsonelement_t **message, Split args) {
 	if (args.size != 1) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
@@ -19,8 +19,8 @@ static void execute(Client client, JSONElement **message, Split args) {
 		config.url = search_url;
 
 		Response search_response = request(config);
-		JSONElement *search_result = json_parse(search_response.data);
-		JSONResult page_name = json_get_val(search_result, "1.0");
+		jsonelement_t *search_result = json_parse(search_response.data);
+		jsonresult_t page_name = json_get_val(search_result, "1.0");
 
 		if (page_name.exist) {
 			char url[512] = {0};
@@ -28,8 +28,8 @@ static void execute(Client client, JSONElement **message, Split args) {
 			config.url = url;
 
 			Response info_response = request(config);
-			JSONElement *info_data = json_parse(info_response.data);
-			JSONElement *page_info = ((JSONElement **) json_get_val(info_data, "query.pages").value.object->value)[0];
+			jsonelement_t *info_data = json_parse(info_response.data);
+			jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
 			Embed embed = {0};
 
 			char *title = json_get_val(page_info, "title").value.string;
@@ -40,7 +40,7 @@ static void execute(Client client, JSONElement **message, Split args) {
 			embed.description = json_get_val(page_info, "pageprops.wikibase-shortdesc").value.string;
 			set_embed_author(&embed, title, page_url, NULL);
 
-			JSONResult image_name = json_get_val(page_info, "pageprops.page_image_free");
+			jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
 
 			if (image_name.exist) {
 				char image_url[512] = {0};
@@ -48,8 +48,8 @@ static void execute(Client client, JSONElement **message, Split args) {
 				config.url = image_url;
 
 				Response image_response = request(config);
-				JSONElement *image_data = json_parse(image_response.data);
-				JSONElement *image_info = ((JSONElement **) json_get_val(image_data, "query.pages").value.object->value)[0];
+				jsonelement_t *image_data = json_parse(image_response.data);
+				jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
 				embed.image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
 
 				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);

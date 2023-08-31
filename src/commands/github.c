@@ -10,7 +10,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(Client client, JSONElement **message, Split args) {
+static void execute(Client client, jsonelement_t **message, Split args) {
 	if (args.size != 1) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
@@ -39,10 +39,10 @@ static void execute(Client client, JSONElement **message, Split args) {
 			if (response.status.code == 404) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
 			} else {
-				JSONElement *user = json_parse(response.data);
-				JSONResult login_data = json_get_val(user, "login");
-				JSONResult name_data = json_get_val(user, "name");
-				JSONResult bio = json_get_val(user, "bio");
+				jsonelement_t *user = json_parse(response.data);
+				jsonresult_t login_data = json_get_val(user, "login");
+				jsonresult_t name_data = json_get_val(user, "name");
+				jsonresult_t bio = json_get_val(user, "bio");
 
 				char following[24] = {0};
 				sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
@@ -59,7 +59,7 @@ static void execute(Client client, JSONElement **message, Split args) {
 				char given_stars[24] = {0};
 				sprintf(url, "https://api.github.com/users/%s/starred", args.data[0]);
 				config.url = url;
-				JSONElement *stars_json = json_parse(response.data);
+				jsonelement_t *stars_json = json_parse(response.data);
 				sprintf(given_stars, "%ld", stars_json->size);
 				json_free(stars_json);
 
@@ -106,10 +106,10 @@ static void execute(Client client, JSONElement **message, Split args) {
 			if (response.status.code == 404) {
 				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
 			} else {
-				JSONElement *repository = json_parse(response.data);
-				JSONResult description = json_get_val(repository, "description");
-				JSONResult language = json_get_val(repository, "language");
-				JSONResult license = json_get_val(repository, "license");
+				jsonelement_t *repository = json_parse(response.data);
+				jsonresult_t description = json_get_val(repository, "description");
+				jsonresult_t language = json_get_val(repository, "language");
+				jsonresult_t license = json_get_val(repository, "license");
 
 				char stars[24] = {0};
 				char watchers[24] = {0};

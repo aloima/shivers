@@ -20,7 +20,7 @@ void free_cooldown_memory() {
 	free(cooldown_memory);
 }
 
-void run_with_cooldown(char *user_id, void (*command)(Client client, JSONElement **message, Split args), Client client, JSONElement **message, Split args) {
+void run_with_cooldown(char *user_id, void (*command)(Client client, jsonelement_t **message, Split args), Client client, jsonelement_t **message, Split args) {
 	unsigned long target = (get_cooldown(user_id).timestamp + 3000);
 	unsigned long current = get_timestamp(NULL);
 

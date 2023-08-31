@@ -14,7 +14,7 @@
 #define SECONDS_IN_HOUR (60 * 60)
 #define SECONDS_IN_MINUTE (60)
 
-static void execute(Client client, JSONElement **message, Split args) {
+static void execute(Client client, jsonelement_t **message, Split args) {
 	Embed embed = {0};
 
 	struct rusage r_usage;
