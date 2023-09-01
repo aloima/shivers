@@ -14,13 +14,16 @@
 #include <network.h>
 
 URL parse_url(const char *data) {
-	URL url;
-	memset(&url, 0, sizeof(URL));
+	URL url = {0};
+	Split splitter = split(data, "/");
 
-	Split splitter = split((char *) data, "/");
+	if (splitter.size < 3) {
+		throw("request(): invalid url format");
+	}
+
 	Split hostname_splitter = split(splitter.data[2], ":");
 
-	size_t protocol_length = strlen(splitter.data[0]);
+	const size_t protocol_length = strlen(splitter.data[0]);
 	url.protocol = allocate(NULL, 0, protocol_length, sizeof(char));
 	strncpy(url.protocol, splitter.data[0], protocol_length - 1);
 
@@ -37,9 +40,15 @@ URL parse_url(const char *data) {
 		}
 	}
 
-	url.path = allocate(NULL, 0, calculate_join(splitter.data + 3, splitter.size - 3, "/") + 2, sizeof(char));
-	url.path[0] = '/';
-	join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
+	if (splitter.size == 3) {
+		url.path = allocate(NULL, 0, 2, sizeof(char));
+		url.path[0] = '/';
+		join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
+	} else {
+		const size_t join_length = calculate_join(splitter.data + 3, splitter.size - 3, "/");
+		url.path = allocate(NULL, 0, join_length + 2, sizeof(char));
+		url.path[0] = '/';
+	}
 
 	split_free(&splitter);
 	split_free(&hostname_splitter);

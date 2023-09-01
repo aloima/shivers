@@ -16,13 +16,12 @@
 #include <utils.h>
 
 static char check_config(RequestConfig config) {
-	char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
-	size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
+	const char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
+	const size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
 	bool is_allowed_method = false;
 
 	if (config.method == NULL || config.url == NULL) {
-		fprintf(stderr, "request(): url and method members are necessary\n");
-		exit(EXIT_FAILURE);
+		throw("request(): url and method members are necessary");
 	}
 
 	for (size_t i = 0; i < allowed_methods_length; ++i) {
@@ -33,8 +32,7 @@ static char check_config(RequestConfig config) {
 	}
 
 	if (!is_allowed_method) {
-		fprintf(stderr, "request(): %s is invalid method\n", config.method);
-		exit(EXIT_FAILURE);
+		throw("request(): %s is invalid method", config.method);
 	}
 
 	return 1;
@@ -73,10 +71,7 @@ Response request(RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message[2048] = {0};
-		memset(&request_message, 0, sizeof(request_message));
-
-		char buffer[1024] = {0}, *response_message = NULL;
+		char request_message[2048] = {0}, buffer[1024] = {0}, *response_message = NULL;
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -121,7 +116,7 @@ Response request(RequestConfig config) {
 
 		size_t request_message_length = strlen(request_message);
 
-		if ((tls ? SSL_write(ssl, request_message, request_message_length) : write(sockfd, request_message, request_message_length)) <= 0) {
+		if (_write(ssl, sockfd, request_message, request_message_length) <= 0) {
 			close_socket(sockfd, ssl);
 			throw_network("write()", tls);
 		}
@@ -129,7 +124,7 @@ Response request(RequestConfig config) {
 		size_t read_size = 0;
 		size_t response_message_length = 0;
 
-		while ((read_size = (size_t) (tls ? SSL_read(ssl, buffer, 1023) : read(sockfd, buffer, 1023))) > 0) {
+		while ((read_size = _read(ssl, sockfd, buffer, 1023)) > 0) {
 			if (errno != 0) {
 				close_socket(sockfd, ssl);
 				throw_network("read()", tls);
@@ -142,10 +137,12 @@ Response request(RequestConfig config) {
 
 		Split line_splitter = split(response_message, "\r\n");
 		Split status_splitter = split(line_splitter.data[0], " ");
-		size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
-		response.status.code = (short) atoi(status_splitter.data[1]);
+		const size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
+
+		response.status.code = atoi(status_splitter.data[1]);
 		response.status.message = allocate(NULL, 0, status_message_length + 1, sizeof(char));
 		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
+
 		split_free(&status_splitter);
 
 		size_t i = 0;
@@ -155,14 +152,19 @@ Response request(RequestConfig config) {
 				break;
 			} else {
 				Split header_splitter = split(line_splitter.data[i], ": ");
-				size_t name_length = strlen(header_splitter.data[0]);
-				size_t value_length = strlen(header_splitter.data[1]);
 
 				response.headers = allocate(response.headers, i - 1, i, sizeof(Header));
-				response.headers[i - 1].name = allocate(NULL, 0, name_length + 1, sizeof(char));
-				response.headers[i - 1].value = allocate(NULL, 0, value_length + 1, sizeof(char));
-				strncpy(response.headers[i - 1].name, header_splitter.data[0], name_length);
-				strncpy(response.headers[i - 1].value, header_splitter.data[1], value_length);
+				Header *header = &response.headers[i - 1];
+
+				const char *name = header_splitter.data[0];
+				const char *value = header_splitter.data[1];
+				const size_t name_length = strlen(name);
+				const size_t value_length = strlen(value);
+
+				header->name = allocate(NULL, 0, name_length + 1, sizeof(char));
+				header->value = allocate(NULL, 0, value_length + 1, sizeof(char));
+				strncpy(header->name, name, name_length);
+				strncpy(header->value, value, value_length);
 				++response.header_size;
 
 				split_free(&header_splitter);
@@ -170,16 +172,16 @@ Response request(RequestConfig config) {
 		}
 
 		size_t response_data_length = 0;
-		char *te_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
+		const char *transfer_encoding_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
-		if (te_value != NULL && strcmp(te_value, "chunked") == 0) {
+		if (transfer_encoding_value != NULL && strcmp(transfer_encoding_value, "chunked") == 0) {
 			size_t response_read_data_length = 0;
 			response_data_length = ahtoi(line_splitter.data[i + 1]);
 			response.data = allocate(NULL, 0, response_data_length + 1, sizeof(char));
 			i += 2;
 
 			while (i < line_splitter.size && response_read_data_length != response_data_length) {
-				size_t line_length = strlen(line_splitter.data[i]);
+				const size_t line_length = strlen(line_splitter.data[i]);
 				strncat(response.data, line_splitter.data[i], line_length);
 				response_read_data_length += line_length;
 
@@ -191,9 +193,9 @@ Response request(RequestConfig config) {
 		} else {
 			while (i < line_splitter.size) {
 				if (line_splitter.data[i][0] != 0) {
-					bool last_line = ((i + 1) == line_splitter.size);
-					size_t line_length = strlen(line_splitter.data[i]);
-					response_data_length += (line_length + (!last_line ? 1 : 0));
+					const bool last_line = ((i + 1) == line_splitter.size);
+					const size_t line_length = strlen(line_splitter.data[i]);
+					response_data_length += (line_length + !last_line);
 					response.data = allocate(response.data, response_data_length - line_length - !last_line + 1, response_data_length + 1, sizeof(char));
 					strncat(response.data, line_splitter.data[i], line_length);
 
