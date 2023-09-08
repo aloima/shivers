@@ -43,11 +43,11 @@ URL parse_url(const char *data) {
 	if (splitter.size == 3) {
 		url.path = allocate(NULL, 0, 2, sizeof(char));
 		url.path[0] = '/';
-		join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
 	} else {
 		const size_t join_length = calculate_join(splitter.data + 3, splitter.size - 3, "/");
 		url.path = allocate(NULL, 0, join_length + 2, sizeof(char));
 		url.path[0] = '/';
+		join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
 	}
 
 	split_free(&splitter);
