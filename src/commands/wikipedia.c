@@ -6,16 +6,21 @@
 #include <utils.h>
 #include <json.h>
 
+// TODO: add url escaping for ' ' => "%20"
+
 static void execute(Client client, jsonelement_t **message, Split args) {
-	if (args.size != 1) {
+	if (args.size == 0) {
 		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
 		return;
 	} else {
 		RequestConfig config = {0};
 		config.method = "GET";
 
+		char search_query[512] = {0};
+		join(args.data, search_query, args.size, " ");
+
 		char search_url[512] = {0};
-		sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", args.data[0]);
+		sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", search_query);
 		config.url = search_url;
 
 		Response search_response = request(config);

@@ -21,7 +21,7 @@ static char token[256] = {0};
 static size_t ready_guild_size = 0;
 static bool handled_ready_guilds = false;
 
-static Client client;
+static Client client = {0};
 
 static unsigned long previous_heartbeat_sent_at = 0;
 static unsigned long heartbeat_sent_at = 0;
@@ -90,14 +90,13 @@ static void send_identify() {
 
 static void onstart() {
 	create_caches();
-	memset(&client, 0, sizeof(Client));
 	puts("Websocket is started.");
 }
 
 static void onmessage(const WebsocketFrame frame) {
 	jsonelement_t *data = json_parse((char *) frame.payload);
-	char *event_name = json_get_val(data, "t").value.string;
-	unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
+	const char *event_name = json_get_val(data, "t").value.string;
+	const unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
 
 	switch (op) {
 		case 0: {
@@ -133,7 +132,7 @@ static void onmessage(const WebsocketFrame frame) {
 		}
 
 		case 10: {
-			heartbeat_interval = (unsigned short) json_get_val(data, "d.heartbeat_interval").value.number;
+			heartbeat_interval = json_get_val(data, "d.heartbeat_interval").value.number;
 			send_identify();
 			send_heartbeat();
 			pthread_create(&heartbeat_thread, NULL, start_heartbeat_thread, NULL);

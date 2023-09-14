@@ -114,7 +114,13 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 								size_t received = 0;
 
 								while (received != frame.payload_length) {
-									received += _read(websocket->ssl, websocket->sockfd, frame.payload + received, 512);
+									size_t diff = (frame.payload_length - received);
+
+									if (diff > 512) {
+										received += _read(websocket->ssl, websocket->sockfd, frame.payload + received, 512);
+									} else {
+										received += _read(websocket->ssl, websocket->sockfd, frame.payload + received, diff);
+									}
 								}
 
 								if (websocket->methods.onmessage) {
@@ -145,9 +151,9 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 
 					_write(websocket->ssl, websocket->sockfd, tbs.data, tbs.size);
 
-					for (int i = 0; i < websocket->tbs_size; ++i) {
+					for (size_t i = 0; i < websocket->tbs_size; ++i) {
 						if ((i + 1) != websocket->tbs_size) {
-							websocket->tbs[i].data = allocate(NULL, 0, websocket->tbs[i + 1].size + 1, sizeof(char));
+							websocket->tbs[i].data = allocate(websocket->tbs[i].data, 0, websocket->tbs[i + 1].size + 1, sizeof(char));
 							websocket->tbs[i].size = websocket->tbs[i + 1].size;
 							memcpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
 						}
@@ -236,7 +242,7 @@ static void switch_protocols(Websocket *websocket) {
 }
 
 void send_websocket_message(Websocket *websocket, const char *message) {
-	unsigned char *data = NULL;	
+	unsigned char *data = NULL;
 	size_t message_length = strlen(message);
 	size_t data_length = message_length;
 	unsigned char masking_key[5] = {0};
@@ -284,10 +290,9 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 
 
 Websocket create_websocket(const char *url, const WebsocketMethods methods) {
-	Websocket websocket;
-	memset(&websocket, 0, sizeof(Websocket));
-
+	Websocket websocket = {0};
 	websocket.methods = methods;
+
 	initialize_websocket(&websocket, url);
 	create_epoll(&websocket);
 
@@ -350,13 +355,23 @@ void connect_websocket(Websocket *websocket) {
 }
 
 void close_websocket(Websocket *websocket, const short code, const char *reason) {
-	unregister_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
-	websocket->connected = false;
-	websocket->closed = true;
-	close(websocket->epollfd);
+	if (websocket->connected && !websocket->closed) {
+		unregister_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
 
+		websocket->connected = false;
+		websocket->closed = true;
+
+		close(websocket->epollfd);
+		close_socket(websocket->sockfd, websocket->ssl);
+	}
+
+
+	for (size_t i = 0; i < websocket->tbs_size; ++i) {
+		free(websocket->tbs[i].data);
+	}
+
+	free(websocket->tbs);
 	free_url(websocket->url);
-	close_socket(websocket->sockfd, websocket->ssl);
 
 	if (websocket->methods.onclose) {
 		websocket->methods.onclose(code, reason);
