@@ -24,7 +24,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
 
 	char guilds[8] = {0};
-	sprintf(guilds, "%ld", get_cache_size(get_guilds_cache()));
+	sprintf(guilds, "%ld", get_guilds_cache()->size);
 
 	char latency[8] = {0};
 	sprintf(latency, "%dms", get_latency());

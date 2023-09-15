@@ -46,9 +46,7 @@
 	void create_caches();
 	void clear_cache(Cache *cache);
 	void add_to_cache(Cache *cache, const char *data);
-	size_t get_cache_size(Cache *cache);
-	void remove_from_cache_index(Cache *cache, size_t index);
-	const char *get_cache_data_from_index(Cache *cache, size_t index);
+	void remove_from_cache_index(Cache *cache, const size_t index);
 
 	Cache *get_guilds_cache();
 
