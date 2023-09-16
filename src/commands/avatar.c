@@ -61,7 +61,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
 }
 
-struct Command avatar = {
+const struct Command avatar = {
 	.execute = execute,
 	.name = "avatar",
 	.description = "Sends the avatar of the user",

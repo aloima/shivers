@@ -13,17 +13,18 @@ void split_free(Split *value) {
 }
 
 Split split(const char *text, const char *separator) {
-	size_t length = strlen(text);
-	size_t separator_length = strlen(separator);
+	const size_t length = strlen(text);
+	const size_t separator_length = strlen(separator);
 	size_t data_length = 0;
 
-	Split result = {0};
-	result.data = allocate(NULL, 0, 1, sizeof(char *));
-	result.size = 1;
+	Split result = {
+		.data = allocate(NULL, 0, 1, sizeof(char *)),
+		.size = 1
+	};
 
 	for (size_t i = 0; i < length; ++i) {
 		char **data = &result.data[result.size - 1];
-		char ch = text[i];
+		const char ch = text[i];
 
 		if (ch != separator[0]) {
 			++data_length;

@@ -67,7 +67,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	}
 }
 
-struct Command help = {
+const struct Command help = {
 	.execute = execute,
 	.name = "help",
 	.description = "Sends help page",

@@ -75,7 +75,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	}
 }
 
-struct Command wikipedia = {
+const struct Command wikipedia = {
 	.execute = execute,
 	.name = "wikipedia",
 	.description = "Sends short info from Wikipedia",

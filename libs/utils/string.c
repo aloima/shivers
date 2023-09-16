@@ -4,10 +4,10 @@
 #include <utils.h>
 
 void strtolower(char *source, const char *dest) {
-	size_t length = strlen(dest);
+	const size_t length = strlen(dest);
 
 	for (size_t i = 0; i < length; ++i) {
-		char ch = dest[i];
+		const char ch = dest[i];
 
 		if (isupper(ch)) {
 			source[i] = tolower(ch);
@@ -18,10 +18,10 @@ void strtolower(char *source, const char *dest) {
 }
 
 void strtoupper(char *source, const char *dest) {
-	size_t length = strlen(dest);
+	const size_t length = strlen(dest);
 
 	for (size_t i = 0; i < length; ++i) {
-		char ch = dest[i];
+		const char ch = dest[i];
 
 		if (islower(ch)) {
 			source[i] = toupper(ch);

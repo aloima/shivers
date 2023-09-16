@@ -3,11 +3,11 @@
 
 #include <utils.h>
 
-size_t calculate_join(char **value, size_t size, char *separator) {
+size_t calculate_join(char **value, size_t size, const char *separator) {
 	size_t source_length = (strlen(separator) * (size - 1));
 
 	for (size_t i = 0; size != 0; ++i) {
-		size_t string_length = strlen(value[i]);
+		const size_t string_length = strlen(value[i]);
 
 		if (string_length != 0) {
 			source_length += string_length;
@@ -18,14 +18,14 @@ size_t calculate_join(char **value, size_t size, char *separator) {
 	return source_length;
 }
 
-size_t join(char **value, char *source, size_t size, char *separator) {
-	size_t separator_length = strlen(separator);
-	size_t source_length = (separator_length * (size - 1));
+size_t join(char **value, char *source, size_t size, const char *separator) {
+	const size_t separator_length = strlen(separator);
+	const size_t source_length = (separator_length * (size - 1));
 
 	for (size_t i = 0; size != 0; ++i) {
-		char *data = value[i];
-		size_t length = strlen(data);
-		bool has_separator = (size != 1);
+		const char *data = value[i];
+		const size_t length = strlen(data);
+		const bool has_separator = (size != 1);
 
 		if (length != 0) {
 			strncat(source, data, length);

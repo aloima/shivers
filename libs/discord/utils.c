@@ -6,7 +6,7 @@
 #include <discord.h>
 #include <network.h>
 
-const unsigned int get_all_intents() {
+unsigned int get_all_intents() {
 	unsigned int result = 0;
 
 	for (int i = 0; i <= 21; ++i) {
@@ -16,17 +16,18 @@ const unsigned int get_all_intents() {
 	return result;
 }
 
-Response api_request(char *token, char *path, char *method, char *body) {
+Response api_request(const char *token, const char *path, const char *method, const char *body) {
 	char url[256] = {0};
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
 	char authorization[128] = {0};
 	sprintf(authorization, "Bot %s", token);
 
-	RequestConfig config = {0};
-	config.url = url;
-	config.method = method;
-	config.headers = allocate(NULL, 0, 2 + (body ? 1 : 0), sizeof(Header));
+	RequestConfig config = {
+		.url = url,
+		.method = (char *) method,
+		.headers = allocate(NULL, 0, 2 + !!body, sizeof(Header))
+	};
 
 	config.headers[0] = (Header) {
 		.name = "Authorization",
@@ -173,7 +174,7 @@ void set_embed_author(Embed *embed, char *name, char *url, char *icon_url) {
 	};
 }
 
-bool check_snowflake(char *snowflake) {
+bool check_snowflake(const char *snowflake) {
 	size_t length = strlen(snowflake);
 
 	if (length != 18) {

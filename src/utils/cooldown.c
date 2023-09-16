@@ -38,19 +38,21 @@ void run_with_cooldown(char *user_id, void (*command)(Client client, jsonelement
 	}
 }
 
-void add_cooldown(char *user_id) {
+void add_cooldown(const char *user_id) {
 	++cooldown_memory->size;
 	cooldown_memory->cooldowns = allocate(cooldown_memory->cooldowns, cooldown_memory->size - 1, cooldown_memory->size, sizeof(struct Cooldown));
 
-	struct Cooldown cooldown;
-	cooldown.timestamp = get_timestamp(NULL);
-	cooldown.user_id = allocate(NULL, 0, strlen(user_id) + 1, sizeof(char));
+	struct Cooldown cooldown = {
+		.timestamp = get_timestamp(NULL),
+		.user_id = allocate(NULL, 0, strlen(user_id) + 1, sizeof(char))
+	};
+
 	strcpy(cooldown.user_id, user_id);
 
 	memcpy(cooldown_memory->cooldowns + cooldown_memory->size - 1, &cooldown, sizeof(struct Cooldown));
 }
 
-void remove_cooldown(char *user_id) {
+void remove_cooldown(const char *user_id) {
 	size_t at = 0;
 
 	for (size_t i = 0; i < cooldown_memory->size; ++i) {
@@ -71,7 +73,7 @@ void remove_cooldown(char *user_id) {
 	cooldown_memory->cooldowns = allocate(cooldown_memory->cooldowns, cooldown_memory->size + 1, cooldown_memory->size, sizeof(struct Cooldown));
 }
 
-bool has_cooldown(char *user_id) {
+bool has_cooldown(const char *user_id) {
 	bool result = false;
 
 	for (size_t i = 0; i < cooldown_memory->size; ++i) {
@@ -84,9 +86,8 @@ bool has_cooldown(char *user_id) {
 	return result;
 }
 
-struct Cooldown get_cooldown(char *user_id) {
-	struct Cooldown cooldown;
-	memset(&cooldown, 0, sizeof(struct Cooldown));
+struct Cooldown get_cooldown(const char *user_id) {
+	struct Cooldown cooldown = {0};
 
 	for (size_t i = 0; i < cooldown_memory->size; ++i) {
 		if (strcmp(cooldown_memory->cooldowns[i].user_id, user_id) == 0) {

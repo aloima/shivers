@@ -15,8 +15,8 @@
 
 	void *allocate(void *value, const size_t old_count, const size_t new_count, const size_t size);
 
-	size_t join(char **value, char *source, size_t size, char *separator);
-	size_t calculate_join(char **value, size_t size, char *separator);
+	size_t join(char **value, char *source, size_t size, const char *separator);
+	size_t calculate_join(char **value, size_t size, const char *separator);
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);
@@ -25,9 +25,9 @@
 	size_t ahtoi(const char *data);
 	char *base64_encode(const char *data, const size_t data_length);
 
-	const size_t char_at(const char *data, const char ch);
+	size_t char_at(const char *data, const char ch);
 
-	const unsigned long get_timestamp(struct timeval *val);
+	unsigned long get_timestamp(const struct timeval *val);
 
 	void throw(const char *format, ...);
 #endif

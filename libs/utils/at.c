@@ -1,6 +1,6 @@
 #include <string.h>
 
-const size_t char_at(const char *data, const char ch) {
+size_t char_at(const char *data, const char ch) {
 	const size_t size = strlen(data);
 	size_t result = -1;
 

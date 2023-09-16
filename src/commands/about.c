@@ -110,7 +110,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	free(embed.fields);
 }
 
-struct Command about = {
+const struct Command about = {
 	.execute = execute,
 	.name = "about",
 	.description = "Sends bot information",

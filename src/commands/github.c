@@ -143,7 +143,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	}
 }
 
-struct Command github = {
+const struct Command github = {
 	.execute = execute,
 	.name = "github",
 	.description = "Fetches data from GitHub and sends them",

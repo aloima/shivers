@@ -33,18 +33,18 @@
 	void free_cooldown_memory();
 	void run_with_cooldown(char *user_id, void (*command)(Client client, jsonelement_t **message, Split args), Client client, jsonelement_t **message, Split args);
 
-	void add_cooldown(char *user_id);
-	void remove_cooldown(char *user_id);
-	bool has_cooldown(char *user_id);
-	struct Cooldown get_cooldown(char *user_id);
+	void add_cooldown(const char *user_id);
+	void remove_cooldown(const char *user_id);
+	bool has_cooldown(const char *user_id);
+	struct Cooldown get_cooldown(const char *user_id);
 
 	void on_ready(Client client);
 	void on_force_close();
 	void on_message_create(Client client, jsonelement_t **message);
 
-	extern struct Command about;
-	extern struct Command avatar;
-	extern struct Command github;
-	extern struct Command help;
-	extern struct Command wikipedia;
+	extern const struct Command about;
+	extern const struct Command avatar;
+	extern const struct Command github;
+	extern const struct Command help;
+	extern const struct Command wikipedia;
 #endif

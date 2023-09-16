@@ -2,13 +2,13 @@
 
 #include <sys/time.h>
 
-const unsigned long get_timestamp(struct timeval *val) {
+unsigned long get_timestamp(const struct timeval *val) {
 	if (val == NULL) {
 		struct timeval timestamp;
 		gettimeofday(&timestamp, NULL);
 		return ((timestamp.tv_sec * 1000) + (timestamp.tv_usec / 1000));
 	} else {
-		struct timeval *timestamp = val;
+		const struct timeval *timestamp = val;
 		return ((timestamp->tv_sec * 1000) + (timestamp->tv_usec / 1000));
 	}
 }

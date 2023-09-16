@@ -5,10 +5,11 @@
 #include <json.h>
 
 void on_message_create(Client client, jsonelement_t **message) {
-	char *content = json_get_val(*message, "content").value.string;
-	size_t prefix_length = strlen(PREFIX);
+	const bool is_webhook = json_get_val(*message, "webhook_id").exist;
+	const char *content = json_get_val(*message, "content").value.string;
+	const size_t prefix_length = strlen(PREFIX);
 
-	if (content != NULL && strncmp(content, PREFIX, prefix_length) == 0) {
+	if (content != NULL && !is_webhook && strncmp(content, PREFIX, prefix_length) == 0) {
 		Split splitted = split(content + prefix_length, " ");
 		Split args = {
 			.data = splitted.data + 1,
@@ -22,7 +23,7 @@ void on_message_create(Client client, jsonelement_t **message) {
 		const struct Command *commands = get_commands();
 
 		for (size_t i = 0; i < command_size; ++i) {
-			struct Command command = commands[i];
+			const struct Command command = commands[i];
 
 			if (strcmp(input, command.name) == 0) {
 				run_with_cooldown(user_id, command.execute, client, message, args);
