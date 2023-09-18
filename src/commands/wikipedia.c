@@ -8,9 +8,13 @@
 
 // TODO: add url escaping for ' ' => "%20"
 
-static void execute(Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t **message, Split args) {
+	struct Message reply = {0};
+	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+
 	if (args.size == 0) {
-		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
+		reply.content = "Missing argument, please use `help` command.";
+		send_message(client, channel_id, reply);
 		return;
 	} else {
 		RequestConfig config = {0};
@@ -35,7 +39,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 			Response info_response = request(config);
 			jsonelement_t *info_data = json_parse(info_response.data);
 			jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
-			Embed embed = {0};
+			struct Embed embed = {0};
 
 			char *title = json_get_val(page_info, "title").value.string;
 			char page_url[512] = {0};
@@ -57,17 +61,21 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 				jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
 				embed.image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
 
-				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+				add_embed_to_message(embed, &reply);
+				send_message(client, channel_id, reply);
 				response_free(&image_response);
 				json_free(image_data);
 			} else {
-				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+				add_embed_to_message(embed, &reply);
+				send_message(client, channel_id, reply);
 			}
 
 			response_free(&info_response);
+			free_message(reply);
 			json_free(info_data);
 		} else {
-			send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
+			reply.content = "Not found.";
+			send_message(client, channel_id, reply);
 		}
 
 		response_free(&search_response);

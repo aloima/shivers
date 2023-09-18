@@ -21,7 +21,7 @@ static char token[256] = {0};
 static size_t ready_guild_size = 0;
 static bool handled_ready_guilds = false;
 
-static Client client = {0};
+static struct Client client = {0};
 
 static unsigned long previous_heartbeat_sent_at = 0;
 static unsigned long heartbeat_sent_at = 0;

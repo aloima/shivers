@@ -2,10 +2,14 @@
 #include <stdio.h>
 
 #include <shivers.h>
+#include <discord.h>
 #include <utils.h>
 #include <json.h>
 
-static void execute(Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t **message, Split args) {
+	struct Message reply = {0};
+	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+
 	const struct Command *commands = get_commands();
 	const size_t command_size = get_command_size();
 
@@ -20,17 +24,20 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 		}
 
 		if (command.name != NULL) {
-			Embed embed = {0};
+			struct Embed embed = {0};
 			set_embed_author(&embed, command.name, NULL, NULL);
 			embed.description = command.description;
 			embed.color = COLOR;
 
-			send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+			add_embed_to_message(embed, &reply);
+			send_message(client, channel_id, reply);
+			free_message(reply);
 		} else {
-			send_content(client, json_get_val(*message, "channel_id").value.string, "Unknown command, please use `help` command to get list of the commands.");
+			reply.content = "Unknown command, please use `help` command to get list of the commands.";
+			send_message(client, channel_id, reply);
 		}
 	} else {
-		Embed embed = {0};
+		struct Embed embed = {0};
 
 		char text[4096] = {0};
 		sprintf(text, (
@@ -50,7 +57,7 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 		}
 
 		for (size_t i = 0; i < command_size; ++i) {
-			struct Command command = commands[i];
+			const struct Command command = commands[i];
 
 			char blanks[64] = {0};
 			char line[256] = {0};
@@ -63,7 +70,10 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 
 		embed.color = COLOR;
 		embed.description = text;
-		send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+
+		add_embed_to_message(embed, &reply);
+		send_message(client, channel_id, reply);
+		free_message(reply);
 	}
 }
 

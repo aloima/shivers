@@ -20,14 +20,17 @@ void free_cooldown_memory() {
 	free(cooldown_memory);
 }
 
-void run_with_cooldown(char *user_id, void (*command)(Client client, jsonelement_t **message, Split args), Client client, jsonelement_t **message, Split args) {
-	unsigned long target = (get_cooldown(user_id).timestamp + 3000);
-	unsigned long current = get_timestamp(NULL);
+void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t **message, Split args), struct Client client, jsonelement_t **message, Split args) {
+	const unsigned long target = (get_cooldown(user_id).timestamp + 3000);
+	const unsigned long current = get_timestamp(NULL);
 
 	if (target > current) {
+		struct Message reply = {0};
 		char warning[64] = {0};
 		sprintf(warning, "You need to wait `%.2Lf seconds` to use a command.", ((long double) target - (long double) current) / 1000.0);
-		send_content(client, json_get_val(*message, "channel_id").value.string, warning);
+		reply.content = warning;
+
+		send_message(client, json_get_val(*message, "channel_id").value.string, reply);
 	} else {
 		if (has_cooldown(user_id)) {
 			remove_cooldown(user_id);

@@ -7,8 +7,10 @@
 
 #define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
 
-static void execute(Client client, jsonelement_t **message, Split args) {
-	Embed embed = {0};
+static void execute(struct Client client, jsonelement_t **message, Split args) {
+	struct Message reply = {0};
+	struct Embed embed = {0};
+	const char *channel_id = json_get_val(*message, "channel_id").value.string;
 
 	char avatar_url[128] = {0};
 
@@ -18,7 +20,8 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 		bool mention_error = (strncmp(arg, "<@", 2) != 0 || arg[20] != '>');
 
 		if ((arg_length != 21 || mention_error) && (arg_length != 18)) {
-			send_content(client, json_get_val(*message, "channel_id").value.string, "Invalid argument, please use `help` command.");
+			reply.content = "Invalid argument, please use `help` command.";
+			send_message(client, channel_id, reply);
 			return;
 		} else {
 			char user_id[19] = {0};
@@ -30,7 +33,8 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 			}
 
 			if (!check_snowflake(user_id)) {
-				send_content(client, json_get_val(*message, "channel_id").value.string, "Invalid argument, please use `help` command.");
+				reply.content = "Invalid argument, please use `help` command.";
+				send_message(client, channel_id, reply);
 				return;
 			} else {
 				char path[32] = {0};
@@ -58,7 +62,9 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	embed.image_url = avatar_url;
 	embed.color = COLOR;
 
-	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+	add_embed_to_message(embed, &reply);
+	send_message(client, channel_id, reply);
+	free_message(reply);
 }
 
 const struct Command avatar = {

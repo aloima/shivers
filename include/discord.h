@@ -11,34 +11,40 @@
 		size_t size;
 	} Cache;
 
-	typedef struct {
+	struct Client {
 		jsonelement_t *user;
 		unsigned long ready_at;
 		char *token;
-	} Client;
+	};
 
-	typedef struct {
+	struct EmbedField {
 		char *name;
 		char *value;
-		bool inline_mode;
-	} EmbedField;
+		bool is_inline;
+	};
 
-	typedef struct {
+	struct EmbedAuthor {
 		char *name;
 		char *url;
 		char *icon_url;
-	} EmbedAuthor;
+	};
 
-	typedef struct {
+	struct Embed {
 		char *title;
 		char *description;
 		unsigned int color;
 		char *image_url;
 		char *thumbnail_url;
-		EmbedAuthor author;
-		EmbedField *fields;
+		struct EmbedAuthor author;
+		struct EmbedField *fields;
 		short field_size;
-	} Embed;
+	};
+
+	struct Message {
+		char *content;
+		struct Embed *embeds;
+		size_t embed_size;
+	};
 
 	void connect_gateway(const char *token);
 	int get_latency();
@@ -53,10 +59,11 @@
 	unsigned int get_all_intents();
 	Response api_request(const char *token, const char *path, const char *method, const char *body);
 
-	void send_content(Client client, const char *channel_id, const char *content);
-	void send_embed(Client client, const char *channel_id, Embed embed);
-	void add_field_to_embed(Embed *embed, char *name, char *value, bool inline_mode);
-	void set_embed_author(Embed *embed, char *name, char *url, char *icon_url);
+	void send_message(const struct Client client, const char *channel_id, const struct Message message);
+	void free_message(struct Message message);
+	void add_field_to_embed(struct Embed *embed, char *name, char *value, bool is_inline);
+	void set_embed_author(struct Embed *embed, char *name, char *url, char *icon_url);
+	void add_embed_to_message(const struct Embed embed, struct Message *message);
 
 	bool check_snowflake(const char *snowflake);
 #endif

@@ -10,12 +10,16 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t **message, Split args) {
+	struct Message reply = {0};
+	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+
 	if (args.size != 1) {
-		send_content(client, json_get_val(*message, "channel_id").value.string, "Missing argument, please use `help` command.");
+		reply.content = "Missing argument, please use `help` command.";
+		send_message(client, channel_id, reply);
 		return;
 	} else {
-		Embed embed = {0};
+		struct Embed embed = {0};
 		RequestConfig config = {0};
 
 		config.header_size = 1;
@@ -37,7 +41,8 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 			response = request(config);
 
 			if (response.status.code == 404) {
-				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
+				reply.content = "Not found.";
+				send_message(client, channel_id, reply);
 			} else {
 				jsonelement_t *user = json_parse(response.data);
 				jsonresult_t login_data = json_get_val(user, "login");
@@ -91,7 +96,9 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 					embed.description = bio.value.string;
 				}
 
-				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+				add_embed_to_message(embed, &reply);
+				send_message(client, channel_id, reply);
+				free_message(reply);
 				free(embed.fields);
 				json_free(user);
 			}
@@ -104,7 +111,8 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 			response = request(config);
 
 			if (response.status.code == 404) {
-				send_content(client, json_get_val(*message, "channel_id").value.string, "Not found.");
+				reply.content = "Not found.";
+				send_message(client, channel_id, reply);
 			} else {
 				jsonelement_t *repository = json_parse(response.data);
 				jsonresult_t description = json_get_val(repository, "description");
@@ -132,8 +140,10 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 					embed.description = description.value.string;
 				}
 
-				send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+				add_embed_to_message(embed, &reply);
+				send_message(client, channel_id, reply);
 				free(embed.fields);
+				free_message(reply);
 				json_free(repository);
 			}
 		}

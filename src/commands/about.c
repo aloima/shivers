@@ -14,23 +14,7 @@
 #define SECONDS_IN_HOUR (60 * 60)
 #define SECONDS_IN_MINUTE (60)
 
-static void execute(Client client, jsonelement_t **message, Split args) {
-	Embed embed = {0};
-
-	struct rusage r_usage;
-	char memory_usage[32] = {0};
-
-	getrusage(RUSAGE_SELF, &r_usage);
-	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
-
-	char guilds[8] = {0};
-	sprintf(guilds, "%ld", get_guilds_cache()->size);
-
-	char latency[8] = {0};
-	sprintf(latency, "%dms", get_latency());
-
-	char **uptime = NULL;
-	size_t uptime_element_count = 0;
+static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	long seconds = ((get_timestamp(NULL) - client.ready_at) / 1000);
 	short years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
 	seconds -= (years * SECONDS_IN_YEAR);
@@ -43,55 +27,70 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	short minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
 	seconds -= (minutes * SECONDS_IN_MINUTE);
 
+	char *uptime[6] = {0};
+	size_t uptime_element_count = 0;
+
 	if (years != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi yrs", years);
 	}
 
 	if (months != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mths", months);
 	}
 
 	if (days != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi days", days);
 	}
 
 	if (hours != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mins", minutes);
 	}
+
 	if (seconds != 0) {
 		++uptime_element_count;
-		uptime = allocate(uptime, uptime_element_count - 1, uptime_element_count, sizeof(char *));
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%ld secs", seconds);
 	}
 
-	char uptime_text[128] = {0};
 	join(uptime, uptime_text, uptime_element_count, " ");
 
 	for (short i = 0; i < uptime_element_count; ++i) {
 		free(uptime[i]);
 	}
+}
 
-	free(uptime);
+static void execute(struct Client client, jsonelement_t **message, Split args) {
+	struct Message reply = {0};
+	struct Embed embed = {0};
+
+	struct rusage r_usage;
+	char memory_usage[32] = {0};
+
+	getrusage(RUSAGE_SELF, &r_usage);
+	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
+
+	char uptime_text[64] = {0};
+	set_uptime_text(client, uptime_text);
+
+	char guilds[8] = {0};
+	sprintf(guilds, "%ld", get_guilds_cache()->size);
+
+	char latency[8] = {0};
+	sprintf(latency, "%dms", get_latency());
 
 	char add[128] = {0};
 	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
@@ -106,8 +105,10 @@ static void execute(Client client, jsonelement_t **message, Split args) {
 	add_field_to_embed(&embed, "Uptime", uptime_text, true);
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
-	send_embed(client, json_get_val(*message, "channel_id").value.string, embed);
+	add_embed_to_message(embed, &reply);
+	send_message(client, json_get_val(*message, "channel_id").value.string, reply);
 	free(embed.fields);
+	free_message(reply);
 }
 
 const struct Command about = {

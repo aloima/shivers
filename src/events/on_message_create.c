@@ -4,7 +4,7 @@
 #include <utils.h>
 #include <json.h>
 
-void on_message_create(Client client, jsonelement_t **message) {
+void on_message_create(struct Client client, jsonelement_t **message) {
 	const bool is_webhook = json_get_val(*message, "webhook_id").exist;
 	const char *content = json_get_val(*message, "content").value.string;
 	const size_t prefix_length = strlen(PREFIX);
