@@ -31,7 +31,7 @@ struct URL parse_url(const char *data) {
 	strcpy(url.hostname, hostname_splitter.data[0]);
 
 	if (hostname_splitter.size == 2) {
-		url.port = (unsigned short) atoi(hostname_splitter.data[1]);
+		url.port = atoi(hostname_splitter.data[1]);
 	} else {
 		if (strcmp(url.protocol, "https") == 0 || strcmp(url.protocol, "wss") == 0) {
 			url.port = 443;
@@ -152,6 +152,35 @@ size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size) {
 
 	if (err) {
 		throw_network("_write()", !!ssl);
+	}
+
+	return result;
+}
+
+char *percent_encode(const char *data) {
+	const char reserved_chars[16] = {
+		' ', '[', ']', '@',
+		'!', '$', '\'', '(',
+		')', '*', '+', ',', ';',
+		'\0'
+	}; // Some of reserved characters are not added because of syntax of URL.
+	const size_t length = strlen(data);
+	size_t result_length = (length + 1);
+	char *result = allocate(NULL, 0, (length + 1), sizeof(char));
+
+	for (size_t i = 0; i < length; ++i) {
+		const char ch = data[i];
+
+		if (char_at(reserved_chars, data[i]) != -1) {
+			result = allocate(result, result_length, result_length + 2, sizeof(char));
+			result_length += 2;
+
+			char hex[4] = {0};
+			sprintf(hex, "%%%x", ch);
+			strncat(result, hex, 3);
+		} else {
+			strncat(result, &ch, 1);
+		}
 	}
 
 	return result;

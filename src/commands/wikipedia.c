@@ -7,8 +7,6 @@
 #include <utils.h>
 #include <json.h>
 
-// TODO: add url escaping for ' ' => "%20"
-
 static void execute(struct Client client, jsonelement_t **message, Split args) {
 	struct Message reply = {0};
 	const char *channel_id = json_get_val(*message, "channel_id").value.string;
@@ -43,12 +41,13 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 			struct Embed embed = {0};
 
 			char *title = json_get_val(page_info, "title").value.string;
-			char page_url[512] = {0};
+			char page_url[512] = {0}, *encoded_page_url = NULL;
 			sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
+			encoded_page_url = percent_encode(page_url);
 
 			embed.color = COLOR;
 			embed.description = json_get_val(page_info, "pageprops.wikibase-shortdesc").value.string;
-			set_embed_author(&embed, title, page_url, NULL);
+			set_embed_author(&embed, title, encoded_page_url, NULL);
 
 			jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
 
@@ -60,7 +59,24 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 				struct Response image_response = request(config);
 				jsonelement_t *image_data = json_parse(image_response.data);
 				jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
-				embed.image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
+				const char *final_image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
+				const size_t final_image_url_length = strlen(final_image_url);
+
+				if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
+					char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
+					char png_url[512] = {0};
+					Split svg_splitter = split(svg_url, "/");
+					char image_code[32] = {0};
+
+					join(svg_splitter.data + 5, image_code, 2, "/");
+					split_free(&svg_splitter);
+
+					sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
+					embed.image_url = png_url;
+				} else {
+					embed.image_url = (char *) final_image_url;
+				}
+
 
 				add_embed_to_message(embed, &reply);
 				send_message(client, channel_id, reply);
@@ -74,6 +90,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 			response_free(&info_response);
 			free_message(reply);
 			json_free(info_data);
+			free(encoded_page_url);
 		} else {
 			reply.content = "Not found.";
 			send_message(client, channel_id, reply);

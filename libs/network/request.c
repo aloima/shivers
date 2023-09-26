@@ -58,8 +58,12 @@ struct Response request(struct RequestConfig config) {
 	SSL_CTX *ssl_ctx = NULL;
 
 	check_config(config);
-	struct URL url = parse_url(config.url);
+
+	char *encoded_url = percent_encode(config.url);
+	struct URL url = parse_url(encoded_url);
 	bool tls = (url.port == 443);
+
+	free(encoded_url);
 
 	host = resolve_hostname(url.hostname);
 	addr.sin_family = AF_INET;

@@ -47,6 +47,7 @@
 
 	struct URL parse_url(const char *data);
 	void free_url(struct URL url);
+	char *percent_encode(const char *data);
 
 	size_t _read(SSL *ssl, int sockfd, char *buffer, size_t size);
 	size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size);
