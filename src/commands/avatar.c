@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -14,15 +15,15 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 	struct Embed embed = {0};
 	const char *channel_id = json_get_val(*message, "channel_id").value.string;
 
-	char avatar_url[128] = {0};
+	char avatar_url[101] = {0};
 
 	if (args.size == 1) {
 		const char *arg = args.data[0];
 		const size_t arg_length = strlen(arg);
-		const bool mention_error = (strncmp(arg, "<@", 2) != 0 || arg[20] != '>');
+		const bool mention_error = (arg_length != 21 || strncmp(arg, "<@", 2) != 0 || arg[20] != '>');
 
-		if ((arg_length != 21 || mention_error) && (arg_length != 18)) {
-			reply.content = "Invalid argument, please use `help` command.";
+		if (mention_error && (arg_length != 18)) {
+			reply.content = INVALID_ARGUMENT;
 			send_message(client, channel_id, reply);
 			return;
 		} else {
@@ -35,14 +36,14 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 			}
 
 			if (!check_snowflake(user_id)) {
-				reply.content = "Invalid argument, please use `help` command.";
+				reply.content = INVALID_ARGUMENT;
 				send_message(client, channel_id, reply);
 				return;
 			} else {
 				char path[32] = {0};
 				sprintf(path, "/users/%s", user_id);
 
-				Response response = api_request(client.token, path, "GET", NULL);
+				struct Response response = api_request(client.token, path, "GET", NULL);
 				jsonelement_t *user = json_parse(response.data);
 				const jsonresult_t avatar = json_get_val(user, "avatar");
 
@@ -89,5 +90,14 @@ const struct Command avatar = {
 	.execute = execute,
 	.name = "avatar",
 	.description = "Sends the avatar of the user",
-	.args = NULL
+	.args = (struct CommandArgument[]) {
+		(struct CommandArgument) {
+			.name = "member",
+			.description = "The mention or the ID of a member whose avatar that you want to view",
+			.examples = (const char *[]) {"840217542400409630", "<@840217542400409630>"},
+			.example_size = 2,
+			.optional = true
+		}
+	},
+	.arg_size = 1
 };

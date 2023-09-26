@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -17,7 +18,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 		send_message(client, channel_id, reply);
 		return;
 	} else {
-		RequestConfig config = {0};
+		struct RequestConfig config = {0};
 		config.method = "GET";
 
 		char search_query[512] = {0};
@@ -27,7 +28,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 		sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", search_query);
 		config.url = search_url;
 
-		Response search_response = request(config);
+		struct Response search_response = request(config);
 		jsonelement_t *search_result = json_parse(search_response.data);
 		jsonresult_t page_name = json_get_val(search_result, "1.0");
 
@@ -36,7 +37,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
 			config.url = url;
 
-			Response info_response = request(config);
+			struct Response info_response = request(config);
 			jsonelement_t *info_data = json_parse(info_response.data);
 			jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
 			struct Embed embed = {0};
@@ -56,7 +57,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 				sprintf(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
 				config.url = image_url;
 
-				Response image_response = request(config);
+				struct Response image_response = request(config);
 				jsonelement_t *image_data = json_parse(image_response.data);
 				jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
 				embed.image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
@@ -87,5 +88,14 @@ const struct Command wikipedia = {
 	.execute = execute,
 	.name = "wikipedia",
 	.description = "Sends short info from Wikipedia",
-	.args = NULL
+	.args = (struct CommandArgument[]) {
+		(struct CommandArgument) {
+			.name = "query",
+			.description = "The search query of the page which you want to get information",
+			.examples = (const char *[]) {"federal republic of germany", "ottoman"},
+			.example_size = 2,
+			.optional = true
+		}
+	},
+	.arg_size = 1
 };

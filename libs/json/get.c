@@ -7,7 +7,7 @@
 #include <utils.h>
 
 jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
-	Split splitter = split((char *) search, ".");
+	Split splitter = split(search, ".");
 	jsonelement_t *value = element;
 	jsonresult_t result = {0};
 	result.exist = true;

@@ -1,8 +1,8 @@
 #define _XOPEN_SOURCE
 
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -15,22 +15,22 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 	const char *channel_id = json_get_val(*message, "channel_id").value.string;
 
 	if (args.size != 1) {
-		reply.content = "Missing argument, please use `help` command.";
+		reply.content = MISSING_ARGUMENT;
 		send_message(client, channel_id, reply);
 		return;
 	} else {
 		struct Embed embed = {0};
-		RequestConfig config = {0};
+		struct RequestConfig config = {0};
 
 		config.header_size = 1;
-		config.headers = allocate(NULL, 0, 1, sizeof(Header));
-		config.headers[0] = (Header) {
+		config.headers = allocate(NULL, 0, 1, sizeof(struct Header));
+		config.headers[0] = (struct Header) {
 			.name = "User-Agent",
 			.value = "shivers"
 		};
 
 		char url[256] = {0};
-		Response response;
+		struct Response response = {0};
 
 		if (char_at(args.data[0], '/') == -1) {
 			sprintf(url, "https://api.github.com/users/%s", args.data[0]);
@@ -157,5 +157,14 @@ const struct Command github = {
 	.execute = execute,
 	.name = "github",
 	.description = "Fetches data from GitHub and sends them",
-	.args = NULL
+	.args = (struct CommandArgument[]) {
+		(struct CommandArgument) {
+			.name = "query",
+			.description = "The repository or the user that you want to get information",
+			.examples = (const char *[]) {"aloima", "torvalds", "aloima/shivers", "torvalds/linux"},
+			.example_size = 4,
+			.optional = true
+		}
+	},
+	.arg_size = 1
 };

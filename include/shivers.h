@@ -17,11 +17,20 @@
 		size_t size;
 	};
 
+	struct CommandArgument {
+		const char *name;
+		const char *description;
+		const char **examples;
+		const size_t example_size;
+		const bool optional;
+	};
+
 	struct Command {
 		void (*execute)(struct Client client, jsonelement_t **message, Split args);
 		char *name;
 		char *description;
-		char **args;
+		struct CommandArgument *args;
+		size_t arg_size;
 	};
 
 	void setup_commands();
@@ -37,6 +46,9 @@
 	void remove_cooldown(const char *user_id);
 	bool has_cooldown(const char *user_id);
 	struct Cooldown get_cooldown(const char *user_id);
+
+	#define INVALID_ARGUMENT "Invalid argument, please use `help` command."
+	#define MISSING_ARGUMENT "Missing argument, please use `help` command."
 
 	void on_ready(struct Client client);
 	void on_force_close();

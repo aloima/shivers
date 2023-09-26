@@ -10,7 +10,7 @@
 #include <json.h>
 #include <network.h>
 
-static Websocket websocket;
+static Websocket websocket = {0};
 
 static unsigned int heartbeat_interval;
 static pthread_t heartbeat_thread;
@@ -94,16 +94,16 @@ static void onstart() {
 }
 
 static void onmessage(const WebsocketFrame frame) {
-	jsonelement_t *data = json_parse((char *) frame.payload);
+	jsonelement_t *data = json_parse(frame.payload);
 	const char *event_name = json_get_val(data, "t").value.string;
-	const unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
+	const unsigned short op = json_get_val(data, "op").value.number;
 
 	switch (op) {
 		case 0: {
-			last_sequence = (int) json_get_val(data, "s").value.number;
+			last_sequence = json_get_val(data, "s").value.number;
 
 			if (strcmp(event_name, "READY") == 0) {
-				Response response = api_request(token, "/users/@me", "GET", NULL);
+				struct Response response = api_request(token, "/users/@me", "GET", NULL);
 				client.user = json_parse(response.data);
 				client.token = token;
 				client.ready_at = get_timestamp(NULL);

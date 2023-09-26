@@ -45,5 +45,5 @@
 	jsonresult_t json_get_val(jsonelement_t *element, const char *search);
 
 	jsonelement_t *create_empty_json_element(bool is_array);
-	void add_json_element(jsonelement_t **object, const char *key, void *data, const char type);
+	void add_json_element(jsonelement_t *object, const char *key, void *data, const char type);
 #endif

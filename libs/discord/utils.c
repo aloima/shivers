@@ -16,25 +16,25 @@ unsigned int get_all_intents() {
 	return result;
 }
 
-Response api_request(const char *token, const char *path, const char *method, const char *body) {
+struct Response api_request(const char *token, const char *path, const char *method, const char *body) {
 	char url[256] = {0};
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
 	char authorization[128] = {0};
 	sprintf(authorization, "Bot %s", token);
 
-	RequestConfig config = {
+	struct RequestConfig config = {
 		.url = url,
 		.method = (char *) method,
-		.headers = allocate(NULL, 0, 2 + !!body, sizeof(Header))
+		.headers = allocate(NULL, 0, 2 + !!body, sizeof(struct Header))
 	};
 
-	config.headers[0] = (Header) {
+	config.headers[0] = (struct Header) {
 		.name = "Authorization",
 		.value = authorization
 	};
 
-	config.headers[1] = (Header) {
+	config.headers[1] = (struct Header) {
 		.name = "Content-Type",
 		.value = "application/json"
 	};
@@ -48,7 +48,7 @@ Response api_request(const char *token, const char *path, const char *method, co
 		sprintf(length, "%ld", body_length);
 
 		config.header_size = 3;
-		config.headers[2] = (Header) {
+		config.headers[2] = (struct Header) {
 			.name = "Content-Length",
 			.value = length
 		};
@@ -56,7 +56,7 @@ Response api_request(const char *token, const char *path, const char *method, co
 		config.header_size = 2;
 	}
 
-	Response response = request(config);
+	struct Response response = request(config);
 	free(config.headers);
 
 	if (body != NULL) {

@@ -15,7 +15,7 @@
 #include <network.h>
 #include <utils.h>
 
-static char check_config(RequestConfig config) {
+static char check_config(struct RequestConfig config) {
 	const char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 	const size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
 	bool is_allowed_method = false;
@@ -38,7 +38,7 @@ static char check_config(RequestConfig config) {
 	return 1;
 }
 
-void response_free(Response *response) {
+void response_free(struct Response *response) {
 	for (size_t i = 0; i < response->header_size; ++i) {
 		free(response->headers[i].name);
 		free(response->headers[i].value);
@@ -49,8 +49,8 @@ void response_free(Response *response) {
 	free(response->status.message);
 }
 
-Response request(RequestConfig config) {
-	Response response = { false, { 0, NULL }, NULL, NULL, 0 };
+struct Response request(struct RequestConfig config) {
+	struct Response response = { false, { 0, NULL }, NULL, NULL, 0 };
 	int sockfd;
 	struct sockaddr_in addr;
 	struct hostent *host = NULL;
@@ -58,7 +58,7 @@ Response request(RequestConfig config) {
 	SSL_CTX *ssl_ctx = NULL;
 
 	check_config(config);
-	URL url = parse_url(config.url);
+	struct URL url = parse_url(config.url);
 	bool tls = (url.port == 443);
 
 	host = resolve_hostname(url.hostname);
@@ -153,8 +153,8 @@ Response request(RequestConfig config) {
 			} else {
 				Split header_splitter = split(line_splitter.data[i], ": ");
 
-				response.headers = allocate(response.headers, i - 1, i, sizeof(Header));
-				Header *header = &response.headers[i - 1];
+				response.headers = allocate(response.headers, i - 1, i, sizeof(struct Header));
+				struct Header *header = &response.headers[i - 1];
 
 				const char *name = header_splitter.data[0];
 				const char *value = header_splitter.data[1];

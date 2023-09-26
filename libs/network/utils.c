@@ -13,8 +13,8 @@
 
 #include <network.h>
 
-URL parse_url(const char *data) {
-	URL url = {0};
+struct URL parse_url(const char *data) {
+	struct URL url = {0};
 	Split splitter = split(data, "/");
 
 	if (splitter.size < 3) {
@@ -56,11 +56,11 @@ URL parse_url(const char *data) {
 	return url;
 }
 
-void free_url(URL url) {
+void free_url(struct URL url) {
 	free(url.protocol);
 	free(url.hostname);
 	free(url.path);
-	memset(&url, 0, sizeof(URL));
+	memset(&url, 0, sizeof(struct URL));
 }
 
 struct hostent *resolve_hostname(char *hostname) {
@@ -111,9 +111,8 @@ unsigned long combine_bytes(unsigned char *bytes, size_t byte_count) {
 	return result;
 }
 
-Header get_header(Header *headers, size_t header_size, char *name) {
-	Header header;
-	memset(&header, 0, sizeof(header));
+struct Header get_header(struct Header *headers, size_t header_size, char *name) {
+	struct Header header = {0};
 
 	char header_name[1024] = {0};
 	strtolower(header_name, name);

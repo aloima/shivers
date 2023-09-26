@@ -78,21 +78,21 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 	struct Embed embed = {0};
 
 	struct rusage r_usage;
-	char memory_usage[32] = {0};
+	char memory_usage[16] = {0};
 
 	getrusage(RUSAGE_SELF, &r_usage);
 	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
 
-	char uptime_text[64] = {0};
+	char uptime_text[56] = {0};
 	set_uptime_text(client, uptime_text);
 
-	char guilds[8] = {0};
+	char guilds[4] = {0};
 	sprintf(guilds, "%ld", get_guilds_cache()->size);
 
 	char latency[8] = {0};
 	sprintf(latency, "%dms", get_latency());
 
-	char add[128] = {0};
+	char add[112] = {0};
 	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
 
 	embed.color = COLOR;
@@ -115,5 +115,6 @@ const struct Command about = {
 	.execute = execute,
 	.name = "about",
 	.description = "Sends bot information",
-	.args = NULL
+	.args = NULL,
+	.arg_size = 0
 };

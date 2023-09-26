@@ -57,7 +57,7 @@
 	Cache *get_guilds_cache();
 
 	unsigned int get_all_intents();
-	Response api_request(const char *token, const char *path, const char *method, const char *body);
+	struct Response api_request(const char *token, const char *path, const char *method, const char *body);
 
 	void send_message(const struct Client client, const char *channel_id, const struct Message message);
 	void free_message(struct Message message);

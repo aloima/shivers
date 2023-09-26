@@ -7,27 +7,27 @@
 #ifndef NETWORK_H_
 	#define NETWORK_H_
 
-	typedef struct {
+	struct URL {
 		char *protocol;
 		char *hostname;
 		char *path;
 		unsigned short port;
-	} URL;
+	};
 
-	typedef struct {
+	struct Header {
 		char *name;
 		char *value;
-	} Header;
+	};
 
-	typedef struct {
+	struct RequestConfig {
 		char *url;
 		char *method;
-		Header *headers;
+		struct Header *headers;
 		size_t header_size;
 		char *body;
-	} RequestConfig;
+	};
 
-	typedef struct {
+	struct Response {
 		bool success;
 
 		struct {
@@ -36,23 +36,23 @@
 		} status;
 
 		char *data;
-		Header *headers;
+		struct Header *headers;
 		size_t header_size;
-	} Response;
+	};
 
-	Response request(RequestConfig config);
-	void response_free(Response *response);
+	struct Response request(struct RequestConfig config);
+	void response_free(struct Response *response);
 
 	void throw_network(const char *value, bool tls);
 
-	URL parse_url(const char *data);
-	void free_url(URL url);
+	struct URL parse_url(const char *data);
+	void free_url(struct URL url);
 
 	size_t _read(SSL *ssl, int sockfd, char *buffer, size_t size);
 	size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size);
 
 	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
-	Header get_header(Header *headers, size_t header_size, char *name);
+	struct Header get_header(struct Header *headers, size_t header_size, char *name);
 	struct hostent *resolve_hostname(char *hostname);
 	void close_socket(int sockfd, SSL *ssl);
 
@@ -81,7 +81,7 @@
 		int sockfd;
 		int epollfd;
 		SSL *ssl;
-		URL url;
+		struct URL url;
 		WebsocketMethods methods;
 		bool connected;
 		bool closed;
