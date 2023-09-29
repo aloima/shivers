@@ -10,10 +10,10 @@
 #define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
 #define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/%d.png?size=1024"
 
-static void execute(struct Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
-	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
 	char avatar_url[101] = {0};
 
@@ -63,8 +63,8 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 			}
 		}
 	} else {
-		const char *user_id = json_get_val(*message, "author.id").value.string;
-		const jsonresult_t avatar = json_get_val(*message, "author.avatar");
+		const char *user_id = json_get_val(message, "author.id").value.string;
+		const jsonresult_t avatar = json_get_val(message, "author.avatar");
 
 		if (avatar.exist && avatar.type != JSON_NULL) {
 			const char *avatar_hash = avatar.value.string;
@@ -72,7 +72,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 
 			sprintf(avatar_url, AVATAR_URL, user_id, avatar_hash, extension);
 		} else {
-			const char *discriminator = json_get_val(*message, "author.discriminator").value.string;
+			const char *discriminator = json_get_val(message, "author.discriminator").value.string;
 
 			sprintf(avatar_url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
 		}

@@ -4,7 +4,7 @@ Shivers is a Discord bot made for hobby.
 ## Building
 OpenSSL library must be installed in your system.
 
-```
+```sh
 make
 ```
 

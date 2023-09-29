@@ -7,9 +7,9 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
-	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
 	const struct Command *commands = get_commands();
 	const size_t command_size = get_command_size();

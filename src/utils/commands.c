@@ -8,7 +8,8 @@ static size_t command_size = 0;
 
 void setup_commands() {
 	struct Command command_array[] = {about, avatar, github, help, wikipedia};
-	command_size = 5;
+	command_size = sizeof(command_array) / sizeof(struct Command);
+
 	commands = allocate(NULL, 0, command_size, sizeof(struct Command));
 	memcpy(commands, command_array, sizeof(command_array));
 }

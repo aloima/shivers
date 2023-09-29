@@ -125,7 +125,7 @@ static void onmessage(const WebsocketFrame frame) {
 				}
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
-				on_message_create(client, &message);
+				on_message_create(client, message);
 			}
 
 			break;

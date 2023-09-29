@@ -7,9 +7,9 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
-	const char *channel_id = json_get_val(*message, "channel_id").value.string;
+	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
 	if (args.size == 0) {
 		reply.content = "Missing argument, please use `help` command.";

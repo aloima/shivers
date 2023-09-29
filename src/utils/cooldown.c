@@ -20,7 +20,7 @@ void free_cooldown_memory() {
 	free(cooldown_memory);
 }
 
-void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t **message, Split args), struct Client client, jsonelement_t **message, Split args) {
+void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args) {
 	const unsigned long target = (get_cooldown(user_id).timestamp + 3000);
 	const unsigned long current = get_timestamp(NULL);
 
@@ -30,7 +30,7 @@ void run_with_cooldown(const char *user_id, void (*command)(struct Client client
 		sprintf(warning, "You need to wait `%.2Lf seconds` to use a command.", ((long double) target - (long double) current) / 1000.0);
 		reply.content = warning;
 
-		send_message(client, json_get_val(*message, "channel_id").value.string, reply);
+		send_message(client, json_get_val(message, "channel_id").value.string, reply);
 	} else {
 		if (has_cooldown(user_id)) {
 			remove_cooldown(user_id);
@@ -93,8 +93,10 @@ struct Cooldown get_cooldown(const char *user_id) {
 	struct Cooldown cooldown = {0};
 
 	for (size_t i = 0; i < cooldown_memory->size; ++i) {
-		if (strcmp(cooldown_memory->cooldowns[i].user_id, user_id) == 0) {
-			cooldown = cooldown_memory->cooldowns[i];
+		struct Cooldown data = cooldown_memory->cooldowns[i];
+
+		if (strcmp(data.user_id, user_id) == 0) {
+			cooldown = data;
 			break;
 		}
 	}

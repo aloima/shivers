@@ -73,7 +73,7 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	}
 }
 
-static void execute(struct Client client, jsonelement_t **message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
 
@@ -81,7 +81,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 	char memory_usage[16] = {0};
 
 	getrusage(RUSAGE_SELF, &r_usage);
-	sprintf(memory_usage, "%.2f MB", (double) r_usage.ru_maxrss / 1024);
+	sprintf(memory_usage, "%.2f MB", r_usage.ru_maxrss / 1024.0);
 
 	char uptime_text[56] = {0};
 	set_uptime_text(client, uptime_text);
@@ -106,7 +106,7 @@ static void execute(struct Client client, jsonelement_t **message, Split args) {
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
 	add_embed_to_message(embed, &reply);
-	send_message(client, json_get_val(*message, "channel_id").value.string, reply);
+	send_message(client, json_get_val(message, "channel_id").value.string, reply);
 	free(embed.fields);
 	free_message(reply);
 }

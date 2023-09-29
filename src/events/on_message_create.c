@@ -4,9 +4,9 @@
 #include <utils.h>
 #include <json.h>
 
-void on_message_create(struct Client client, jsonelement_t **message) {
-	const bool is_webhook = json_get_val(*message, "webhook_id").exist;
-	const char *content = json_get_val(*message, "content").value.string;
+void on_message_create(struct Client client, jsonelement_t *message) {
+	const bool is_webhook = json_get_val(message, "webhook_id").exist;
+	const char *content = json_get_val(message, "content").value.string;
 	const size_t prefix_length = strlen(PREFIX);
 
 	if (content != NULL && !is_webhook && strncmp(content, PREFIX, prefix_length) == 0) {
@@ -17,7 +17,7 @@ void on_message_create(struct Client client, jsonelement_t **message) {
 		};
 
 		const char *input = splitted.data[0];
-		char *user_id = json_get_val(*message, "author.id").value.string;
+		char *user_id = json_get_val(message, "author.id").value.string;
 
 		const size_t command_size = get_command_size();
 		const struct Command *commands = get_commands();
