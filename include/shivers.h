@@ -12,11 +12,6 @@
 		unsigned long timestamp;
 	};
 
-	struct CooldownMemory {
-		struct Cooldown *cooldowns;
-		size_t size;
-	};
-
 	struct CommandArgument {
 		const char *name;
 		const char *description;
@@ -38,8 +33,7 @@
 	const struct Command *get_commands();
 	const size_t get_command_size();
 
-	void setup_cooldown_memory();
-	void free_cooldown_memory();
+	void free_cooldowns();
 	void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args);
 
 	void add_cooldown(const char *user_id);

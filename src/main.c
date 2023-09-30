@@ -1,22 +1,21 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 
 #include <discord.h>
+#include <utils.h>
 
 int main(void) {
 	struct stat token_entry;
 	int token = stat("token", &token_entry);
 
 	if (token == -1) {
-		fprintf(stderr, "startup: missing token file\n");
-		return EXIT_FAILURE;
+		throw("startup: missing token file");
 	} else if (!S_ISREG(token_entry.st_mode)) {
-		fprintf(stderr, "startup: invalid token entry\n");
-		return EXIT_FAILURE;
+		throw("startup: invalid token entry");
 	} else {
 		srand(time(NULL));
 

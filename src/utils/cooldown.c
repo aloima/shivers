@@ -5,19 +5,15 @@
 #include <shivers.h>
 #include <utils.h>
 
-struct CooldownMemory *cooldown_memory = NULL;
+static struct Cooldown *cooldowns = NULL;
+static size_t cooldown_size = 0;
 
-void setup_cooldown_memory() {
-	cooldown_memory = allocate(NULL, 0, 1, sizeof(struct CooldownMemory));
-}
-
-void free_cooldown_memory() {
-	for (size_t i = 0; i < cooldown_memory->size; ++i) {
-		free(cooldown_memory->cooldowns[i].user_id);
+void free_cooldowns() {
+	for (size_t i = 0; i < cooldown_size; ++i) {
+		free(cooldowns[i].user_id);
 	}
 
-	free(cooldown_memory->cooldowns);
-	free(cooldown_memory);
+	free(cooldowns);
 }
 
 void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args) {
@@ -25,9 +21,10 @@ void run_with_cooldown(const char *user_id, void (*command)(struct Client client
 	const unsigned long current = get_timestamp(NULL);
 
 	if (target > current) {
-		struct Message reply = {0};
 		char warning[64] = {0};
 		sprintf(warning, "You need to wait `%.2Lf seconds` to use a command.", ((long double) target - (long double) current) / 1000.0);
+
+		struct Message reply = {0};
 		reply.content = warning;
 
 		send_message(client, json_get_val(message, "channel_id").value.string, reply);
@@ -42,8 +39,8 @@ void run_with_cooldown(const char *user_id, void (*command)(struct Client client
 }
 
 void add_cooldown(const char *user_id) {
-	++cooldown_memory->size;
-	cooldown_memory->cooldowns = allocate(cooldown_memory->cooldowns, cooldown_memory->size - 1, cooldown_memory->size, sizeof(struct Cooldown));
+	++cooldown_size;
+	cooldowns = allocate(cooldowns, cooldown_size - 1, cooldown_size, sizeof(struct Cooldown));
 
 	struct Cooldown cooldown = {
 		.timestamp = get_timestamp(NULL),
@@ -52,35 +49,35 @@ void add_cooldown(const char *user_id) {
 
 	strcpy(cooldown.user_id, user_id);
 
-	memcpy(cooldown_memory->cooldowns + cooldown_memory->size - 1, &cooldown, sizeof(struct Cooldown));
+	memcpy(cooldowns + cooldown_size - 1, &cooldown, sizeof(struct Cooldown));
 }
 
 void remove_cooldown(const char *user_id) {
 	size_t at = 0;
 
-	for (size_t i = 0; i < cooldown_memory->size; ++i) {
-		if (strcmp(cooldown_memory->cooldowns[i].user_id, user_id) == 0) {
+	for (size_t i = 0; i < cooldown_size; ++i) {
+		if (strcmp(cooldowns[i].user_id, user_id) == 0) {
 			at = i;
 			break;
 		}
 	}
 
-	for (size_t i = at + 1; i < cooldown_memory->size; ++i) {
-		cooldown_memory->cooldowns[i - 1].user_id = allocate(NULL, 0, strlen(cooldown_memory->cooldowns[i + 1].user_id) + 1, sizeof(char));
-		memcpy(cooldown_memory->cooldowns + i - 1, cooldown_memory->cooldowns + i, sizeof(struct Cooldown));
+	for (size_t i = at + 1; i < cooldown_size; ++i) {
+		cooldowns[i - 1].user_id = allocate(NULL, 0, strlen(cooldowns[i + 1].user_id) + 1, sizeof(char));
+		memcpy(cooldowns + i - 1, cooldowns + i, sizeof(struct Cooldown));
 	}
 
-	free(cooldown_memory->cooldowns[cooldown_memory->size - 1].user_id);
+	free(cooldowns[cooldown_size - 1].user_id);
 
-	--cooldown_memory->size;
-	cooldown_memory->cooldowns = allocate(cooldown_memory->cooldowns, cooldown_memory->size + 1, cooldown_memory->size, sizeof(struct Cooldown));
+	--cooldown_size;
+	cooldowns = allocate(cooldowns, cooldown_size + 1, cooldown_size, sizeof(struct Cooldown));
 }
 
 bool has_cooldown(const char *user_id) {
 	bool result = false;
 
-	for (size_t i = 0; i < cooldown_memory->size; ++i) {
-		if (strcmp(cooldown_memory->cooldowns[i].user_id, user_id) == 0) {
+	for (size_t i = 0; i < cooldown_size; ++i) {
+		if (strcmp(cooldowns[i].user_id, user_id) == 0) {
 			result = true;
 			break;
 		}
@@ -92,8 +89,8 @@ bool has_cooldown(const char *user_id) {
 struct Cooldown get_cooldown(const char *user_id) {
 	struct Cooldown cooldown = {0};
 
-	for (size_t i = 0; i < cooldown_memory->size; ++i) {
-		struct Cooldown data = cooldown_memory->cooldowns[i];
+	for (size_t i = 0; i < cooldown_size; ++i) {
+		struct Cooldown data = cooldowns[i];
 
 		if (strcmp(data.user_id, user_id) == 0) {
 			cooldown = data;
