@@ -99,8 +99,8 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	embed.description = add;
 
 	add_field_to_embed(&embed, "Developer", "<@840217542400409630>", true);
-	add_field_to_embed(&embed, "Memory usage", memory_usage, true);
-	add_field_to_embed(&embed, "Guilds", guilds, true);
+	add_field_to_embed(&embed, "Memory", memory_usage, true);
+	add_field_to_embed(&embed, "Servers", guilds, true);
 	add_field_to_embed(&embed, "Latency", latency, true);
 	add_field_to_embed(&embed, "Uptime", uptime_text, true);
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);

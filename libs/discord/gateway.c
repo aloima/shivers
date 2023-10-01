@@ -119,8 +119,8 @@ static void onmessage(const WebsocketFrame frame) {
 					--ready_guild_size;
 
 					if (ready_guild_size == 0) {
-						puts("Handled all guilds.");
 						handled_ready_guilds = true;
+						on_handle_guilds(client);
 					}
 				}
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
@@ -182,4 +182,24 @@ int get_latency() {
 	} else {
 		return (heartbeat_received_at - heartbeat_sent_at);
 	}
+}
+
+void set_presence(const char *name, const char type, const char *status) {
+	char presence[256];
+	sprintf(presence, "{"
+		"\"op\":3,"
+		"\"d\":{"
+			"\"since\":null,"
+			"\"activities\":["
+				"{"
+					"\"name\":\"%s\","
+					"\"type\":%d"
+				"}"
+			"],"
+			"\"status\":\"%s\","
+			"\"afk\":false"
+		"}"
+	"}", name, type, status);
+
+	send_websocket_message(&websocket, presence);
 }

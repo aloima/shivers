@@ -48,6 +48,7 @@
 
 	void connect_gateway(const char *token);
 	int get_latency();
+	void set_presence(const char *name, const char type, const char *status);
 
 	void create_caches();
 	void clear_cache(Cache *cache);
