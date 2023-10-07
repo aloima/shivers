@@ -19,12 +19,36 @@
 		char *value;
 	};
 
+	struct FormDataField {
+		char *name;
+		char *data;
+		size_t data_size;
+		struct Header *headers;
+		size_t header_size;
+		char *filename;
+	};
+
+	struct FormData {
+		struct FormDataField *fields;
+		size_t field_size;
+		char *boundary;
+	};
+
+	struct RequestBody {
+		union {
+			char *data;
+			struct FormData formdata;
+		} payload;
+
+		bool is_formdata;
+	};
+
 	struct RequestConfig {
 		char *url;
 		char *method;
 		struct Header *headers;
 		size_t header_size;
-		char *body;
+		struct RequestBody body;
 	};
 
 	struct Response {
@@ -56,6 +80,9 @@
 	struct Header get_header(struct Header *headers, size_t header_size, char *name);
 	struct hostent *resolve_hostname(char *hostname);
 	void close_socket(int sockfd, SSL *ssl);
+	void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const size_t data_size, const char *filename);
+	void add_header_to_formdata_field(struct FormData *formdata, const char *field_name, const char *header_name, const char *header_value);
+	void free_formdata(struct FormData formdata);
 
 	// Websocket Headers
 	#define WEBSOCKET_FRAME_MAGIC 0x81;

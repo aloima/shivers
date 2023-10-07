@@ -185,3 +185,79 @@ char *percent_encode(const char *data) {
 
 	return result;
 }
+
+void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const size_t data_size, const char *filename) {
+	++formdata->field_size;
+	formdata->fields = allocate(formdata->fields, formdata->field_size - 1, formdata->field_size, sizeof(struct FormDataField));
+
+	char *field_name = allocate(NULL, 0, strlen(name) + 1, sizeof(char));
+	strcpy(field_name, name);
+
+	char *field_data = allocate(NULL, 0, data_size + 1, sizeof(char));
+	memcpy(field_data, data, data_size);
+
+	char *field_filename = NULL;
+
+	if (filename) {
+		field_filename = allocate(NULL, 0, strlen(filename) + 1, sizeof(char));
+		strcpy(field_filename, filename);
+	}
+
+	formdata->fields[formdata->field_size - 1] = (struct FormDataField) {
+		.name = field_name,
+		.data = field_data,
+		.data_size = (data_size == -1 ? strlen(data) : data_size),
+		.filename = field_filename
+	};
+}
+
+void add_header_to_formdata_field(struct FormData *formdata, const char *field_name, const char *header_name, const char *header_value) {
+	size_t field_size = formdata->field_size;
+
+	for (size_t i = 0; i < field_size; ++i) {
+		struct FormDataField *field = &(formdata->fields[i]);
+
+		if (strcmp(field->name, field_name) == 0) {
+			++field->header_size;
+			field->headers = allocate(field->headers, field->header_size - 1, field->header_size, sizeof(struct Header));
+
+			char *name = allocate(NULL, 0, strlen(header_name) + 1, sizeof(char));
+			strcpy(name, header_name);
+
+			char *value = allocate(NULL, 0, strlen(header_value) + 1, sizeof(char));
+			strcpy(value, header_value);
+
+			field->headers[field->header_size - 1] = (struct Header) {
+				.name = name,
+				.value = value
+			};
+
+			break;
+		}
+	}
+}
+
+void free_formdata(struct FormData formdata) {
+	for (size_t i = 0; i < formdata.field_size; ++i) {
+		struct FormDataField field = formdata.fields[i];
+
+		if (field.header_size != 0) {
+			for (size_t h = 0; h < field.header_size; ++h) {
+				struct Header header = field.headers[h];
+				free(header.name);
+				free(header.value);
+			}
+
+			free(field.headers);
+		}
+
+		free(field.name);
+		free(field.data);
+
+		if (field.filename) {
+			free(field.filename);
+		}
+	}
+
+	free(formdata.fields);
+}

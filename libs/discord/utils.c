@@ -16,7 +16,7 @@ unsigned int get_all_intents() {
 	return result;
 }
 
-struct Response api_request(const char *token, const char *path, const char *method, const char *body) {
+struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
 	char url[256] = {0};
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
@@ -26,7 +26,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	struct RequestConfig config = {
 		.url = url,
 		.method = (char *) method,
-		.headers = allocate(NULL, 0, 2 + !!body, sizeof(struct Header))
+		.headers = allocate(NULL, 0, 1 + !!formdata + !!body, sizeof(struct Header))
 	};
 
 	config.headers[0] = (struct Header) {
@@ -34,33 +34,33 @@ struct Response api_request(const char *token, const char *path, const char *met
 		.value = authorization
 	};
 
-	config.headers[1] = (struct Header) {
-		.name = "Content-Type",
-		.value = "application/json"
-	};
+	config.header_size = 1;
 
-	if (body != NULL) {
+	if (body != NULL && formdata == NULL) {
 		size_t body_length = strlen(body);
-		config.body = allocate(NULL, 0, body_length + 1, sizeof(char));
-		strcpy(config.body, body);
+		config.body.is_formdata = false;
+		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
+		strcpy(config.body.payload.data, body);
 
 		char length[5] = {0};
 		sprintf(length, "%ld", body_length);
 
-		config.header_size = 3;
-		config.headers[2] = (struct Header) {
-			.name = "Content-Length",
-			.value = length
-		};
-	} else {
 		config.header_size = 2;
+
+		config.headers[1] = (struct Header) {
+			.name = "Content-Type",
+			.value = "application/json"
+		};
+	} else if (body == NULL && formdata != NULL && formdata->field_size != 0) {
+		config.body.is_formdata = true;
+		config.body.payload.formdata = *formdata;
 	}
 
 	struct Response response = request(config);
 	free(config.headers);
 
 	if (body != NULL) {
-		free(config.body);
+		free(config.body.payload.data);
 	}
 
 	return response;

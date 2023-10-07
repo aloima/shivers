@@ -105,6 +105,18 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	add_field_to_embed(&embed, "Uptime", uptime_text, true);
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
+	#if defined(__clang__)
+		char footer[64];
+		sprintf(footer, "Compiled with clang %d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
+
+		set_embed_footer(&embed, footer, NULL);
+	#elif defined(__GNUC__)
+		char footer[64];
+		sprintf(footer, "Compiled with gcc %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+
+		set_embed_footer(&embed, footer, NULL);
+	#endif
+
 	add_embed_to_message(embed, &reply);
 	send_message(client, json_get_val(message, "channel_id").value.string, reply);
 	free(embed.fields);

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include <discord.h>
+#include <network.h>
 #include <json.h>
 
 void send_message(const struct Client client, const char *channel_id, const struct Message message) {
@@ -11,7 +12,9 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	char path[64] = {0};
 	sprintf(path, "/channels/%s/messages", channel_id);
 
-	if (message.content) add_json_element(payload, "content", message.content, JSON_STRING);
+	if (message.content) {
+		add_json_element(payload, "content", message.content, JSON_STRING);
+	}
 
 	if (message.embed_size != 0) {
 		jsonelement_t *embeds_payload = create_empty_json_element(true);
@@ -64,6 +67,19 @@ void send_message(const struct Client client, const char *channel_id, const stru
 				json_free(thumbnail);
 			}
 
+			if (embed.footer.text) {
+				jsonelement_t *embed_author_payload = create_empty_json_element(false);
+				add_json_element(embed_author_payload, "text", embed.footer.text, JSON_STRING);
+
+				if (embed.footer.icon_url) {
+					add_json_element(embed_author_payload, "icon_url", embed.footer.icon_url, JSON_STRING);
+				}
+
+				add_json_element(embed_payload, "footer", embed_author_payload, JSON_OBJECT);
+				json_free(embed_author_payload);
+			}
+
+
 			if (embed.field_size != 0) {
 				jsonelement_t *fields_payload = create_empty_json_element(true);
 
@@ -94,9 +110,52 @@ void send_message(const struct Client client, const char *channel_id, const stru
 		json_free(embeds_payload);
 	}
 
+	struct Response response;
 	char *body = json_stringify(payload);
 
-	struct Response response = api_request(client.token, path, "POST", body);
+	if (message.file_size != 0 && payload->size != 0) {
+		struct FormData formdata = {
+			.boundary = "deneme"
+		};
+
+		add_field_to_formdata(&formdata, "payload_json", body, strlen(body), NULL);
+		add_header_to_formdata_field(&formdata, "payload_json", "Content-Type", "application/json");
+
+		for (size_t i = 0; i < message.file_size; ++i) {
+			struct File file = message.files[i];
+			char *field_name = allocate(NULL, 0, 12, sizeof(char));
+			sprintf(field_name, "files[%ld]", i);
+
+			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
+			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
+			free(field_name);
+		}
+
+		response = api_request(client.token, path, "POST", NULL, &formdata);
+		free_formdata(formdata);
+	} else if (message.file_size != 0) {
+		struct FormData formdata = {
+			.boundary = "deneme"
+		};
+
+		for (size_t i = 0; i < message.file_size; ++i) {
+			struct File file = message.files[i];
+			char *field_name = allocate(NULL, 0, 12, sizeof(char));
+			sprintf(field_name, "files[%ld]", i);
+
+			add_field_to_formdata(&formdata, file.name, file.data, file.size, NULL);
+			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
+			free(field_name);
+		}
+
+		response = api_request(client.token, path, "POST", NULL, &formdata);
+		free_formdata(formdata);
+	} else if (payload->size != 0) {
+		response = api_request(client.token, path, "POST", body, NULL);
+	} else {
+		throw("cannot send empty message");
+	}
+
 	response_free(&response);
 	json_free(payload);
 	free(body);
@@ -121,6 +180,13 @@ void set_embed_author(struct Embed *embed, char *name, char *url, char *icon_url
 	};
 }
 
+void set_embed_footer(struct Embed *embed, char *text, char *icon_url) {
+	embed->footer = (struct EmbedFooter) {
+		.text = text,
+		.icon_url = icon_url
+	};
+}
+
 void add_embed_to_message(const struct Embed embed, struct Message *message) {
 	++message->embed_size;
 	message->embeds = allocate(message->embeds, message->embed_size - 1, message->embed_size, sizeof(struct Embed));
@@ -128,5 +194,22 @@ void add_embed_to_message(const struct Embed embed, struct Message *message) {
 }
 
 void free_message(struct Message message) {
-	free(message.embeds);
+	if (message.embed_size != 0) {
+		free(message.embeds);
+	}
+
+	if (message.file_size != 0) {
+		free(message.files);
+	}
+}
+
+void add_file_to_message(struct Message *message, const char *name, const char *data, const size_t size, const char *type) {
+	++message->file_size;
+	message->files = allocate(message->files, message->file_size - 1, message->file_size, sizeof(struct File));
+	message->files[message->file_size - 1] = (struct File) {
+		.name = (char *) name,
+		.data = (char *) data,
+		.type = (char *) type,
+		.size = size
+	};
 }

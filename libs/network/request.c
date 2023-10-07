@@ -49,6 +49,8 @@ void response_free(struct Response *response) {
 	free(response->status.message);
 }
 
+// TODO: allocate request_message variable isntead of static array
+
 struct Response request(struct RequestConfig config) {
 	struct Response response = { false, { 0, NULL }, NULL, NULL, 0 };
 	int sockfd;
@@ -75,7 +77,8 @@ struct Response request(struct RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message[2048] = {0}, buffer[1024] = {0}, *response_message = NULL;
+		char request_message[8192] = {0};
+		char buffer[1024] = {0}, *response_message = NULL;
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -97,15 +100,85 @@ struct Response request(struct RequestConfig config) {
 			strcat(header_text, "\r\n");
 		}
 
-		if (config.body) {
-			sprintf(request_message,
+		if (config.body.is_formdata) {
+			const char *boundary = config.body.payload.formdata.boundary;
+			const size_t boundary_length = strlen(boundary);
+
+			char *data = NULL;
+			size_t data_length = 0;
+
+			char separator[32] = {0};
+			sprintf(separator, "--%s\r\n", boundary);
+
+			const size_t field_size = config.body.payload.formdata.field_size;
+
+			for (size_t i = 0; i < field_size; ++i) {
+				const struct FormDataField field = config.body.payload.formdata.fields[i];
+
+				char line[128] = {0};
+				size_t line_length = 0;
+				size_t field_length = (4 + boundary_length + (field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name) + 4);
+
+				data = allocate(data, data_length, data_length + field_length + 1, sizeof(char));
+				strcat(data, separator);
+
+				if (field.filename) {
+					sprintf(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
+				} else {
+					sprintf(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
+				}
+
+				strcat(data, line);
+
+				const size_t field_header_size = field.header_size;
+
+				for (size_t a = 0; a < field_header_size; ++a) {
+					const struct Header header = field.headers[a];
+					sprintf(line, "%s: %s\r\n", header.name, header.value);
+					line_length = strlen(line);
+
+					data = allocate(data, data_length + field_length + 1, data_length + field_length + line_length + 1, sizeof(char));
+					field_length += line_length;
+					strcat(data, line);
+				}
+
+				strcat(data, "\r\n");
+				data = allocate(data, data_length + field_length + 1, data_length + field_length + field.data_size + 1, sizeof(char));
+				field_length += field.data_size;
+				strncat(data, field.data, field.data_size);
+				data_length += field_length;
+				strcat(data, "\r\n");
+			}
+
+			data = allocate(data, data_length + 1, 4 + boundary_length + data_length + 1, sizeof(char));
+			data_length += (4 + boundary_length);
+			sprintf(separator, "--%s--", boundary);
+			strcat(data, separator);
+
+			sprintf(request_message, (
 				"%s %s HTTP/1.1\r\n"
 				"Host: %s:%d\r\n"
 				"Accept: */*\r\n"
 				"Connection: close\r\n"
+				"Content-Type: multipart/form-data; boundary=%s\r\n"
+				"Content-Length: %ld\r\n"
 				"%s\r\n"
 				"%s"
-			, config.method, url.path, url.hostname, url.port, header_text, config.body);
+			), config.method, url.path, url.hostname, url.port, boundary, data_length, header_text, data);
+
+			free(data);
+		} else if (config.body.payload.data != NULL) {
+			char *body = config.body.payload.data;
+
+			sprintf(request_message, (
+				"%s %s HTTP/1.1\r\n"
+				"Host: %s:%d\r\n"
+				"Accept: */*\r\n"
+				"Connection: close\r\n"
+				"Content-Length: %ld\n"
+				"%s\r\n"
+				"%s"
+			), config.method, url.path, url.hostname, url.port, strlen(body), header_text, body);
 		} else {
 			sprintf(request_message,
 				"%s %s HTTP/1.1\r\n"

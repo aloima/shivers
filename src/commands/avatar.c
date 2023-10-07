@@ -43,7 +43,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				char path[32] = {0};
 				sprintf(path, "/users/%s", user_id);
 
-				struct Response response = api_request(client.token, path, "GET", NULL);
+				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
 				jsonelement_t *user = json_parse(response.data);
 				const jsonresult_t avatar = json_get_val(user, "avatar");
 
