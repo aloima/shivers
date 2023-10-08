@@ -143,7 +143,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 			char *field_name = allocate(NULL, 0, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
 
-			add_field_to_formdata(&formdata, file.name, file.data, file.size, NULL);
+			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
 			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
 			free(field_name);
 		}
