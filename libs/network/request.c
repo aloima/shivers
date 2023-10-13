@@ -77,7 +77,8 @@ struct Response request(struct RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message[8192] = {0};
+		char request_message[12288] = {0};
+		size_t request_message_length;
 		char buffer[1024] = {0}, *response_message = NULL;
 
 		if (tls) {
@@ -113,14 +114,16 @@ struct Response request(struct RequestConfig config) {
 			const size_t field_size = config.body.payload.formdata.field_size;
 
 			for (size_t i = 0; i < field_size; ++i) {
+				const bool first_field = (i == 0);
 				const struct FormDataField field = config.body.payload.formdata.fields[i];
 
 				char line[128] = {0};
 				size_t line_length = 0;
-				size_t field_length = (4 + boundary_length + (field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name) + 4);
+				const size_t disposition_length = ((field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name));
+				size_t field_length = (4 + boundary_length + disposition_length);
 
-				data = allocate(data, data_length, data_length + field_length + 1, sizeof(char));
-				strcat(data, separator);
+				data = allocate(data, (first_field ? 0 : (data_length + 1)), data_length + field_length + 1, sizeof(char));
+				memcpy(data + data_length, separator, 4 + boundary_length);
 
 				if (field.filename) {
 					sprintf(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
@@ -128,7 +131,7 @@ struct Response request(struct RequestConfig config) {
 					sprintf(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
 				}
 
-				strcat(data, line);
+				memcpy(data + data_length + 4 + boundary_length, line, disposition_length);
 
 				const size_t field_header_size = field.header_size;
 
@@ -138,22 +141,28 @@ struct Response request(struct RequestConfig config) {
 					line_length = strlen(line);
 
 					data = allocate(data, data_length + field_length + 1, data_length + field_length + line_length + 1, sizeof(char));
+					memcpy(data + data_length + field_length, line, line_length);
 					field_length += line_length;
-					strcat(data, line);
 				}
 
-				strcat(data, "\r\n");
-				data = allocate(data, data_length + field_length + 1, data_length + field_length + field.data_size + 1, sizeof(char));
+				data = allocate(data, data_length + field_length + 1, data_length + field_length + 2 + 1, sizeof(char));
+				memcpy(data + data_length + field_length, "\r\n", 2);
+				field_length += 2;
+
+				data = allocate(data, data_length + field_length + 1, data_length + field_length + field.data_size + 2 + 1, sizeof(char));
+				memcpy(data + data_length + field_length, field.data, field.data_size);
 				field_length += field.data_size;
-				strncat(data, field.data, field.data_size);
+
+				memcpy(data + data_length + field_length, "\r\n", 2);
+				field_length += 2;
+
 				data_length += field_length;
-				strcat(data, "\r\n");
 			}
 
 			data = allocate(data, data_length + 1, 4 + boundary_length + data_length + 1, sizeof(char));
-			data_length += (4 + boundary_length);
 			sprintf(separator, "--%s--", boundary);
-			strcat(data, separator);
+			memcpy(data + data_length, separator, (4 + boundary_length));
+			data_length += (4 + boundary_length);
 
 			sprintf(request_message, (
 				"%s %s HTTP/1.1\r\n"
@@ -163,8 +172,11 @@ struct Response request(struct RequestConfig config) {
 				"Content-Type: multipart/form-data; boundary=%s\r\n"
 				"Content-Length: %ld\r\n"
 				"%s\r\n"
-				"%s"
-			), config.method, url.path, url.hostname, url.port, boundary, data_length, header_text, data);
+			), config.method, url.path, url.hostname, url.port, boundary, data_length, header_text);
+
+			request_message_length = strlen(request_message);
+			memcpy(request_message + request_message_length, data, data_length);
+			request_message_length += data_length;
 
 			free(data);
 		} else if (config.body.payload.data != NULL) {
@@ -179,6 +191,8 @@ struct Response request(struct RequestConfig config) {
 				"%s\r\n"
 				"%s"
 			), config.method, url.path, url.hostname, url.port, strlen(body), header_text, body);
+
+			request_message_length = strlen(request_message);
 		} else {
 			sprintf(request_message,
 				"%s %s HTTP/1.1\r\n"
@@ -187,11 +201,11 @@ struct Response request(struct RequestConfig config) {
 				"Connection: close\r\n"
 				"%s\r\n"
 			, config.method, url.path, url.hostname, url.port, header_text);
+
+			request_message_length = strlen(request_message);
 		}
 
 		free_url(url);
-
-		size_t request_message_length = strlen(request_message);
 
 		if (_write(ssl, sockfd, request_message, request_message_length) <= 0) {
 			close_socket(sockfd, ssl);

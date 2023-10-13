@@ -51,6 +51,7 @@
 
 	extern const struct Command about;
 	extern const struct Command avatar;
+	extern const struct Command chess;
 	extern const struct Command github;
 	extern const struct Command help;
 	extern const struct Command wikipedia;
