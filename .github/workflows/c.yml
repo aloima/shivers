@@ -17,5 +17,11 @@ jobs:
         version: latest
         platform: x64
 
+    - name: setup-libvips
+      run: |
+        sudo apt-get install libvips42
+        sudo apt-get install libvips-dev
+        sudo apt-get install libomp-dev
+
     - name: make
       run: make
