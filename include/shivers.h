@@ -43,6 +43,7 @@
 
 	#define INVALID_ARGUMENT "Invalid argument, please use `help` command."
 	#define MISSING_ARGUMENT "Missing argument, please use `help` command."
+	#define ADDITIONAL_ARGUMENT "Additional argument, please use `help` command."
 
 	void on_ready(struct Client client);
 	void on_handle_guilds(struct Client client);

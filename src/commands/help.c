@@ -28,7 +28,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		if (command.name != NULL) {
 			struct Embed embed = {0};
 
-			char usage[64] = {0};
+			char usage[64];
 			char *arguments_description = NULL;
 
 			sprintf(usage, PREFIX "%s", command.name);
@@ -40,7 +40,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			if (command.arg_size != 0) {
 				char **arguments_text = allocate(NULL, 0, command.arg_size, sizeof(char *));
 
-				for (size_t i = 0; i < command.arg_size; ++i) {
+				for (unsigned char i = 0; i < command.arg_size; ++i) {
 					const struct CommandArgument argument = command.args[i];
 					arguments_text[i] = allocate(NULL, 0, 192, sizeof(char));
 
@@ -79,7 +79,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				add_field_to_embed(&embed, "Usage", usage, false);
 				add_field_to_embed(&embed, "Arguments", arguments_description, false);
 
-				for (size_t i = 0; i < command.arg_size; ++i) {
+				for (unsigned char i = 0; i < command.arg_size; ++i) {
 					free(arguments_text[i]);
 				}
 
@@ -104,13 +104,13 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	} else {
 		struct Embed embed = {0};
 
-		char text[4097] = {0};
+		char text[4096];
 		strcpy(text, "```\\n");
 
-		size_t max_length = 0;
+		unsigned char max_length = 0;
 
-		for (size_t i = 0; i < command_size; ++i) {
-			const size_t length = strlen(commands[i].name);
+		for (unsigned char i = 0; i < command_size; ++i) {
+			const unsigned char length = strlen(commands[i].name);
 
 			if (length > max_length) {
 				max_length = length;
@@ -120,9 +120,13 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		for (size_t i = 0; i < command_size; ++i) {
 			const struct Command command = commands[i];
 
-			char blanks[9] = {0};
-			char line[129] = {0};
-			memset(blanks, ' ', max_length - strlen(command.name));
+			char blanks[8];
+			char line[128];
+			unsigned char blank_length = (max_length - strlen(command.name));
+
+			memset(blanks, ' ', blank_length);
+			blanks[blank_length] = '\0';
+
 			sprintf(line, "%s%s | %s\\n", command.name, blanks, command.description);
 			strcat(text, line);
 		}

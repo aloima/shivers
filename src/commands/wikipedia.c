@@ -16,13 +16,15 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		send_message(client, channel_id, reply);
 		return;
 	} else {
-		struct RequestConfig config = {0};
-		config.method = "GET";
+		struct RequestConfig config = {
+			.method = "GET"
+		};
 
-		char search_query[512] = {0};
+		char search_query[512];
+		search_query[0] = 0;
 		join(args.data, search_query, args.size, " ");
 
-		char search_url[512] = {0};
+		char search_url[512];
 		sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", search_query);
 		config.url = search_url;
 
@@ -31,7 +33,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		jsonresult_t page_name = json_get_val(search_result, "1.0");
 
 		if (page_name.exist) {
-			char url[512] = {0};
+			char url[512];
 			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
 			config.url = url;
 
@@ -41,7 +43,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			struct Embed embed = {0};
 
 			char *title = json_get_val(page_info, "title").value.string;
-			char page_url[512] = {0}, *encoded_page_url = NULL;
+			char page_url[512], *encoded_page_url = NULL;
 			sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
 			encoded_page_url = percent_encode(page_url);
 
@@ -52,7 +54,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
 
 			if (image_name.exist) {
-				char image_url[512] = {0};
+				char image_url[512];
 				sprintf(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
 				config.url = image_url;
 
@@ -64,9 +66,10 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 				if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
 					char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
-					char png_url[512] = {0};
+					char png_url[512];
 					Split svg_splitter = split(svg_url, "/");
-					char image_code[32] = {0};
+					char image_code[32];
+					image_code[0] = 0;
 
 					join(svg_splitter.data + 5, image_code, 2, "/");
 					split_free(&svg_splitter);

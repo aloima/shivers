@@ -14,30 +14,34 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
-	if (args.size != 1) {
+	if (args.size == 0) {
 		reply.content = MISSING_ARGUMENT;
+		send_message(client, channel_id, reply);
+		return;
+	} else if (args.size != 1) {
+		reply.content = ADDITIONAL_ARGUMENT;
 		send_message(client, channel_id, reply);
 		return;
 	} else {
 		struct Embed embed = {0};
-		struct RequestConfig config = {0};
+		struct RequestConfig config = {
+			.header_size = 1,
+			.method = "GET",
+			.headers = allocate(NULL, 0, 1, sizeof(struct Header))
+		};
 
-		config.header_size = 1;
-		config.headers = allocate(NULL, 0, 1, sizeof(struct Header));
 		config.headers[0] = (struct Header) {
 			.name = "User-Agent",
 			.value = "shivers"
 		};
 
-		char url[256] = {0};
+		char url[256];
 		struct Response response = {0};
 
 		if (char_at(args.data[0], '/') == -1) {
 			sprintf(url, "https://api.github.com/users/%s", args.data[0]);
 
 			config.url = url;
-			config.method = "GET";
-
 			response = request(config);
 
 			if (response.status.code == 404) {
@@ -49,32 +53,32 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				jsonresult_t name_data = json_get_val(user, "name");
 				jsonresult_t bio = json_get_val(user, "bio");
 
-				char following[24] = {0};
+				char following[16];
 				sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
 
-				char followers[24] = {0};
+				char followers[16];
 				sprintf(followers, "%ld", (unsigned long) json_get_val(user, "followers").value.number);
 
-				char repositories[24] = {0};
+				char repositories[8];
 				sprintf(repositories, "%ld", (unsigned long) json_get_val(user, "public_repos").value.number);
 
-				char gists[24] = {0};
+				char gists[8];
 				sprintf(gists, "%ld", (unsigned long) json_get_val(user, "public_gists").value.number);
 
-				char given_stars[24] = {0};
+				char given_stars[8];
 				sprintf(url, "https://api.github.com/users/%s/starred", args.data[0]);
 				config.url = url;
 				jsonelement_t *stars_json = json_parse(response.data);
 				sprintf(given_stars, "%ld", stars_json->size);
 				json_free(stars_json);
 
-				char joined_at[32] = {0};
-				struct tm tm = {0};
+				char joined_at[32];
+				struct tm tm;
 
 				strptime(json_get_val(user, "created_at").value.string, "%Y-%m-%dT%H:%M:%SZ", &tm);
 				strftime(joined_at, sizeof(joined_at), "%d %B %Y", &tm);
 
-				char name[128] = {0};
+				char name[128];
 				sprintf(name, "@%s", login_data.value.string);
 
 				if (name_data.type != JSON_NULL && (strcmp(login_data.value.string, name_data.value.string) != 0)) {
@@ -106,8 +110,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			sprintf(url, "https://api.github.com/repos/%s", args.data[0]);
 
 			config.url = url;
-			config.method = "GET";
-
 			response = request(config);
 
 			if (response.status.code == 404) {
@@ -119,9 +121,9 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				jsonresult_t language = json_get_val(repository, "language");
 				jsonresult_t license = json_get_val(repository, "license");
 
-				char stars[24] = {0};
-				char watchers[24] = {0};
-				char forks[24] = {0};
+				char stars[8];
+				char watchers[8];
+				char forks[8];
 				sprintf(stars, "%ld", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
 				sprintf(watchers, "%ld", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
 				sprintf(forks, "%ld", (unsigned long) json_get_val(repository, "forks_count").value.number);

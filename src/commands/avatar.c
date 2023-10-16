@@ -15,7 +15,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Embed embed = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
-	char avatar_url[101] = {0};
+	char avatar_url[101];
 
 	if (args.size == 1) {
 		const char *arg = args.data[0];
@@ -27,7 +27,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			send_message(client, channel_id, reply);
 			return;
 		} else {
-			char user_id[19] = {0};
+			char user_id[19];
 
 			if (arg_length == 18) {
 				snprintf(user_id, 19, "%s", args.data[0]);

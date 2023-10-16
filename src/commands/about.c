@@ -16,19 +16,19 @@
 
 static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	long seconds = ((get_timestamp(NULL) - client.ready_at) / 1000);
-	short years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
+	char years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
 	seconds -= (years * SECONDS_IN_YEAR);
-	short months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
+	char months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
 	seconds -= (months * SECONDS_IN_MONTH);
-	short days = ((seconds - (seconds % SECONDS_IN_DAY)) / SECONDS_IN_DAY);
+	char days = ((seconds - (seconds % SECONDS_IN_DAY)) / SECONDS_IN_DAY);
 	seconds -= (days * SECONDS_IN_DAY);
-	short hours = ((seconds - (seconds % SECONDS_IN_HOUR)) / SECONDS_IN_HOUR);
+	char hours = ((seconds - (seconds % SECONDS_IN_HOUR)) / SECONDS_IN_HOUR);
 	seconds -= (hours * SECONDS_IN_HOUR);
-	short minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
+	char minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
 	seconds -= (minutes * SECONDS_IN_MINUTE);
 
 	char *uptime[6] = {0};
-	size_t uptime_element_count = 0;
+	unsigned char uptime_element_count = 0;
 
 	if (years != 0) {
 		++uptime_element_count;
@@ -68,7 +68,7 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 
 	join(uptime, uptime_text, uptime_element_count, " ");
 
-	for (short i = 0; i < uptime_element_count; ++i) {
+	for (unsigned char i = 0; i < uptime_element_count; ++i) {
 		free(uptime[i]);
 	}
 }
@@ -78,21 +78,22 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Embed embed = {0};
 
 	struct rusage r_usage;
-	char memory_usage[16] = {0};
+	char memory_usage[16];
 
 	getrusage(RUSAGE_SELF, &r_usage);
 	sprintf(memory_usage, "%.2f MB", r_usage.ru_maxrss / 1024.0);
 
-	char uptime_text[56] = {0};
+	char uptime_text[48];
+	uptime_text[0] = 0;
 	set_uptime_text(client, uptime_text);
 
-	char guilds[4] = {0};
+	char guilds[4];
 	sprintf(guilds, "%ld", get_guilds_cache()->size);
 
-	char latency[8] = {0};
+	char latency[8];
 	sprintf(latency, "%dms", get_latency());
 
-	char add[112] = {0};
+	char add[112];
 	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
 
 	embed.color = COLOR;
