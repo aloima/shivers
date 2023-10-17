@@ -6,7 +6,7 @@
 
 char *base64_encode(const char *data, const size_t data_length) {
 	const char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	const size_t m3 = (data_length % 3);
+	const unsigned char m3 = (data_length % 3);
 	const size_t d3 = ((data_length - m3) / 3);
 	const size_t loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
 

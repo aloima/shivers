@@ -31,7 +31,7 @@
 	void setup_commands();
 	void free_commands();
 	const struct Command *get_commands();
-	const size_t get_command_size();
+	const unsigned short get_command_size();
 
 	void free_cooldowns();
 	void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args);

@@ -4,7 +4,7 @@
 #include <utils.h>
 
 static struct Command *commands = NULL;
-static size_t command_size = 0;
+static unsigned short command_size = 0;
 
 void setup_commands() {
 	struct Command command_array[] = {about, avatar, chess, github, help, wikipedia};
@@ -22,6 +22,6 @@ const struct Command *get_commands() {
 	return commands;
 }
 
-const size_t get_command_size() {
+const unsigned short get_command_size() {
 	return command_size;
 }

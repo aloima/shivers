@@ -53,26 +53,29 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				jsonresult_t name_data = json_get_val(user, "name");
 				jsonresult_t bio = json_get_val(user, "bio");
 
-				char following[16];
+				char following[8];
 				sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
 
-				char followers[16];
+				char followers[8];
 				sprintf(followers, "%ld", (unsigned long) json_get_val(user, "followers").value.number);
 
-				char repositories[8];
+				char repositories[6];
 				sprintf(repositories, "%ld", (unsigned long) json_get_val(user, "public_repos").value.number);
 
-				char gists[8];
+				char gists[6];
 				sprintf(gists, "%ld", (unsigned long) json_get_val(user, "public_gists").value.number);
 
 				char given_stars[8];
 				sprintf(url, "https://api.github.com/users/%s/starred", args.data[0]);
+
 				config.url = url;
-				jsonelement_t *stars_json = json_parse(response.data);
+				response = request(config);
+
+				jsonelement_t *stars_json = json_parse(response.data); // TODO: invalid parsing, fix it
 				sprintf(given_stars, "%ld", stars_json->size);
 				json_free(stars_json);
 
-				char joined_at[32];
+				char joined_at[18];
 				struct tm tm;
 
 				strptime(json_get_val(user, "created_at").value.string, "%Y-%m-%dT%H:%M:%SZ", &tm);
@@ -122,10 +125,12 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				jsonresult_t license = json_get_val(repository, "license");
 
 				char stars[8];
-				char watchers[8];
-				char forks[8];
 				sprintf(stars, "%ld", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
+
+				char watchers[8];
 				sprintf(watchers, "%ld", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
+
+				char forks[8];
 				sprintf(forks, "%ld", (unsigned long) json_get_val(repository, "forks_count").value.number);
 
 				add_field_to_embed(&embed, "Stars", stars, true);

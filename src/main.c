@@ -10,9 +10,9 @@
 
 int main(void) {
 	struct stat token_entry;
-	int token = stat("token", &token_entry);
+	char token_stat = stat("token", &token_entry);
 
-	if (token == -1) {
+	if (token_stat == -1) {
 		throw("startup: missing token file");
 	} else if (!S_ISREG(token_entry.st_mode)) {
 		throw("startup: invalid token entry");
@@ -20,7 +20,7 @@ int main(void) {
 		srand(time(NULL));
 
 		FILE *token_file = fopen("token", "r");
-		char token[256] = {0};
+		char token[256];
 
 		fgets(token, 256, token_file);
 		fclose(token_file);
