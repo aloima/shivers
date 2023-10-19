@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = --optimize=3 --warn-all --std=gnu99
-LIBRARIES = -lm -lssl -lcrypto -lpthread `pkg-config vips --cflags --libs`
+LIBRARIES = -lm -lssl -lcrypto -lpthread
 
 .PHONY: compile clean
 
