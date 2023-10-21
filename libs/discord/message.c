@@ -68,15 +68,15 @@ void send_message(const struct Client client, const char *channel_id, const stru
 			}
 
 			if (embed.footer.text) {
-				jsonelement_t *embed_author_payload = create_empty_json_element(false);
-				add_json_element(embed_author_payload, "text", embed.footer.text, JSON_STRING);
+				jsonelement_t *embed_footer_payload = create_empty_json_element(false);
+				add_json_element(embed_footer_payload, "text", embed.footer.text, JSON_STRING);
 
 				if (embed.footer.icon_url) {
-					add_json_element(embed_author_payload, "icon_url", embed.footer.icon_url, JSON_STRING);
+					add_json_element(embed_footer_payload, "icon_url", embed.footer.icon_url, JSON_STRING);
 				}
 
-				add_json_element(embed_payload, "footer", embed_author_payload, JSON_OBJECT);
-				json_free(embed_author_payload);
+				add_json_element(embed_payload, "footer", embed_footer_payload, JSON_OBJECT);
+				json_free(embed_footer_payload);
 			}
 
 
@@ -123,7 +123,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 
 		for (size_t i = 0; i < message.file_size; ++i) {
 			struct File file = message.files[i];
-			char *field_name = allocate(NULL, 0, 12, sizeof(char));
+			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
 
 			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
@@ -140,7 +140,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 
 		for (size_t i = 0; i < message.file_size; ++i) {
 			struct File file = message.files[i];
-			char *field_name = allocate(NULL, 0, 12, sizeof(char));
+			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
 
 			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
@@ -163,7 +163,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 
 void add_field_to_embed(struct Embed *embed, char *name, char *value, bool is_inline) {
 	++embed->field_size;
-	embed->fields = allocate(embed->fields, embed->field_size - 1, embed->field_size, sizeof(struct EmbedField));
+	embed->fields = allocate(embed->fields, -1, embed->field_size, sizeof(struct EmbedField));
 
 	embed->fields[embed->field_size - 1] = (struct EmbedField) {
 		.name = name,
@@ -189,7 +189,7 @@ void set_embed_footer(struct Embed *embed, char *text, char *icon_url) {
 
 void add_embed_to_message(const struct Embed embed, struct Message *message) {
 	++message->embed_size;
-	message->embeds = allocate(message->embeds, message->embed_size - 1, message->embed_size, sizeof(struct Embed));
+	message->embeds = allocate(message->embeds, -1, message->embed_size, sizeof(struct Embed));
 	message->embeds[message->embed_size - 1] = embed;
 }
 
@@ -205,7 +205,7 @@ void free_message(struct Message message) {
 
 void add_file_to_message(struct Message *message, const char *name, const char *data, const size_t size, const char *type) {
 	++message->file_size;
-	message->files = allocate(message->files, message->file_size - 1, message->file_size, sizeof(struct File));
+	message->files = allocate(message->files, -1, message->file_size, sizeof(struct File));
 	message->files[message->file_size - 1] = (struct File) {
 		.name = (char *) name,
 		.data = (char *) data,

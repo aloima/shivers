@@ -27,7 +27,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		struct RequestConfig config = {
 			.header_size = 1,
 			.method = "GET",
-			.headers = allocate(NULL, 0, 1, sizeof(struct Header))
+			.headers = allocate(NULL, -1, 1, sizeof(struct Header))
 		};
 
 		config.headers[0] = (struct Header) {

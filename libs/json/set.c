@@ -3,7 +3,7 @@
 
 #include <json.h>
 
-jsonelement_t *create_empty_json_element(bool is_array) {
+jsonelement_t *create_empty_json_element(const bool is_array) {
 	jsonelement_t *element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 
 	if (is_array) {
@@ -17,24 +17,26 @@ jsonelement_t *create_empty_json_element(bool is_array) {
 
 void add_json_element(jsonelement_t *target, const char *key, void *data, const char type) {
 	++target->size;
+	jsonelement_t **elements_value = (jsonelement_t **) target->value;
+	jsonelement_t ***elements = &elements_value;
 
-	target->value = allocate(target->value, target->size - 1, target->size, sizeof(jsonelement_t));
+	target->value = allocate(*elements, -1, target->size, sizeof(jsonelement_t *));
 	((jsonelement_t **) target->value)[target->size - 1] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 	((jsonelement_t **) target->value)[target->size - 1]->type = type;
 
 	if (key != NULL) {
 		size_t key_length = strlen(key);
 		((jsonelement_t **) target->value)[target->size - 1]->key = allocate(NULL, 0, key_length + 1, sizeof(jsonelement_t));
-		memcpy(((jsonelement_t **) target->value)[target->size - 1]->key, key, key_length);
+		strncpy(((jsonelement_t **) target->value)[target->size - 1]->key, key, key_length);
 	}
 
 	if (type == JSON_STRING) {
 		size_t data_length = strlen(data);
 
-		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, 0, data_length + 1, sizeof(char));
-		memcpy(((jsonelement_t **) target->value)[target->size - 1]->value, data, data_length);
+		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, -1, data_length + 1, sizeof(char));
+		strncpy(((jsonelement_t **) target->value)[target->size - 1]->value, data, data_length);
 	} else if (type == JSON_BOOLEAN) {
-		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, 0, 1, sizeof(char));
+		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, -1, 1, sizeof(char));
 		((bool *) ((jsonelement_t **) target->value)[target->size - 1]->value)[0] = ((bool *) data)[0];
 	} else if (type == JSON_NUMBER) {
 		long number = ((long *) data)[0];
@@ -42,10 +44,10 @@ void add_json_element(jsonelement_t *target, const char *key, void *data, const 
 		// TODO: float support
 		((jsonelement_t **) target->value)[target->size - 1]->size = 1;
 
-		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, 0, 1, sizeof(long));
+		((jsonelement_t **) target->value)[target->size - 1]->value = allocate(NULL, -1, 1, sizeof(long));
 		memcpy(((jsonelement_t **) target->value)[target->size - 1]->value, &number, sizeof(long));
 	} else if (type == JSON_OBJECT || type == JSON_ARRAY) {
-		size_t size = ((jsonelement_t *) data)->size;
+		const size_t size = ((jsonelement_t *) data)->size;
 		jsonelement_t *target_element = ((jsonelement_t **) target->value)[target->size - 1];
 
 		for (size_t i = 0; i < size; ++i) {

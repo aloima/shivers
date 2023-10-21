@@ -24,10 +24,10 @@ struct URL parse_url(const char *data) {
 	Split hostname_splitter = split(splitter.data[2], ":");
 
 	const size_t protocol_length = strlen(splitter.data[0]);
-	url.protocol = allocate(NULL, 0, protocol_length, sizeof(char));
+	url.protocol = allocate(NULL, -1, protocol_length, sizeof(char));
 	strncpy(url.protocol, splitter.data[0], protocol_length - 1);
 
-	url.hostname = allocate(NULL, 0, strlen(hostname_splitter.data[0]) + 1, sizeof(char));
+	url.hostname = allocate(NULL, -1, strlen(hostname_splitter.data[0]) + 1, sizeof(char));
 	strcpy(url.hostname, hostname_splitter.data[0]);
 
 	if (hostname_splitter.size == 2) {
@@ -166,16 +166,16 @@ char *percent_encode(const char *data) {
 	}; // Some of reserved characters are not added because of syntax of URL.
 	const size_t length = strlen(data);
 	size_t result_length = (length + 1);
-	char *result = allocate(NULL, 0, (length + 1), sizeof(char));
+	char *result = allocate(NULL, -1, (length + 1), sizeof(char));
 
 	for (size_t i = 0; i < length; ++i) {
 		const char ch = data[i];
 
 		if (char_at(reserved_chars, data[i]) != -1) {
-			result = allocate(result, result_length, result_length + 2, sizeof(char));
+			result = allocate(result, -1, result_length + 2, sizeof(char));
 			result_length += 2;
 
-			char hex[4] = {0};
+			char hex[4];
 			sprintf(hex, "%%%x", ch);
 			strncat(result, hex, 3);
 		} else {
@@ -188,18 +188,18 @@ char *percent_encode(const char *data) {
 
 void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const size_t data_size, const char *filename) {
 	++formdata->field_size;
-	formdata->fields = allocate(formdata->fields, formdata->field_size - 1, formdata->field_size, sizeof(struct FormDataField));
+	formdata->fields = allocate(formdata->fields, -1, formdata->field_size, sizeof(struct FormDataField));
 
-	char *field_name = allocate(NULL, 0, strlen(name) + 1, sizeof(char));
+	char *field_name = allocate(NULL, -1, strlen(name) + 1, sizeof(char));
 	strcpy(field_name, name);
 
-	char *field_data = allocate(NULL, 0, data_size + 1, sizeof(char));
+	char *field_data = allocate(NULL, -1, data_size + 1, sizeof(char));
 	memcpy(field_data, data, data_size);
 
 	char *field_filename = NULL;
 
 	if (filename) {
-		field_filename = allocate(NULL, 0, strlen(filename) + 1, sizeof(char));
+		field_filename = allocate(NULL, -1, strlen(filename) + 1, sizeof(char));
 		strcpy(field_filename, filename);
 	}
 
@@ -219,12 +219,12 @@ void add_header_to_formdata_field(struct FormData *formdata, const char *field_n
 
 		if (strcmp(field->name, field_name) == 0) {
 			++field->header_size;
-			field->headers = allocate(field->headers, field->header_size - 1, field->header_size, sizeof(struct Header));
+			field->headers = allocate(field->headers, -1, field->header_size, sizeof(struct Header));
 
-			char *name = allocate(NULL, 0, strlen(header_name) + 1, sizeof(char));
+			char *name = allocate(NULL, -1, strlen(header_name) + 1, sizeof(char));
 			strcpy(name, header_name);
 
-			char *value = allocate(NULL, 0, strlen(header_value) + 1, sizeof(char));
+			char *value = allocate(NULL, -1, strlen(header_value) + 1, sizeof(char));
 			strcpy(value, header_value);
 
 			field->headers[field->header_size - 1] = (struct Header) {

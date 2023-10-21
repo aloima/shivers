@@ -107,7 +107,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 							_read(websocket->ssl, websocket->sockfd, (char *) buffer, 4);
 						}
 
-						frame.payload = allocate(NULL, 0, frame.payload_length + 1, sizeof(char));
+						frame.payload = allocate(NULL, -1, frame.payload_length + 1, sizeof(char));
 
 						switch (frame.opcode) {
 							case 0x1: {
@@ -153,14 +153,14 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 
 					for (size_t i = 0; i < websocket->tbs_size; ++i) {
 						if ((i + 1) != websocket->tbs_size) {
-							websocket->tbs[i].data = allocate(websocket->tbs[i].data, 0, websocket->tbs[i + 1].size + 1, sizeof(char));
+							websocket->tbs[i].data = allocate(websocket->tbs[i].data, -1, websocket->tbs[i + 1].size + 1, sizeof(char));
 							websocket->tbs[i].size = websocket->tbs[i + 1].size;
-							memcpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
+							strncpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
 						}
 					}
 
 					free(websocket->tbs[websocket->tbs_size - 1].data);
-					websocket->tbs = allocate(websocket->tbs, websocket->tbs_size, websocket->tbs_size - 1, sizeof(WebsocketTBS));
+					websocket->tbs = allocate(websocket->tbs, -1, websocket->tbs_size - 1, sizeof(WebsocketTBS));
 					--websocket->tbs_size;
 				}
 			}
@@ -174,7 +174,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 	for (int i = 0; i < splitter.size; ++i) {
 		if (strstr(splitter.data[i], ":") != NULL) {
 			Split line_splitter = split(splitter.data[i], ":");
-			char header_name[128] = {0};
+			char header_name[128];
 			strtolower(header_name, line_splitter.data[0]);
 
 			if (strcmp(header_name, "sec-websocket-accept") == 0) {
@@ -182,7 +182,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 
 				const char* websocket_guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 				size_t final_length = strlen(key) + strlen(websocket_guid);
-				char *final = allocate(NULL, 0, final_length + 1, sizeof(char));
+				char *final = allocate(NULL, -1, final_length + 1, sizeof(char));
 				strcat(final, key);
 				strcat(final, websocket_guid);
 
@@ -225,7 +225,7 @@ static void switch_protocols(Websocket *websocket) {
 
 	websocket->key = base64_encode((char *) key_data, 16);
 
-	char *request_message = allocate(NULL, 0, 512, sizeof(char));
+	char *request_message = allocate(NULL, -1, 512, sizeof(char));
 
 	sprintf(request_message,
 		"GET %s HTTP/1.1\r\n"
@@ -253,7 +253,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 
 	if (message_length > 65535) {
 		data_length += 14;
-		data = allocate(NULL, 0, data_length, sizeof(char));
+		data = allocate(NULL, -1, data_length, sizeof(char));
 		data[1] = 255;
 
 		for (int i = 0; i < 8; ++i) {
@@ -261,13 +261,13 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 		}
 	} else if (message_length > 125) {
 		data_length += 8;
-		data = allocate(NULL, 0, data_length, sizeof(char));
+		data = allocate(NULL, -1, data_length, sizeof(char));
 		data[1] = 254;
 		data[2] = (message_length >> 8) & 0xFF;
 		data[3] = message_length & 0xFF;
 	} else {
 		data_length += 6;
-		data = allocate(NULL, 0, data_length, sizeof(char));
+		data = allocate(NULL, -1, data_length, sizeof(char));
 		data[1] = 128 + message_length;
 	}
 
@@ -280,8 +280,8 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	}
 
 	++websocket->tbs_size;
-	websocket->tbs = allocate(websocket->tbs, websocket->tbs_size - 1, websocket->tbs_size, sizeof(WebsocketTBS));
-	websocket->tbs[websocket->tbs_size - 1].data = allocate(NULL, 0, data_length, sizeof(char));
+	websocket->tbs = allocate(websocket->tbs, -1, websocket->tbs_size, sizeof(WebsocketTBS));
+	websocket->tbs[websocket->tbs_size - 1].data = allocate(NULL, -1, data_length, sizeof(char));
 	websocket->tbs[websocket->tbs_size - 1].size = data_length;
 	memcpy(websocket->tbs[websocket->tbs_size - 1].data, data, data_length);
 

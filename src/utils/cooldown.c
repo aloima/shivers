@@ -41,15 +41,14 @@ void run_with_cooldown(const char *user_id, void (*command)(struct Client client
 
 void add_cooldown(const char *user_id) {
 	++cooldown_size;
-	cooldowns = allocate(cooldowns, cooldown_size - 1, cooldown_size, sizeof(struct Cooldown));
+	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 
 	struct Cooldown cooldown = {
 		.timestamp = get_timestamp(NULL),
-		.user_id = allocate(NULL, 0, strlen(user_id) + 1, sizeof(char))
+		.user_id = allocate(NULL, -1, strlen(user_id) + 1, sizeof(char))
 	};
 
 	strcpy(cooldown.user_id, user_id);
-
 	memcpy(cooldowns + cooldown_size - 1, &cooldown, sizeof(struct Cooldown));
 }
 
@@ -64,14 +63,14 @@ void remove_cooldown(const char *user_id) {
 	}
 
 	for (unsigned short i = at + 1; i < cooldown_size; ++i) {
-		cooldowns[i - 1].user_id = allocate(NULL, 0, strlen(cooldowns[i + 1].user_id) + 1, sizeof(char));
+		cooldowns[i - 1].user_id = allocate(cooldowns[i - 1].user_id, -1, strlen(cooldowns[i].user_id) + 1, sizeof(char));
 		memcpy(cooldowns + i - 1, cooldowns + i, sizeof(struct Cooldown));
 	}
 
 	free(cooldowns[cooldown_size - 1].user_id);
 
 	--cooldown_size;
-	cooldowns = allocate(cooldowns, cooldown_size + 1, cooldown_size, sizeof(struct Cooldown));
+	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 }
 
 bool has_cooldown(const char *user_id) {

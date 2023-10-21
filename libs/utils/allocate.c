@@ -1,17 +1,20 @@
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <utils.h>
 
-void *allocate(void *value, const size_t old_count, const size_t new_count, const size_t size) {
+void *allocate(void *value, const long old_count, const long new_count, const unsigned char size) {
 	if (value == NULL) {
-		return calloc(new_count, size);
+		return calloc(new_count, size); // remove it and fix uninitialization problem for strings
 	} else {
-		// TODO: when you change it size_t or others, it gives error. fix it.
-		const long diff = (new_count - old_count);
 		void *val = realloc(value, new_count * size);
 
-		if (diff > 0) {
-			memset(val + (old_count * size), 0, size * diff);
+		if (old_count != -1) {
+			const long diff = (new_count - old_count);
+
+			if (diff > 0) {
+				memset(val + (old_count * size), 0, size * diff);
+			}
 		}
 
 		return val;

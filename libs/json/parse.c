@@ -68,7 +68,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 				bool waiting_new_element = false;
 
 				while (condition) {
-					jsonelement_t *sub_element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
+					jsonelement_t *sub_element = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 					bool sub_condition = true;
 
 					sub_element->parent = element;
@@ -76,7 +76,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 
 					if (text[*i] != ']') {
 						++element->size;
-						element->value = allocate(element->value, element->size - 1, element->size, sizeof(jsonelement_t));
+						element->value = allocate(element->value, -1, element->size, sizeof(jsonelement_t));
 						((jsonelement_t **) element->value)[element->size - 1] = sub_element;
 						parse_v(sub_element, text, length, i);
 					} else {
@@ -116,19 +116,19 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 			} else if (isdigit(ch)) {
 				element->type = JSON_NUMBER;
 				element->size = 1;
-				element->value = allocate(element->value, 0, 1, sizeof(long));
+				element->value = allocate(element->value, -1, 1, sizeof(long));
 				((long *) element->value)[0] = (ch - 48);
 			} else if (is_true || is_false) {
 				element->type = JSON_BOOLEAN;
 
 				if (is_true) {
 					*i += 4;
-					element->value = allocate(element->value, 0, 1, sizeof(bool));
+					element->value = allocate(element->value, -1, 1, sizeof(bool));
 					((bool *) element->value)[0] = true;
 					break;
 				} else if (is_false) {
 					*i += 5;
-					element->value = allocate(element->value, 0, 1, sizeof(bool));
+					element->value = allocate(element->value, -1, 1, sizeof(bool));
 					((bool *) element->value)[0] = false;
 					break;
 				}
@@ -144,7 +144,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 			if (element->type == JSON_STRING) {
 				if (ch != '"' || escaping) {
 					++value_length;
-					element->value = allocate(element->value, value_length, value_length + 1, sizeof(char));
+					element->value = allocate(element->value, -1, value_length + 1, sizeof(char));
 					strncat(element->value, &ch, 1);
 
 					if (ch == '\\') {
@@ -161,7 +161,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 					((long *) element->value)[0] = ((((long *) element->value)[0] * 10) + (ch - 48));
 				} else if (element->size != 2 && ch == '.') {
 					element->size = 2;
-					element->value = allocate(element->value, 1, 2, sizeof(long));
+					element->value = allocate(element->value, -1, 2, sizeof(long));
 					++(*i);
 
 					bool condition = (*i < length);
@@ -194,7 +194,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 	bool parsing_key = false;
 	bool parsing_value = false;
 
-	*element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
+	*element = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 	(*element)->parent = parent;
 
 	while (*i < length) {
@@ -219,7 +219,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				parsing_key = false;
 			} else {
 				++key_length;
-				(*element)->key = allocate((*element)->key, key_length, key_length + 1, sizeof(char));
+				(*element)->key = allocate((*element)->key, -1, key_length + 1, sizeof(char));
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
@@ -230,7 +230,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				parsing_value = true;
 			} else if (parsing_value) {
 				++parent->size;
-				parent->value = allocate(parent->value, parent->size - 1, parent->size, sizeof(jsonelement_t));
+				parent->value = allocate(parent->value, -1, parent->size, sizeof(jsonelement_t));
 				((jsonelement_t **) parent->value)[parent->size - 1] = *element;
 				parse_v(*element, text, length, i);
 				break;
@@ -246,7 +246,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 }
 
 jsonelement_t *json_parse(const char *text) {
-	jsonelement_t *result = allocate(NULL, 0, 1, sizeof(jsonelement_t));
+	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 	size_t length = strlen(text);
 	size_t i = 0;
 

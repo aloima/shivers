@@ -32,31 +32,31 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 
 	if (years != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
+		uptime[uptime_element_count - 1] = allocate(NULL, -1, 7, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi yrs", years);
 	}
 
 	if (months != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
+		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mths", months);
 	}
 
 	if (days != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
+		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi days", days);
 	}
 
 	if (hours != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
+		uptime[uptime_element_count - 1] = allocate(NULL, -1, 7, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
+		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
 		sprintf(uptime[uptime_element_count - 1], "%hi mins", minutes);
 	}
 

@@ -24,7 +24,7 @@ static char check_config(struct RequestConfig config) {
 		throw("request(): url and method members are necessary");
 	}
 
-	for (size_t i = 0; i < allowed_methods_length; ++i) {
+	for (unsigned char i = 0; i < allowed_methods_length; ++i) {
 		if (strcmp(config.method, allowed_methods[i]) == 0) {
 			is_allowed_method = true;
 			break;
@@ -39,7 +39,7 @@ static char check_config(struct RequestConfig config) {
 }
 
 void response_free(struct Response *response) {
-	for (size_t i = 0; i < response->header_size; ++i) {
+	for (unsigned char i = 0; i < response->header_size; ++i) {
 		free(response->headers[i].name);
 		free(response->headers[i].value);
 	}
@@ -108,21 +108,20 @@ struct Response request(struct RequestConfig config) {
 			char *data = NULL;
 			size_t data_length = 0;
 
-			char separator[32] = {0};
+			char separator[32];
 			sprintf(separator, "--%s\r\n", boundary);
 
-			const size_t field_size = config.body.payload.formdata.field_size;
+			const unsigned short field_size = config.body.payload.formdata.field_size;
 
-			for (size_t i = 0; i < field_size; ++i) {
-				const bool first_field = (i == 0);
+			for (unsigned short i = 0; i < field_size; ++i) {
 				const struct FormDataField field = config.body.payload.formdata.fields[i];
 
-				char line[128] = {0};
+				char line[128];
 				size_t line_length = 0;
 				const size_t disposition_length = ((field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name));
 				size_t field_length = (4 + boundary_length + disposition_length);
 
-				data = allocate(data, (first_field ? 0 : (data_length + 1)), data_length + field_length + 1, sizeof(char));
+				data = allocate(data, -1, data_length + field_length + 1, sizeof(char));
 				memcpy(data + data_length, separator, 4 + boundary_length);
 
 				if (field.filename) {
@@ -133,23 +132,23 @@ struct Response request(struct RequestConfig config) {
 
 				memcpy(data + data_length + 4 + boundary_length, line, disposition_length);
 
-				const size_t field_header_size = field.header_size;
+				const unsigned char field_header_size = field.header_size;
 
-				for (size_t a = 0; a < field_header_size; ++a) {
+				for (unsigned char a = 0; a < field_header_size; ++a) {
 					const struct Header header = field.headers[a];
 					sprintf(line, "%s: %s\r\n", header.name, header.value);
 					line_length = strlen(line);
 
-					data = allocate(data, data_length + field_length + 1, data_length + field_length + line_length + 1, sizeof(char));
+					data = allocate(data, -1, data_length + field_length + line_length + 1, sizeof(char));
 					memcpy(data + data_length + field_length, line, line_length);
 					field_length += line_length;
 				}
 
-				data = allocate(data, data_length + field_length + 1, data_length + field_length + 2 + 1, sizeof(char));
+				data = allocate(data, -1, data_length + field_length + 2 + 1, sizeof(char));
 				memcpy(data + data_length + field_length, "\r\n", 2);
 				field_length += 2;
 
-				data = allocate(data, data_length + field_length + 1, data_length + field_length + field.data_size + 2 + 1, sizeof(char));
+				data = allocate(data, -1, data_length + field_length + field.data_size + 2 + 1, sizeof(char));
 				memcpy(data + data_length + field_length, field.data, field.data_size);
 				field_length += field.data_size;
 
@@ -159,7 +158,7 @@ struct Response request(struct RequestConfig config) {
 				data_length += field_length;
 			}
 
-			data = allocate(data, data_length + 1, 4 + boundary_length + data_length + 1, sizeof(char));
+			data = allocate(data, -1, 4 + boundary_length + data_length + 1, sizeof(char));
 			sprintf(separator, "--%s--", boundary);
 			memcpy(data + data_length, separator, (4 + boundary_length));
 			data_length += (4 + boundary_length);
@@ -231,7 +230,7 @@ struct Response request(struct RequestConfig config) {
 		const size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
 
 		response.status.code = atoi(status_splitter.data[1]);
-		response.status.message = allocate(NULL, 0, status_message_length + 1, sizeof(char));
+		response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
 		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 
 		split_free(&status_splitter);
@@ -244,7 +243,7 @@ struct Response request(struct RequestConfig config) {
 			} else {
 				Split header_splitter = split(line_splitter.data[i], ": ");
 
-				response.headers = allocate(response.headers, i - 1, i, sizeof(struct Header));
+				response.headers = allocate(response.headers, -1, i, sizeof(struct Header));
 				struct Header *header = &response.headers[i - 1];
 
 				const char *name = header_splitter.data[0];
@@ -252,8 +251,8 @@ struct Response request(struct RequestConfig config) {
 				const size_t name_length = strlen(name);
 				const size_t value_length = strlen(value);
 
-				header->name = allocate(NULL, 0, name_length + 1, sizeof(char));
-				header->value = allocate(NULL, 0, value_length + 1, sizeof(char));
+				header->name = allocate(NULL, -1, name_length + 1, sizeof(char));
+				header->value = allocate(NULL, -1, value_length + 1, sizeof(char));
 				strncpy(header->name, name, name_length);
 				strncpy(header->value, value, value_length);
 				++response.header_size;
@@ -280,7 +279,6 @@ struct Response request(struct RequestConfig config) {
 			}
 
 			response.data[response_data_length - 1] = '\0';
-			response.data = allocate(response.data, response_data_length, response_data_length, sizeof(char));
 		} else {
 			while (i < line_splitter.size) {
 				if (line_splitter.data[i][0] != 0) {

@@ -18,7 +18,7 @@ Split split(const char *text, const char *separator) {
 	size_t data_length = 0;
 
 	Split result = {
-		.data = allocate(NULL, 0, 1, sizeof(char *)),
+		.data = allocate(NULL, -1, 1, sizeof(char *)),
 		.size = 1
 	};
 
@@ -28,7 +28,7 @@ Split split(const char *text, const char *separator) {
 
 		if (ch != separator[0]) {
 			++data_length;
-			*data = allocate(data_length == 1 ? NULL : *data, data_length, data_length + 1, sizeof(char));
+			*data = allocate(data_length == 1 ? NULL : *data, -1, data_length + 1, sizeof(char));
 
 			strncat(*data, &ch, 1);
 		} else {
@@ -56,7 +56,7 @@ Split split(const char *text, const char *separator) {
 				}
 			} else {
 				++data_length;
-				*data = allocate(*data, data_length, data_length + 1, sizeof(char));
+				*data = allocate(*data, -1, data_length + 1, sizeof(char));
 
 				strncat(*data, &ch, 1);
 			}

@@ -9,7 +9,7 @@
 unsigned int get_all_intents() {
 	unsigned int result = 0;
 
-	for (int i = 0; i <= 21; ++i) {
+	for (unsigned char i = 0; i <= 21; ++i) {
 		result |= (1 << i);
 	}
 
@@ -26,7 +26,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	struct RequestConfig config = {
 		.url = url,
 		.method = (char *) method,
-		.headers = allocate(NULL, 0, 1 + !!formdata + !!body, sizeof(struct Header))
+		.headers = allocate(NULL, -1, 1 + !!formdata + !!body, sizeof(struct Header))
 	};
 
 	config.headers[0] = (struct Header) {

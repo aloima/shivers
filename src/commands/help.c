@@ -38,7 +38,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			add_field_to_embed(&embed, "Description", command.description, false);
 
 			if (command.arg_size != 0) {
-				char **arguments_text = allocate(NULL, 0, command.arg_size, sizeof(char *));
+				char **arguments_text = allocate(NULL, -1, command.arg_size, sizeof(char *));
 
 				for (unsigned char i = 0; i < command.arg_size; ++i) {
 					const struct CommandArgument argument = command.args[i];
@@ -46,7 +46,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 					if (argument.examples) {
 						size_t length = calculate_join((char **) argument.examples, argument.example_size, ", ");
-						char *examples = allocate(NULL, 0, length + 1, sizeof(char));
+						char *examples = allocate(NULL, -1, length + 1, sizeof(char));
 						join((char **) argument.examples, examples, argument.example_size, ", ");
 
 						sprintf(arguments_text[i], (
@@ -73,7 +73,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				}
 
 				size_t arguments_description_size = calculate_join(arguments_text, command.arg_size, "\\n\\n");
-				arguments_description = allocate(NULL, 0, arguments_description_size + 1, sizeof(char));
+				arguments_description = allocate(NULL, -1, arguments_description_size + 1, sizeof(char));
 				join(arguments_text, arguments_description, command.arg_size, "\\n\\n");
 
 				add_field_to_embed(&embed, "Usage", usage, false);

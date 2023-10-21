@@ -15,6 +15,8 @@ void strtolower(char *source, const char *dest) {
 			source[i] = ch;
 		}
 	}
+
+	source[length] = '\0';
 }
 
 void strtoupper(char *source, const char *dest) {
@@ -29,6 +31,8 @@ void strtoupper(char *source, const char *dest) {
 			source[i] = ch;
 		}
 	}
+
+	source[length] = '\0';
 }
 
 const char *ltrim(const char *src) {

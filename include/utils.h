@@ -13,10 +13,10 @@
 	Split split(const char *text, const char *separator);
 	void split_free(Split *value);
 
-	void *allocate(void *value, const size_t old_count, const size_t new_count, const size_t size);
+	void *allocate(void *value, const long old_count, const long new_count, const unsigned char size);
 
-	size_t join(char **value, char *source, size_t size, const char *separator);
-	size_t calculate_join(char **value, size_t size, const char *separator);
+	size_t join(char **value, char *source, unsigned short size, const char *separator);
+	size_t calculate_join(char **value, unsigned short size, const char *separator);
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);

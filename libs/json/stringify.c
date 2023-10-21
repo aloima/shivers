@@ -13,16 +13,17 @@ char *json_stringify(jsonelement_t *element) {
 
 	if (element->type == JSON_STRING) {
 		size_t length = strlen(element->value);
-		result = allocate(NULL, 0, length + 3, sizeof(char));
+		result = allocate(NULL, -1, length + 3, sizeof(char));
 		result[0] = '"';
 		strncat(result, element->value, length);
 		result[length + 1] = '"';
+		result[length + 2] = '\0';
 	} else if (element->type == JSON_NUMBER) {
 		long number = ((long *) element->value)[0];
 		size_t digit_count = (floor(log10(number)) + 1);
 		size_t i = digit_count;
 
-		result = allocate(NULL, 0, (digit_count + 1), sizeof(char));
+		result = allocate(NULL, -1, (digit_count + 1), sizeof(char));
 
 		while (i != 0) {
 			int8_t digit = floor(number / pow(10, (i - 1)));
@@ -35,8 +36,9 @@ char *json_stringify(jsonelement_t *element) {
 		if (element->size == 2) {
 			long fractional_number = ((long *) element->value)[1];
 			size_t fractional_digit_count = floor(log10(fractional_number)) + 1;
-			result = allocate(result, digit_count + 1, digit_count + fractional_digit_count + 2, sizeof(char));
+			result = allocate(result, -1, digit_count + fractional_digit_count + 2, sizeof(char));
 			result[digit_count] = '.';
+			result[digit_count + 1] = '\0';
 
 			while (fractional_digit_count != 0) {
 				int8_t digit = floor(fractional_number / pow(10, (fractional_digit_count - 1)));
@@ -50,20 +52,20 @@ char *json_stringify(jsonelement_t *element) {
 		bool value = ((bool *) element->value)[0];
 
 		if (value) {
-			result = allocate(NULL, 0, 5, sizeof(char));
+			result = allocate(NULL, -1, 5, sizeof(char));
 			strncat(result, "true", 4);
 		} else {
-			result = allocate(NULL, 0, 6, sizeof(char));
+			result = allocate(NULL, -1, 6, sizeof(char));
 			strncat(result, "false", 5);
 		}
 	} else if (element->type == JSON_NULL) {
-		result = allocate(NULL, 0, 5, sizeof(char));
+		result = allocate(NULL, -1, 5, sizeof(char));
 		strncat(result, "null", 4);
 	} else if (element->type == JSON_OBJECT) {
 		size_t result_length = 2;
 		size_t i;
 
-		result = allocate(NULL, 0, result_length + 1, sizeof(char));
+		result = allocate(NULL, -1, result_length + 1, sizeof(char));
 		strncat(result, "{", 1);
 
 		for (i = 0; i < element->size; ++i) {
@@ -74,7 +76,7 @@ char *json_stringify(jsonelement_t *element) {
 			bool has_comma = (element->size != (i + 1));
 
 			result_length += key_length + 3 + value_length + has_comma;
-			result = allocate(result, result_length - key_length - 3 - value_length - has_comma, result_length + 1, sizeof(char));
+			result = allocate(result, -1, result_length + 1, sizeof(char));
 			strncat(result, "\"", 1);
 			strncat(result, data->key, key_length);
 			strncat(result, "\":", 2);
@@ -92,7 +94,7 @@ char *json_stringify(jsonelement_t *element) {
 		size_t result_length = 2;
 		size_t i;
 
-		result = allocate(NULL, 0, result_length + 1, sizeof(char));
+		result = allocate(NULL, -1, result_length + 1, sizeof(char));
 		strncat(result, "[", 1);
 
 		for (i = 0; i < element->size; ++i) {
@@ -102,7 +104,7 @@ char *json_stringify(jsonelement_t *element) {
 			bool has_comma = (element->size != (i + 1));
 
 			result_length += value_length + has_comma;
-			result = allocate(result, result_length - value_length - has_comma + 1, result_length + 1, sizeof(char));
+			result = allocate(result, -1, result_length + 1, sizeof(char));
 			strncat(result, value, value_length);
 
 			if (has_comma) {
