@@ -265,20 +265,26 @@ struct Response request(struct RequestConfig config) {
 		const char *transfer_encoding_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
 		if (transfer_encoding_value != NULL && strcmp(transfer_encoding_value, "chunked") == 0) {
-			size_t response_read_data_length = 0;
-			response_data_length = ahtoi(line_splitter.data[i + 1]);
-			response.data = allocate(NULL, 0, response_data_length + 1, sizeof(char));
-			i += 2;
+			++i;
 
-			while (i < line_splitter.size && response_read_data_length != response_data_length) {
-				const size_t line_length = strlen(line_splitter.data[i]);
-				strncat(response.data, line_splitter.data[i], line_length);
-				response_read_data_length += line_length;
+			while (i < line_splitter.size) {
+				size_t hex_length = ahtoi(line_splitter.data[i]);
+				const size_t line_length = strlen(line_splitter.data[i + 1]);
 
-				++i;
+				if (line_length != 0) {
+					if (line_length == hex_length) {
+						response_data_length += hex_length;
+						response.data = allocate(response.data, -1, response_data_length + 1, sizeof(char));
+						strncat(response.data, line_splitter.data[i + 1], line_length);
+					} else {
+						throw_network("invalid http message encoding", false);
+					}
+				} else {
+					break;
+				}
+
+				i += 2;
 			}
-
-			response.data[response_data_length - 1] = '\0';
 		} else {
 			while (i < line_splitter.size) {
 				if (line_splitter.data[i][0] != 0) {

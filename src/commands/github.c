@@ -65,16 +65,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				char gists[6];
 				sprintf(gists, "%ld", (unsigned long) json_get_val(user, "public_gists").value.number);
 
-				char given_stars[8];
-				sprintf(url, "https://api.github.com/users/%s/starred", args.data[0]);
-
-				config.url = url;
-				response = request(config);
-
-				jsonelement_t *stars_json = json_parse(response.data); // TODO: invalid parsing, fix it
-				sprintf(given_stars, "%ld", stars_json->size);
-				json_free(stars_json);
-
 				char joined_at[18];
 				struct tm tm;
 
@@ -92,7 +82,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				add_field_to_embed(&embed, "Following", following, true);
 				add_field_to_embed(&embed, "Followers", followers, true);
 				add_field_to_embed(&embed, "Joined at", joined_at, true);
-				add_field_to_embed(&embed, "Given Stars", given_stars, true);
 				add_field_to_embed(&embed, "Gists", gists, true);
 
 				embed.thumbnail_url = json_get_val(user, "avatar_url").value.string;

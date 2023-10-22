@@ -78,19 +78,19 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Embed embed = {0};
 
 	struct rusage r_usage;
-	char memory_usage[16];
+	char memory_usage[11];
 
 	getrusage(RUSAGE_SELF, &r_usage);
 	sprintf(memory_usage, "%.2f MB", r_usage.ru_maxrss / 1024.0);
 
-	char uptime_text[48];
+	char uptime_text[41];
 	uptime_text[0] = 0;
 	set_uptime_text(client, uptime_text);
 
 	char guilds[4];
 	sprintf(guilds, "%ld", get_guilds_cache()->size);
 
-	char latency[8];
+	char latency[7];
 	sprintf(latency, "%dms", get_latency());
 
 	char add[112];
@@ -107,12 +107,12 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
 	#if defined(__clang__)
-		char footer[64];
+		char footer[32];
 		sprintf(footer, "Compiled with clang %d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
 
 		set_embed_footer(&embed, footer, NULL);
 	#elif defined(__GNUC__)
-		char footer[64];
+		char footer[30];
 		sprintf(footer, "Compiled with gcc %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 
 		set_embed_footer(&embed, footer, NULL);
