@@ -23,15 +23,21 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 				break;
 			}
 		} else if (value->type == JSON_OBJECT) {
-			for (size_t i = 0; i < value->size; ++i) {
-				jsonelement_t *data = ((jsonelement_t **) value->value)[i];
+			size_t size = value->size;
 
-				if (strcmp(data->key, splitter.data[ki]) == 0) {
-					value = data;
-					i = value->size;
-				} else if ((i + 1) == value->size) {
-					result.exist = false;
-					ki = splitter.size;
+			if (size == 0) {
+				result.exist = false;
+			} else {
+				for (size_t i = 0; i < value->size; ++i) {
+					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
+
+					if (strcmp(data->key, splitter.data[ki]) == 0) {
+						value = data;
+						i = value->size;
+					} else if ((i + 1) == value->size) {
+						result.exist = false;
+						ki = splitter.size;
+					}
 				}
 			}
 		} else {
