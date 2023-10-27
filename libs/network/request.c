@@ -15,7 +15,7 @@
 #include <network.h>
 #include <utils.h>
 
-static char check_config(struct RequestConfig config) {
+static void check_config(struct RequestConfig config) {
 	const char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 	const size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
 	bool is_allowed_method = false;
@@ -34,8 +34,6 @@ static char check_config(struct RequestConfig config) {
 	if (!is_allowed_method) {
 		throw("request(): %s is invalid method", config.method);
 	}
-
-	return 1;
 }
 
 void response_free(struct Response *response) {
@@ -63,7 +61,7 @@ struct Response request(struct RequestConfig config) {
 
 	char *encoded_url = percent_encode(config.url);
 	struct URL url = parse_url(encoded_url);
-	bool tls = (url.port == 443);
+	const bool tls = (url.port == 443);
 
 	free(encoded_url);
 
@@ -291,7 +289,7 @@ struct Response request(struct RequestConfig config) {
 					const bool last_line = ((i + 1) == line_splitter.size);
 					const size_t line_length = strlen(line_splitter.data[i]);
 					response_data_length += (line_length + !last_line);
-					response.data = allocate(response.data, response_data_length - line_length - !last_line + 1, response_data_length + 1, sizeof(char));
+					response.data = allocate(response.data, -1, response_data_length + 1, sizeof(char));
 					strncat(response.data, line_splitter.data[i], line_length);
 
 					if (!last_line) {

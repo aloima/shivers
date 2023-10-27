@@ -13,7 +13,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	sprintf(path, "/channels/%s/messages", channel_id);
 
 	if (message.content) {
-		add_json_element(payload, "content", message.content, JSON_STRING);
+		json_set_val(payload, "content", message.content, JSON_STRING);
 	}
 
 	if (message.embed_size != 0) {
@@ -25,57 +25,57 @@ void send_message(const struct Client client, const char *channel_id, const stru
 
 			if (embed.author.name) {
 				jsonelement_t *embed_author_payload = create_empty_json_element(false);
-				add_json_element(embed_author_payload, "name", embed.author.name, JSON_STRING);
+				json_set_val(embed_author_payload, "name", embed.author.name, JSON_STRING);
 
 				if (embed.author.url) {
-					add_json_element(embed_author_payload, "url", embed.author.url, JSON_STRING);
+					json_set_val(embed_author_payload, "url", embed.author.url, JSON_STRING);
 				}
 
 				if (embed.author.icon_url) {
-					add_json_element(embed_author_payload, "icon_url", embed.author.icon_url, JSON_STRING);
+					json_set_val(embed_author_payload, "icon_url", embed.author.icon_url, JSON_STRING);
 				}
 
-				add_json_element(embed_payload, "author", embed_author_payload, JSON_OBJECT);
+				json_set_val(embed_payload, "author", embed_author_payload, JSON_OBJECT);
 				json_free(embed_author_payload);
 			}
 
 			if (embed.title) {
-				add_json_element(embed_payload, "title", embed.title, JSON_STRING);
+				json_set_val(embed_payload, "title", embed.title, JSON_STRING);
 			}
 
 			if (embed.description) {
-				add_json_element(embed_payload, "description", embed.description, JSON_STRING);
+				json_set_val(embed_payload, "description", embed.description, JSON_STRING);
 			}
 
 			if (embed.color) {
-				add_json_element(embed_payload, "color", &(embed.color), JSON_NUMBER);
+				json_set_val(embed_payload, "color", &(embed.color), JSON_NUMBER);
 			}
 
 			if (embed.image_url) {
 				jsonelement_t *embed_image_payload = create_empty_json_element(false);
-				add_json_element(embed_image_payload, "url", embed.image_url, JSON_STRING);
+				json_set_val(embed_image_payload, "url", embed.image_url, JSON_STRING);
 
-				add_json_element(embed_payload, "image", embed_image_payload, JSON_OBJECT);
+				json_set_val(embed_payload, "image", embed_image_payload, JSON_OBJECT);
 				json_free(embed_image_payload);
 			}
 
 			if (embed.thumbnail_url) {
 				jsonelement_t *thumbnail = create_empty_json_element(false);
-				add_json_element(thumbnail, "url", embed.thumbnail_url, JSON_STRING);
+				json_set_val(thumbnail, "url", embed.thumbnail_url, JSON_STRING);
 
-				add_json_element(embed_payload, "thumbnail", thumbnail, JSON_OBJECT);
+				json_set_val(embed_payload, "thumbnail", thumbnail, JSON_OBJECT);
 				json_free(thumbnail);
 			}
 
 			if (embed.footer.text) {
 				jsonelement_t *embed_footer_payload = create_empty_json_element(false);
-				add_json_element(embed_footer_payload, "text", embed.footer.text, JSON_STRING);
+				json_set_val(embed_footer_payload, "text", embed.footer.text, JSON_STRING);
 
 				if (embed.footer.icon_url) {
-					add_json_element(embed_footer_payload, "icon_url", embed.footer.icon_url, JSON_STRING);
+					json_set_val(embed_footer_payload, "icon_url", embed.footer.icon_url, JSON_STRING);
 				}
 
-				add_json_element(embed_payload, "footer", embed_footer_payload, JSON_OBJECT);
+				json_set_val(embed_payload, "footer", embed_footer_payload, JSON_OBJECT);
 				json_free(embed_footer_payload);
 			}
 
@@ -87,26 +87,26 @@ void send_message(const struct Client client, const char *channel_id, const stru
 					struct EmbedField field = embed.fields[e];
 					jsonelement_t *field_payload = create_empty_json_element(false);
 
-					add_json_element(field_payload, "name", field.name, JSON_STRING);
-					add_json_element(field_payload, "value", field.value, JSON_STRING);
+					json_set_val(field_payload, "name", field.name, JSON_STRING);
+					json_set_val(field_payload, "value", field.value, JSON_STRING);
 
 					if (field.is_inline) {
-						add_json_element(field_payload, "inline", &(field.is_inline), JSON_BOOLEAN);
+						json_set_val(field_payload, "inline", &(field.is_inline), JSON_BOOLEAN);
 					}
 
-					add_json_element(fields_payload, NULL, field_payload, JSON_OBJECT);
+					json_set_val(fields_payload, NULL, field_payload, JSON_OBJECT);
 					json_free(field_payload);
 				}
 
-				add_json_element(embed_payload, "fields", fields_payload, JSON_ARRAY);
+				json_set_val(embed_payload, "fields", fields_payload, JSON_ARRAY);
 				json_free(fields_payload);
 			}
 
-			add_json_element(embeds_payload, NULL, embed_payload, JSON_OBJECT);
+			json_set_val(embeds_payload, NULL, embed_payload, JSON_OBJECT);
 			json_free(embed_payload);
 		}
 
-		add_json_element(payload, "embeds", embeds_payload, JSON_ARRAY);
+		json_set_val(payload, "embeds", embeds_payload, JSON_ARRAY);
 		json_free(embeds_payload);
 	}
 

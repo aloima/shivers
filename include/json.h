@@ -27,12 +27,13 @@
 		char *string;
 		float number;
 		bool boolean;
-		struct JSONElement *object;
-		struct JSONElement *array;
+		jsonelement_t *object;
+		jsonelement_t *array;
 	} jsonvalue_t;
 
 	typedef struct {
 		jsonvalue_t value;
+		jsonelement_t *element;
 		bool exist;
 		char type;
 	} jsonresult_t;
@@ -45,5 +46,5 @@
 	jsonresult_t json_get_val(jsonelement_t *element, const char *search);
 
 	jsonelement_t *create_empty_json_element(bool is_array);
-	void add_json_element(jsonelement_t *object, const char *key, void *data, const char type);
+	void json_set_val(jsonelement_t *object, const char *key, void *data, const char type);
 #endif
