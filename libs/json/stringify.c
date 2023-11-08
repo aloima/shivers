@@ -7,11 +7,13 @@
 #include <json.h>
 #include <utils.h>
 
-// TODO: writing empty elements
 char *json_stringify(const jsonelement_t *element, const unsigned char fractional_limit) {
 	char *result = NULL;
 
-	if (element->type == JSON_STRING) {
+	if (!element || element->type == JSON_UNSPECIFIED) {
+		result = allocate(NULL, -1, 8, sizeof(char));
+		strcpy(result, "<empty>");
+	} else if (element->type == JSON_STRING) {
 		const size_t length = strlen(element->value);
 		result = allocate(NULL, -1, length + 3, sizeof(char));
 		result[0] = '"';

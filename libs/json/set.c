@@ -111,8 +111,8 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 				}
 
 				if (element->size < (iskey + 1)) {
+					element->value = allocate(element->value, element->size, (iskey + 1), sizeof(jsonelement_t *));
 					element->size = (iskey + 1);
-					element->value = allocate(element->value, element->size - 1, element->size, sizeof(jsonelement_t *));
 					((jsonelement_t **) element->value)[iskey] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 					((jsonelement_t **) element->value)[iskey]->parent = element;
 				}
