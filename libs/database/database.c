@@ -53,7 +53,7 @@ void database_destroy() {
 	json_free(data, false);
 }
 
-void database_set(const char *key, void *value, const unsigned char type) {
+void database_set(char *key, void *value, const unsigned char type) {
 	json_set_val(data, key, value, type);
 }
 

@@ -96,9 +96,14 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 
 		for (size_t i = 0; i < splitter.size; ++i) {
 			const char *skey = splitter.data[i];
-			const int iskey = atoi(skey);
+			const size_t skey_length = strlen(skey);
 
-			if (iskey > 0 || strcmp(skey, "0") == 0) {
+			char bwp[skey_length - 2 + 1];
+			bwp[skey_length - 2] = 0;
+			strncpy(bwp, skey + 1, skey_length - 2);
+			const int iskey = atoi(bwp);
+
+			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || strcmp(bwp, "0") == 0)) {
 				if (element->type != JSON_ARRAY) {
 					if (element->type == JSON_OBJECT) {
 						for (size_t n = 0; n < element->size; ++n) {

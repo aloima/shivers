@@ -54,5 +54,6 @@
 	extern const struct Command avatar;
 	extern const struct Command github;
 	extern const struct Command help;
+	extern const struct Command level;
 	extern const struct Command wikipedia;
 #endif
