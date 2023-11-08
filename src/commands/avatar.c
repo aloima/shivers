@@ -58,7 +58,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 					sprintf(avatar_url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
 				}
 
-				json_free(user);
+				json_free(user, false);
 				response_free(&response);
 			}
 		}

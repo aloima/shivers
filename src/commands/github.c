@@ -96,7 +96,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				send_message(client, channel_id, reply);
 				free_message(reply);
 				free(embed.fields);
-				json_free(user);
+				json_free(user, false);
 			}
 		} else {
 			sprintf(url, "https://api.github.com/repos/%s", args.data[0]);
@@ -140,7 +140,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				send_message(client, channel_id, reply);
 				free(embed.fields);
 				free_message(reply);
-				json_free(repository);
+				json_free(repository, false);
 			}
 		}
 

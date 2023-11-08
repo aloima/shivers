@@ -42,7 +42,7 @@ void database_initialize(const char *filename) {
 }
 
 void database_save() {
-	char *content = json_stringify(data);
+	char *content = json_stringify(data, 5);
 	FILE *file = fopen(_filename, "w");
 	fwrite(content, sizeof(char), strlen(content), file);
 	fclose(file);
@@ -50,7 +50,7 @@ void database_save() {
 }
 
 void database_destroy() {
-	json_free(data);
+	json_free(data, false);
 }
 
 void database_set(const char *key, void *value, const unsigned char type) {

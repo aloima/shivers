@@ -31,7 +31,7 @@ static void handle_exit(int sig) {
 	close_websocket(&websocket, -1, NULL);
 
 	if (client.user != NULL) {
-		json_free(client.user);
+		json_free(client.user, false);
 	}
 
 	pthread_cancel(heartbeat_thread);
@@ -96,7 +96,7 @@ static void onstart() {
 static void onmessage(const WebsocketFrame frame) {
 	jsonelement_t *data = json_parse(frame.payload);
 	const char *event_name = json_get_val(data, "t").value.string;
-	const unsigned short op = json_get_val(data, "op").value.number;
+	const unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
 
 	switch (op) {
 		case 0: {
@@ -148,7 +148,7 @@ static void onmessage(const WebsocketFrame frame) {
 		}
 	}
 
-	json_free(data);
+	json_free(data, false);
 }
 
 static void onclose(const short code, const char *reason) {

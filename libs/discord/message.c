@@ -36,7 +36,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 				}
 
 				json_set_val(embed_payload, "author", embed_author_payload, JSON_OBJECT);
-				json_free(embed_author_payload);
+				json_free(embed_author_payload, false);
 			}
 
 			if (embed.title) {
@@ -56,7 +56,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 				json_set_val(embed_image_payload, "url", embed.image_url, JSON_STRING);
 
 				json_set_val(embed_payload, "image", embed_image_payload, JSON_OBJECT);
-				json_free(embed_image_payload);
+				json_free(embed_image_payload, false);
 			}
 
 			if (embed.thumbnail_url) {
@@ -64,7 +64,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 				json_set_val(thumbnail, "url", embed.thumbnail_url, JSON_STRING);
 
 				json_set_val(embed_payload, "thumbnail", thumbnail, JSON_OBJECT);
-				json_free(thumbnail);
+				json_free(thumbnail, false);
 			}
 
 			if (embed.footer.text) {
@@ -76,7 +76,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 				}
 
 				json_set_val(embed_payload, "footer", embed_footer_payload, JSON_OBJECT);
-				json_free(embed_footer_payload);
+				json_free(embed_footer_payload, false);
 			}
 
 
@@ -95,23 +95,23 @@ void send_message(const struct Client client, const char *channel_id, const stru
 					}
 
 					json_set_val(fields_payload, NULL, field_payload, JSON_OBJECT);
-					json_free(field_payload);
+					json_free(field_payload, false);
 				}
 
 				json_set_val(embed_payload, "fields", fields_payload, JSON_ARRAY);
-				json_free(fields_payload);
+				json_free(fields_payload, false);
 			}
 
 			json_set_val(embeds_payload, NULL, embed_payload, JSON_OBJECT);
-			json_free(embed_payload);
+			json_free(embed_payload, false);
 		}
 
 		json_set_val(payload, "embeds", embeds_payload, JSON_ARRAY);
-		json_free(embeds_payload);
+		json_free(embeds_payload, false);
 	}
 
 	struct Response response;
-	char *body = json_stringify(payload);
+	char *body = json_stringify(payload, 5);
 
 	if (message.file_size != 0 && payload->size != 0) {
 		struct FormData formdata = {
@@ -157,7 +157,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	}
 
 	response_free(&response);
-	json_free(payload);
+	json_free(payload, true);
 	free(body);
 }
 

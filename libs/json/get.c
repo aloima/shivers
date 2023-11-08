@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <math.h>
 
 #include <json.h>
 #include <utils.h>
@@ -53,14 +52,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		result.element = value;
 
 		if (value->type == JSON_NUMBER) {
-			if (value->size == 2) {
-				long fractional = ((long *) value->value)[1];
-				int fractional_digit_count = (floor(log10(fractional)) + 1);
-
-				result.value.number = (((long *) value->value)[0] + (fractional * pow(10, -fractional_digit_count)));
-			} else {
-				result.value.number = ((long *) value->value)[0];
-			}
+			result.value.number = ((double *) value->value)[0];
 		} else if (value->type == JSON_STRING) {
 			result.value.string = value->value;
 		} else if (value->type == JSON_BOOLEAN) {

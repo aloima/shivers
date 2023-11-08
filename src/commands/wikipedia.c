@@ -84,7 +84,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				add_embed_to_message(embed, &reply);
 				send_message(client, channel_id, reply);
 				response_free(&image_response);
-				json_free(image_data);
+				json_free(image_data, false);
 			} else {
 				add_embed_to_message(embed, &reply);
 				send_message(client, channel_id, reply);
@@ -92,7 +92,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 			response_free(&info_response);
 			free_message(reply);
-			json_free(info_data);
+			json_free(info_data, false);
 			free(encoded_page_url);
 		} else {
 			reply.content = "Not found.";
@@ -100,7 +100,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		}
 
 		response_free(&search_response);
-		json_free(search_result);
+		json_free(search_result, false);
 	}
 }
 

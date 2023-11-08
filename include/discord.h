@@ -37,7 +37,7 @@
 	struct Embed {
 		char *title;
 		char *description;
-		unsigned int color;
+		double color;
 		char *image_url;
 		char *thumbnail_url;
 		struct EmbedAuthor author;

@@ -5,7 +5,7 @@
 	#define SHIVERS_H_
 
 	#define PREFIX "s-"
-	#define COLOR 0xB8B8B8
+	#define COLOR (double) 0xB8B8B8
 
 	struct Cooldown {
 		char *user_id;

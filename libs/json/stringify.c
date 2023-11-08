@@ -2,54 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <math.h>
 
 #include <json.h>
 #include <utils.h>
 
-char *json_stringify(jsonelement_t *element) {
+// TODO: writing empty elements
+char *json_stringify(const jsonelement_t *element, const unsigned char fractional_limit) {
 	char *result = NULL;
 
 	if (element->type == JSON_STRING) {
-		size_t length = strlen(element->value);
+		const size_t length = strlen(element->value);
 		result = allocate(NULL, -1, length + 3, sizeof(char));
 		result[0] = '"';
 		strncat(result, element->value, length);
 		result[length + 1] = '"';
 		result[length + 2] = '\0';
 	} else if (element->type == JSON_NUMBER) {
-		long number = ((long *) element->value)[0];
-		size_t digit_count = (floor(log10(number)) + 1);
-		size_t i = digit_count;
+		const double number = ((double *) element->value)[0];
+		double integer;
+		double fractional = (modf(number, &integer) * pow(10, fractional_limit));
+
+		const size_t digit_count = (floor(log10(integer)) + 1);
+		char formatter[12];
 
 		result = allocate(NULL, -1, (digit_count + 1), sizeof(char));
 
-		while (i != 0) {
-			int8_t digit = floor(number / pow(10, (i - 1)));
-			char ch = (digit + 48);
-			strncat(result, &ch, 1);
-			number -= (digit * pow(10, (i - 1)));
-			--i;
+		if (fractional != 0.0) {
+			result = allocate(result, -1, digit_count + fractional_limit + 2, sizeof(char));
+			sprintf(formatter, "%%.0f.%%%d.0f", fractional_limit);
+			sprintf(result, formatter, integer, fractional);
+		} else {
+			strcpy(formatter, "%.0f");
+			sprintf(result, formatter, integer);
 		}
 
-		if (element->size == 2) {
-			long fractional_number = ((long *) element->value)[1];
-			size_t fractional_digit_count = floor(log10(fractional_number)) + 1;
-			result = allocate(result, -1, digit_count + fractional_digit_count + 2, sizeof(char));
-			result[digit_count] = '.';
-			result[digit_count + 1] = '\0';
-
-			while (fractional_digit_count != 0) {
-				int8_t digit = floor(fractional_number / pow(10, (fractional_digit_count - 1)));
-				char ch = (digit + 48);
-				strncat(result, &ch, 1);
-				fractional_number -= (digit * pow(10, (fractional_digit_count - 1)));
-				--fractional_digit_count;
-			}
-		}
 	} else if (element->type == JSON_BOOLEAN) {
-		bool value = ((bool *) element->value)[0];
+		const bool value = ((bool *) element->value)[0];
 
 		if (value) {
 			result = allocate(NULL, -1, 5, sizeof(char));
@@ -69,11 +58,11 @@ char *json_stringify(jsonelement_t *element) {
 		strncat(result, "{", 1);
 
 		for (i = 0; i < element->size; ++i) {
-			jsonelement_t *data = ((jsonelement_t **) element->value)[i];
-			char *value = json_stringify(data);
-			size_t key_length = strlen(data->key);
-			size_t value_length = strlen(value);
-			bool has_comma = (element->size != (i + 1));
+			const jsonelement_t *data = ((jsonelement_t **) element->value)[i];
+			char *value = json_stringify(data, fractional_limit);
+			const size_t key_length = strlen(data->key);
+			const size_t value_length = strlen(value);
+			const bool has_comma = (element->size != (i + 1));
 
 			result_length += key_length + 3 + value_length + has_comma;
 			result = allocate(result, -1, result_length + 1, sizeof(char));
@@ -98,10 +87,10 @@ char *json_stringify(jsonelement_t *element) {
 		strncat(result, "[", 1);
 
 		for (i = 0; i < element->size; ++i) {
-			jsonelement_t *data = ((jsonelement_t **) element->value)[i];
-			char *value = json_stringify(data);
-			size_t value_length = strlen(value);
-			bool has_comma = (element->size != (i + 1));
+			const jsonelement_t *data = ((jsonelement_t **) element->value)[i];
+			char *value = json_stringify(data, fractional_limit);
+			const size_t value_length = strlen(value);
+			const bool has_comma = (element->size != (i + 1));
 
 			result_length += value_length + has_comma;
 			result = allocate(result, -1, result_length + 1, sizeof(char));

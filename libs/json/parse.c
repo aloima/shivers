@@ -54,7 +54,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 							sub_condition = false;
 							condition = false;
 						} else {
-							json_free(element);
+							json_free(element, true);
 							throw("json_parse(): expected value ',' or '}', but received '%c'", sub_ch);
 						}
 					}
@@ -84,7 +84,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 						condition = false;
 
 						if (waiting_new_element) {
-							json_free(element);
+							json_free(element, true);
 							throw("json_parse(): expected element, but received ']'");
 						}
 
@@ -106,7 +106,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 							sub_condition = false;
 							condition = false;
 						} else {
-							json_free(sub_element);
+							json_free(sub_element, true);
 							throw("json_parse(): expected value ',' or ']', but received '%c'", sub_ch);
 						}
 					}
@@ -116,8 +116,8 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 			} else if (isdigit(ch)) {
 				element->type = JSON_NUMBER;
 				element->size = 1;
-				element->value = allocate(element->value, -1, 1, sizeof(long));
-				((long *) element->value)[0] = (ch - 48);
+				element->value = allocate(element->value, -1, 1, sizeof(double));
+				((double *) element->value)[0] = (ch - 48);
 			} else if (is_true || is_false) {
 				element->type = JSON_BOOLEAN;
 
@@ -137,7 +137,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 				element->type = JSON_NULL;
 				break;
 			} else {
-				json_free(element);
+				json_free(element, true);
 				throw("json_parse(): expected element, but received '%c'", ch);
 			}
 		} else {
@@ -158,11 +158,10 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 				}
 			} else if (element->type == JSON_NUMBER) {
 				if (isdigit(ch)) {
-					((long *) element->value)[0] = ((((long *) element->value)[0] * 10) + (ch - 48));
-				} else if (element->size != 2 && ch == '.') {
-					element->size = 2;
-					element->value = allocate(element->value, -1, 2, sizeof(long));
+					((double *) element->value)[0] = ((((double *) element->value)[0] * 10) + (ch - 48));
+				} else if (ch == '.') {
 					++(*i);
+					size_t starts_at = *i;
 
 					bool condition = (*i < length);
 
@@ -171,7 +170,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 
 						if (isdigit(ch)) {
 							++(*i);
-							((long *) element->value)[1] = (long) ((((long *) element->value)[1] * 10) + (ch - 48));
+							((double *) element->value)[0] += (ch - 48) / pow(10, *i - starts_at + 1);
 							condition = (*i < length);
 						} else {
 							condition = false;
@@ -211,7 +210,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				break;
 			} else {
 				free(*element);
-				json_free(parent);
+				json_free(parent, true);
 				throw("json_parse(): expected value '\"', but received '%c'", ch);
 			}
 		} else if (parsing_key) {
@@ -236,7 +235,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				break;
 			} else {
 				free((*element)->key);
-				json_free(parent);
+				json_free(parent, true);
 				throw("json_parse(): expected value ':', but received '%c'", ch);
 			}
 		}
