@@ -47,7 +47,8 @@ void response_free(struct Response *response) {
 	free(response->status.message);
 }
 
-// TODO: allocate request_message variable isntead of static array
+// TODO: allocate request_message variable instead of static array
+// TODO: cannot handle huge messages like image files while responding, fix it
 
 struct Response request(struct RequestConfig config) {
 	struct Response response = { false, { 0, NULL }, NULL, NULL, 0 };

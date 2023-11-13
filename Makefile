@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = --optimize=3 --warn-all --std=gnu99
-LIBRARIES = -lm -lssl -lcrypto -lpthread
+LIBRARIES = -lm -lssl -lcrypto -lpthread -lz
 
 .PHONY: compile clean
 
