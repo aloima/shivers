@@ -43,7 +43,7 @@ void add_cooldown(const char *user_id) {
 	++cooldown_size;
 	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 
-	struct Cooldown cooldown = {
+	const struct Cooldown cooldown = {
 		.timestamp = get_timestamp(NULL),
 		.user_id = allocate(NULL, -1, strlen(user_id) + 1, sizeof(char))
 	};

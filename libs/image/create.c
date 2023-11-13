@@ -37,8 +37,7 @@ struct PNG create_png(struct Image *image) {
 	memcpy(temp + 4, size_header, 8);
 	memcpy(temp + 12, png_settings, 5);
 
-	unsigned int ihdr_crc = crc32(0L, Z_NULL, 0);
-	ihdr_crc = crc32(ihdr_crc, (const Bytef *) temp, 17);
+	unsigned int ihdr_crc = crc32(0L, (const Bytef *) temp, 17);
 	png_settings[5] = (ihdr_crc >> 24) & 0xFF;
 	png_settings[6] = (ihdr_crc >> 16) & 0xFF;
 	png_settings[7] = (ihdr_crc >> 8) & 0xFF;
@@ -51,9 +50,9 @@ struct PNG create_png(struct Image *image) {
 		.zalloc = Z_NULL,
 		.zfree = Z_NULL,
 		.opaque = Z_NULL,
-		.avail_in = (uInt) data_length,
+		.avail_in = data_length,
 		.next_in = (Bytef *) image->data,
-		.avail_out = (uInt) 0,
+		.avail_out = 0,
 		.next_out = (Bytef *) output
 	};
 
@@ -80,8 +79,7 @@ struct PNG create_png(struct Image *image) {
 
 	free(output);
 
-	unsigned int idat_crc = crc32(0L, Z_NULL, 0);
-	idat_crc = crc32(idat_crc, (const Bytef *) (data + 4), 6 + png_data_size);
+	unsigned int idat_crc = crc32(0L, (const Bytef *) (data + 4), 6 + png_data_size);
 	data[10 + png_data_size] = (idat_crc >> 24) & 0xFF;
 	data[11 + png_data_size] = (idat_crc >> 16) & 0xFF;
 	data[12 + png_data_size] = (idat_crc >> 8) & 0xFF;

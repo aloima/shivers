@@ -10,7 +10,7 @@
 
 int main(void) {
 	struct stat token_entry;
-	char token_stat = stat("token", &token_entry);
+	const char token_stat = stat("token", &token_entry);
 
 	if (token_stat == -1) {
 		throw("startup: missing token file");

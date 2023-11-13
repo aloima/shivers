@@ -47,9 +47,6 @@ void response_free(struct Response *response) {
 	free(response->status.message);
 }
 
-// TODO: allocate request_message variable instead of static array
-// TODO: cannot handle huge messages like image files while responding, fix it
-
 struct Response request(struct RequestConfig config) {
 	struct Response response = { false, { 0, NULL }, NULL, NULL, 0 };
 	int sockfd;
@@ -76,7 +73,7 @@ struct Response request(struct RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message[12288] = {0};
+		char request_message_information[12288] = {0}, *request_message = NULL;
 		size_t request_message_length;
 		char buffer[1024] = {0}, *response_message = NULL;
 
@@ -162,7 +159,7 @@ struct Response request(struct RequestConfig config) {
 			memcpy(data + data_length, separator, (4 + boundary_length));
 			data_length += (4 + boundary_length);
 
-			sprintf(request_message, (
+			sprintf(request_message_information, (
 				"%s %s HTTP/1.1\r\n"
 				"Host: %s:%d\r\n"
 				"Accept: */*\r\n"
@@ -172,27 +169,37 @@ struct Response request(struct RequestConfig config) {
 				"%s\r\n"
 			), config.method, url.path, url.hostname, url.port, boundary, data_length, header_text);
 
-			request_message_length = strlen(request_message);
+			request_message_length = strlen(request_message_information);
+			request_message = allocate(NULL, 0, request_message_length + data_length + 1, sizeof(char));
+
+			strcpy(request_message, request_message_information);
 			memcpy(request_message + request_message_length, data, data_length);
 			request_message_length += data_length;
 
 			free(data);
 		} else if (config.body.payload.data != NULL) {
-			char *body = config.body.payload.data;
+			const char *body = config.body.payload.data;
+			const size_t body_length = strlen(body);
 
-			sprintf(request_message, (
+			sprintf(request_message_information, (
 				"%s %s HTTP/1.1\r\n"
 				"Host: %s:%d\r\n"
 				"Accept: */*\r\n"
 				"Connection: close\r\n"
 				"Content-Length: %ld\n"
 				"%s\r\n"
-				"%s"
-			), config.method, url.path, url.hostname, url.port, strlen(body), header_text, body);
+			), config.method, url.path, url.hostname, url.port, body_length, header_text);
 
-			request_message_length = strlen(request_message);
+			request_message_length = strlen(request_message_information);
+			request_message = allocate(NULL, 0, request_message_length + body_length + 1, sizeof(char));
+
+			strcpy(request_message, request_message_information);
+			memcpy(request_message + request_message_length, body, body_length);
+			request_message_length += body_length;
+			puts(request_message);
+			printf("length: %ld - %ld\n", request_message_length, strlen(request_message));
 		} else {
-			sprintf(request_message,
+			sprintf(request_message_information,
 				"%s %s HTTP/1.1\r\n"
 				"Host: %s:%d\r\n"
 				"Accept: */*\r\n"
@@ -200,7 +207,9 @@ struct Response request(struct RequestConfig config) {
 				"%s\r\n"
 			, config.method, url.path, url.hostname, url.port, header_text);
 
-			request_message_length = strlen(request_message);
+			request_message_length = strlen(request_message_information);
+			request_message = allocate(NULL, 0, request_message_length + 1, sizeof(char));
+			strcpy(request_message, request_message_information);
 		}
 
 		free_url(url);
@@ -209,6 +218,8 @@ struct Response request(struct RequestConfig config) {
 			close_socket(sockfd, ssl);
 			throw_network("write()", tls);
 		}
+
+		free(request_message);
 
 		size_t read_size = 0;
 		size_t response_message_length = 0;
