@@ -30,4 +30,6 @@
 	unsigned long get_timestamp(const struct timeval *val);
 
 	void throw(const char *format, ...);
+
+	void sort(long *data, const size_t size);
 #endif
