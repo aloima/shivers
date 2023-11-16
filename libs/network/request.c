@@ -196,8 +196,6 @@ struct Response request(struct RequestConfig config) {
 			strcpy(request_message, request_message_information);
 			memcpy(request_message + request_message_length, body, body_length);
 			request_message_length += body_length;
-			puts(request_message);
-			printf("length: %ld - %ld\n", request_message_length, strlen(request_message));
 		} else {
 			sprintf(request_message_information,
 				"%s %s HTTP/1.1\r\n"

@@ -28,6 +28,7 @@
 	void set_pixel(struct Image *image, const unsigned int x, const unsigned int y, const unsigned char *color);
 	void draw_rect(struct Image *image, const struct Rectangle rectangle, const unsigned int x, const unsigned int y);
 
+	struct Image read_png(const unsigned char *data, const size_t size);
 	struct PNG create_png(struct Image *image);
 	void png_free(struct PNG png);
 #endif
