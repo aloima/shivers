@@ -17,7 +17,7 @@ unsigned int get_all_intents() {
 }
 
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
-	char url[256] = {0};
+	char url[256];
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
 	char authorization[128] = {0};
@@ -42,7 +42,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
 		strcpy(config.body.payload.data, body);
 
-		char length[5] = {0};
+		char length[5];
 		sprintf(length, "%ld", body_length);
 
 		config.header_size = 2;
@@ -74,7 +74,7 @@ bool check_snowflake(const char *snowflake) {
 	} else {
 		bool result = true;
 
-		for (short i = 0; i < length; ++i) {
+		for (unsigned char i = 0; i < length; ++i) {
 			if (!isdigit(snowflake[i])) {
 				result = false;
 				break;

@@ -8,12 +8,7 @@
 
 jsonelement_t *create_empty_json_element(const bool is_array) {
 	jsonelement_t *element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
-
-	if (is_array) {
-		element->type = JSON_ARRAY;
-	} else {
-		element->type = JSON_OBJECT;
-	}
+	element->type = (is_array ? JSON_ARRAY : JSON_OBJECT);
 
 	return element;
 }

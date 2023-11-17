@@ -9,7 +9,7 @@
 void send_message(const struct Client client, const char *channel_id, const struct Message message) {
 	jsonelement_t *payload = create_empty_json_element(false);
 
-	char path[64] = {0};
+	char path[64];
 	sprintf(path, "/channels/%s/messages", channel_id);
 
 	if (message.content) {
@@ -19,7 +19,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	if (message.embed_size != 0) {
 		jsonelement_t *embeds_payload = create_empty_json_element(true);
 
-		for (size_t i = 0; i < message.embed_size; ++i) {
+		for (unsigned char i = 0; i < message.embed_size; ++i) {
 			struct Embed embed = message.embeds[i];
 			jsonelement_t *embed_payload = create_empty_json_element(false);
 
@@ -83,8 +83,8 @@ void send_message(const struct Client client, const char *channel_id, const stru
 			if (embed.field_size != 0) {
 				jsonelement_t *fields_payload = create_empty_json_element(true);
 
-				for (size_t e = 0; e < embed.field_size; ++e) {
-					struct EmbedField field = embed.fields[e];
+				for (unsigned int f = 0; f < embed.field_size; ++f) {
+					struct EmbedField field = embed.fields[f];
 					jsonelement_t *field_payload = create_empty_json_element(false);
 
 					json_set_val(field_payload, "name", field.name, JSON_STRING);

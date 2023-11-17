@@ -60,7 +60,6 @@ void free_url(struct URL url) {
 	free(url.protocol);
 	free(url.hostname);
 	free(url.path);
-	memset(&url, 0, sizeof(struct URL));
 }
 
 struct hostent *resolve_hostname(char *hostname) {
@@ -104,21 +103,21 @@ void throw_network(const char *value, bool tls) {
 unsigned long combine_bytes(unsigned char *bytes, size_t byte_count) {
 	unsigned long result = 0;
 
-	for (int i = 0; i < byte_count; ++i) {
+	for (unsigned char i = 0; i < byte_count; ++i) {
 		result |= (bytes[i] << ((byte_count - i - 1) * 8));
 	}
 
 	return result;
 }
 
-struct Header get_header(struct Header *headers, size_t header_size, char *name) {
+struct Header get_header(struct Header *headers, const size_t header_size, const char *name) {
 	struct Header header = {0};
 
-	char header_name[1024] = {0};
+	char header_name[1024];
 	strtolower(header_name, name);
 
 	for (size_t i = 0; i < header_size; ++i) {
-		char current_name[1024] = {0};
+		char current_name[1024];
 		strtolower(current_name, headers[i].name);
 
 		if (strcmp(header_name, current_name) == 0) {

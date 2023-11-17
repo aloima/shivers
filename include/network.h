@@ -77,7 +77,7 @@
 	size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size);
 
 	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
-	struct Header get_header(struct Header *headers, size_t header_size, char *name);
+	struct Header get_header(struct Header *headers, const size_t header_size, const char *name);
 	struct hostent *resolve_hostname(char *hostname);
 	void close_socket(int sockfd, SSL *ssl);
 	void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const size_t data_size, const char *filename);

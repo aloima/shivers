@@ -6,10 +6,10 @@
 #ifndef DISCORD_H_
 	#define DISCORD_H_
 
-	typedef struct {
+	struct Cache {
 		char **data;
 		size_t size;
-	} Cache;
+	};
 
 	struct Client {
 		jsonelement_t *user;
@@ -65,12 +65,11 @@
 	int get_latency();
 	void set_presence(const char *name, const char type, const char *status);
 
-	void create_caches();
-	void clear_cache(Cache *cache);
-	void add_to_cache(Cache *cache, const char *data);
-	void remove_from_cache_index(Cache *cache, const size_t index);
+	void clear_cache(struct Cache *cache);
+	void add_to_cache(struct Cache *cache, const char *data);
+	void remove_from_cache_index(struct Cache *cache, const size_t index);
 
-	Cache *get_guilds_cache();
+	struct Cache *get_guilds_cache();
 
 	unsigned int get_all_intents();
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);

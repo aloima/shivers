@@ -25,7 +25,7 @@
 	size_t ahtoi(const char *data);
 	char *base64_encode(const char *data, const size_t data_length);
 
-	size_t char_at(const char *data, const char ch);
+	long char_at(const char *data, const char ch);
 
 	unsigned long get_timestamp(const struct timeval *val);
 
