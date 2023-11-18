@@ -149,18 +149,20 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	}
 }
 
+static const struct CommandArgument args[] = {
+	(struct CommandArgument) {
+		.name = "query",
+		.description = "The repository or the user that you want to get information",
+		.examples = (const char *[]) {"aloima", "torvalds", "aloima/shivers", "torvalds/linux"},
+		.example_size = 4,
+		.optional = true
+	}
+};
+
 const struct Command github = {
 	.execute = execute,
 	.name = "github",
 	.description = "Fetches data from GitHub and sends them",
-	.args = (struct CommandArgument[]) {
-		(struct CommandArgument) {
-			.name = "query",
-			.description = "The repository or the user that you want to get information",
-			.examples = (const char *[]) {"aloima", "torvalds", "aloima/shivers", "torvalds/linux"},
-			.example_size = 4,
-			.optional = true
-		}
-	},
-	.arg_size = 1
+	.args = args,
+	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

@@ -28,17 +28,15 @@ char *json_stringify(const jsonelement_t *element, const unsigned char fractiona
 		const size_t digit_count = (floor(log10(integer)) + 1);
 		char formatter[12];
 
-		result = allocate(NULL, -1, (digit_count + 1), sizeof(char));
-
 		if (fractional != 0.0) {
-			result = allocate(result, -1, digit_count + fractional_limit + 2, sizeof(char));
+			result = allocate(NULL, -1, digit_count + fractional_limit + 2, sizeof(char));
 			sprintf(formatter, "%%.0f.%%%d.0f", fractional_limit);
 			sprintf(result, formatter, integer, fractional);
 		} else {
+			result = allocate(NULL, -1, (digit_count + 1), sizeof(char));
 			strcpy(formatter, "%.0f");
 			sprintf(result, formatter, integer);
 		}
-
 	} else if (element->type == JSON_BOOLEAN) {
 		const bool value = ((bool *) element->value)[0];
 

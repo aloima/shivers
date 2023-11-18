@@ -104,18 +104,20 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	}
 }
 
+const static struct CommandArgument args[] = {
+	(struct CommandArgument) {
+		.name = "query",
+		.description = "The search query of the page which you want to get information",
+		.examples = (const char *[]) {"federal republic of germany", "ottoman"},
+		.example_size = 2,
+		.optional = true
+	}
+};
+
 const struct Command wikipedia = {
 	.execute = execute,
 	.name = "wikipedia",
 	.description = "Sends short info from Wikipedia",
-	.args = (struct CommandArgument[]) {
-		(struct CommandArgument) {
-			.name = "query",
-			.description = "The search query of the page which you want to get information",
-			.examples = (const char *[]) {"federal republic of germany", "ottoman"},
-			.example_size = 2,
-			.optional = true
-		}
-	},
-	.arg_size = 1
+	.args = args,
+	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

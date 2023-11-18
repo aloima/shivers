@@ -161,29 +161,29 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	free(body);
 }
 
-void add_field_to_embed(struct Embed *embed, char *name, char *value, bool is_inline) {
+void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline) {
 	++embed->field_size;
 	embed->fields = allocate(embed->fields, -1, embed->field_size, sizeof(struct EmbedField));
 
 	embed->fields[embed->field_size - 1] = (struct EmbedField) {
-		.name = name,
-		.value = value,
+		.name = (char *) name,
+		.value = (char *) value,
 		.is_inline = is_inline
 	};
 }
 
-void set_embed_author(struct Embed *embed, char *name, char *url, char *icon_url) {
+void set_embed_author(struct Embed *embed, const char *name, const char *url, const char *icon_url) {
 	embed->author = (struct EmbedAuthor) {
-		.name = name,
-		.url = url,
-		.icon_url = icon_url
+		.name = (char *) name,
+		.url = (char *) url,
+		.icon_url = (char *) icon_url
 	};
 }
 
-void set_embed_footer(struct Embed *embed, char *text, char *icon_url) {
+void set_embed_footer(struct Embed *embed, const char *text, const char *icon_url) {
 	embed->footer = (struct EmbedFooter) {
-		.text = text,
-		.icon_url = icon_url
+		.text = (char *) text,
+		.icon_url = (char *) icon_url
 	};
 }
 

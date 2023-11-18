@@ -20,7 +20,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	char url[256];
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
-	char authorization[128] = {0};
+	char authorization[128];
 	sprintf(authorization, "Bot %s", token);
 
 	struct RequestConfig config = {
@@ -37,13 +37,10 @@ struct Response api_request(const char *token, const char *path, const char *met
 	config.header_size = 1;
 
 	if (body != NULL && formdata == NULL) {
-		size_t body_length = strlen(body);
+		const size_t body_length = strlen(body);
 		config.body.is_formdata = false;
 		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
 		strcpy(config.body.payload.data, body);
-
-		char length[5];
-		sprintf(length, "%ld", body_length);
 
 		config.header_size = 2;
 
@@ -67,7 +64,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 }
 
 bool check_snowflake(const char *snowflake) {
-	size_t length = strlen(snowflake);
+	const size_t length = strlen(snowflake);
 
 	if (length != 18) {
 		return false;

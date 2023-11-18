@@ -20,7 +20,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 		for (size_t i = 0; i < command_size; ++i) {
 			if (strcmp(query, commands[i].name) == 0) {
-				command = commands[i];
+				memcpy(&command, &commands[i], sizeof(struct Command));
 				break;
 			}
 		}
@@ -143,18 +143,20 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	}
 }
 
+static const struct CommandArgument args[] = {
+	(struct CommandArgument) {
+		.name = "command",
+		.description = "The command that you want to get information",
+		.examples = (const char *[]) {"about", "avatar"},
+		.example_size = 2,
+		.optional = true
+	}
+};
+
 const struct Command help = {
 	.execute = execute,
 	.name = "help",
 	.description = "Sends help page",
-	.args = (struct CommandArgument[]) {
-		(struct CommandArgument) {
-			.name = "command",
-			.description = "The command that you want to get information",
-			.examples = (const char *[]) {"about", "avatar"},
-			.example_size = 2,
-			.optional = true
-		}
-	},
-	.arg_size = 1
+	.args = args,
+	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

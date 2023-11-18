@@ -22,10 +22,10 @@
 
 	struct Command {
 		void (*execute)(struct Client client, jsonelement_t *message, Split args);
-		char *name;
-		char *description;
-		struct CommandArgument *args;
-		size_t arg_size;
+		const char *name;
+		const char *description;
+		const struct CommandArgument *args;
+		const size_t arg_size;
 	};
 
 	void setup_commands();

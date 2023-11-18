@@ -40,7 +40,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				send_message(client, channel_id, reply);
 				return;
 			} else {
-				char path[32] = {0};
+				char path[26];
 				sprintf(path, "/users/%s", user_id);
 
 				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
@@ -86,18 +86,20 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	free_message(reply);
 }
 
+static const struct CommandArgument args[] = {
+	(const struct CommandArgument) {
+		.name = "member",
+		.description = "The mention or the ID of a member whose avatar that you want to view",
+		.examples = (const char *[]) {"840217542400409630", "<@840217542400409630>"},
+		.example_size = 2,
+		.optional = true
+	}
+};
+
 const struct Command avatar = {
 	.execute = execute,
 	.name = "avatar",
 	.description = "Sends the avatar of the user",
-	.args = (struct CommandArgument[]) {
-		(struct CommandArgument) {
-			.name = "member",
-			.description = "The mention or the ID of a member whose avatar that you want to view",
-			.examples = (const char *[]) {"840217542400409630", "<@840217542400409630>"},
-			.example_size = 2,
-			.optional = true
-		}
-	},
-	.arg_size = 1
+	.args = args,
+	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

@@ -8,10 +8,10 @@
 #include <json.h>
 #include <utils.h>
 
-static void parse_v(jsonelement_t *element, const char *text, size_t length, size_t *i);
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, size_t length, size_t *i);
+static void parse_v(jsonelement_t *element, const char *text, const size_t length, size_t *i);
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const size_t length, size_t *i);
 
-static void parse_v(jsonelement_t *element, const char *text, size_t length, size_t *i) {
+static void parse_v(jsonelement_t *element, const char *text, const size_t length, size_t *i) {
 	size_t value_length = 0;
 	bool escaping = false;
 
@@ -94,7 +94,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 					++(*i);
 
 					while (sub_condition) {
-						char sub_ch = text[*i - 1];
+						const char sub_ch = text[*i - 1];
 
 						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
 							++(*i);
@@ -187,7 +187,7 @@ static void parse_v(jsonelement_t *element, const char *text, size_t length, siz
 	}
 }
 
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, size_t length, size_t *i) {
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const size_t length, size_t *i) {
 	size_t key_length = 0;
 	bool parsing_key = false;
 	bool parsing_value = false;
@@ -196,7 +196,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 	(*element)->parent = parent;
 
 	while (*i < length) {
-		char ch = text[*i];
+		const char ch = text[*i];
 
 		if (!parsing_key && !parsing_value && (ch == ' ' || ch == '\t' || ch == '\n')) {
 			++(*i);
@@ -245,7 +245,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 
 jsonelement_t *json_parse(const char *text) {
 	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
-	size_t length = strlen(text);
+	const size_t length = strlen(text);
 	size_t i = 0;
 
 	parse_v(result, text, length, &i);

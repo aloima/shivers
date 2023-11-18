@@ -76,9 +76,9 @@
 
 	void send_message(const struct Client client, const char *channel_id, const struct Message message);
 	void free_message(struct Message message);
-	void add_field_to_embed(struct Embed *embed, char *name, char *value, bool is_inline);
-	void set_embed_author(struct Embed *embed, char *name, char *url, char *icon_url);
-	void set_embed_footer(struct Embed *embed, char *text, char *icon_url);
+	void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline);
+	void set_embed_author(struct Embed *embed, const char *name, const char *url, const char *icon_url);
+	void set_embed_footer(struct Embed *embed, const char *text, const char *icon_url);
 	void add_embed_to_message(const struct Embed embed, struct Message *message);
 	void add_file_to_message(struct Message *message, const char *name, const char *data, const size_t size, const char *type);
 

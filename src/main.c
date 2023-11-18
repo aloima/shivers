@@ -20,9 +20,9 @@ int main(void) {
 		srand(time(NULL));
 
 		FILE *token_file = fopen("token", "r");
-		char token[256];
+		char token[96];
 
-		fgets(token, 256, token_file);
+		fgets(token, 96, token_file);
 		fclose(token_file);
 		connect_gateway(token);
 

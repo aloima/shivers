@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include <pthread.h>
 #include <unistd.h>
 
 #include <shivers.h>
@@ -17,7 +18,7 @@ static pthread_t heartbeat_thread;
 static int last_sequence = -1;
 static bool heartbeat_waiting = false;
 
-static char token[256];
+static char token[96];
 static size_t ready_guild_size = 0;
 static bool handled_ready_guilds = false;
 
@@ -95,7 +96,7 @@ static void onstart() {
 static void onmessage(const WebsocketFrame frame) {
 	jsonelement_t *data = json_parse(frame.payload);
 	const char *event_name = json_get_val(data, "t").value.string;
-	const unsigned short op = (unsigned short) json_get_val(data, "op").value.number;
+	const unsigned short op = json_get_val(data, "op").value.number;
 
 	switch (op) {
 		case 0: {

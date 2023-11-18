@@ -73,7 +73,7 @@ struct Response request(struct RequestConfig config) {
 	}
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
-		char request_message_information[12288] = {0}, *request_message = NULL;
+		char request_message_information[12288], *request_message = NULL;
 		size_t request_message_length;
 		char buffer[1024] = {0}, *response_message = NULL;
 
@@ -82,13 +82,20 @@ struct Response request(struct RequestConfig config) {
 			SSL_library_init();
 
 			ssl_ctx = SSL_CTX_new(TLS_client_method());
+
+			// These settings are specified for shivers, if you're using this library independently, change them for what your needs
+			SSL_CTX_set_cipher_list(ssl_ctx, "TLS_RSA_WITH_AES_256_CBC_SHA256");
+			SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF);
+			SSL_CTX_set_options(ssl_ctx, SSL_OP_NO_TLSv1);
+
 			ssl = SSL_new(ssl_ctx);
 			SSL_set_fd(ssl, sockfd);
 
 			SSL_connect(ssl);
 		}
 
-		char header_text[65536] = {0};
+		char header_text[65536];
+		header_text[0] = '\0';
 
 		for (int i = 0; i < config.header_size; ++i) {
 			strcat(header_text, config.headers[i].name);

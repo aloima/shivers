@@ -217,11 +217,13 @@ static void check_response(Websocket *websocket, const char *response, const cha
 }
 
 static void switch_protocols(Websocket *websocket) {
-	unsigned char key_data[17] = {0};
+	unsigned char key_data[17];
 
 	for (int i = 0; i < 16; ++i) {
 		key_data[i] = ((rand() % 255) + 1);
 	}
+
+	key_data[16] = '\0';
 
 	websocket->key = base64_encode((char *) key_data, 16);
 
@@ -245,7 +247,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;
 	size_t message_length = strlen(message);
 	size_t data_length = message_length;
-	unsigned char masking_key[5] = {0};
+	unsigned char masking_key[4];
 
 	for (int i = 0; i < 4; ++i) {
 		masking_key[i] = ((rand() % 255) + 1);
@@ -272,7 +274,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	}
 
 	data[0] = WEBSOCKET_FRAME_MAGIC;
-	strcpy(((char *) data) + data_length - message_length - 4, (char *) masking_key);
+	strncpy(((char *) data) + data_length - message_length - 4, (char *) masking_key, 4);
 
 	for (int i = 0; i < message_length; ++i) {
 		char ch = (message[i] ^ masking_key[i % 4]);
@@ -318,7 +320,14 @@ static void initialize_websocket(Websocket *websocket, const char *url) {
 		SSL_load_error_strings();
 		SSL_library_init();
 
-		websocket->ssl = SSL_new(SSL_CTX_new(SSLv23_client_method()));
+		SSL_CTX *ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+
+		// These settings are specified for shivers, if you're using this library independently, change them for what your needs
+		SSL_CTX_set_cipher_list(ssl_ctx, "TLS_RSA_WITH_AES_256_CBC_SHA256");
+		SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF);
+		SSL_CTX_set_options(ssl_ctx, SSL_OP_NO_TLSv1);
+
+		websocket->ssl = SSL_new(ssl_ctx);
 		SSL_set_fd(websocket->ssl, websocket->sockfd);
 	}
 }
