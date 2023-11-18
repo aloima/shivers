@@ -23,7 +23,7 @@ static void unregister_events(int epoll_fd, Websocket *websocket, uint32_t event
 static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events);
 
 static void switch_protocols(Websocket *websocket);
-static void check_response(Websocket *websocket, const char *response, const char *key);
+static void check_response(Websocket *websocket, const char *response, char *key);
 
 static void initialize_websocket(Websocket *websocket, const char *url);
 
@@ -59,7 +59,7 @@ static void unregister_events(int epoll_fd, Websocket *websocket, uint32_t event
 
 static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events) {
 	for (int i = 0; i < num_events; ++i) {
-		uint32_t event = events[i].events;
+		const unsigned int event = events[i].events;
 
 		if (events[i].data.fd == websocket->sockfd) {
 			if (event & EPOLLERR || event & EPOLLHUP) {
@@ -67,8 +67,9 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 			} else if (event & EPOLLIN) {
 				if ((i + 1) == num_events) {
 					if (websocket->key) {
-						char buffer[4096] = {0};
-						_read(websocket->ssl, websocket->sockfd, buffer, 4095);
+						char buffer[4096];
+						size_t read_count = _read(websocket->ssl, websocket->sockfd, buffer, 4095);
+						buffer[read_count] = 0;
 
 						if (strncmp(buffer + 9, "101", 3) == 0) {
 							check_response(websocket, buffer, websocket->key);
@@ -82,7 +83,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 						}
 					} else {
 						WebsocketFrame frame;
-						unsigned char buffer[9] = {0};
+						unsigned char buffer[9];
 
 						_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
 
@@ -114,7 +115,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 								size_t received = 0;
 
 								while (received != frame.payload_length) {
-									size_t diff = (frame.payload_length - received);
+									const size_t diff = (frame.payload_length - received);
 
 									if (diff > 512) {
 										received += _read(websocket->ssl, websocket->sockfd, frame.payload + received, 512);
@@ -168,7 +169,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 	}
 }
 
-static void check_response(Websocket *websocket, const char *response, const char *key) {
+static void check_response(Websocket *websocket, const char *response, char *key) {
 	Split splitter = split((char *) response, "\r\n");
 
 	for (int i = 0; i < splitter.size; ++i) {
@@ -180,19 +181,21 @@ static void check_response(Websocket *websocket, const char *response, const cha
 			if (strcmp(header_name, "sec-websocket-accept") == 0) {
 				const char *value = ltrim(line_splitter.data[1]);
 
-				const char* websocket_guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-				size_t final_length = strlen(key) + strlen(websocket_guid);
-				char *final = allocate(NULL, -1, final_length + 1, sizeof(char));
-				strcat(final, key);
-				strcat(final, websocket_guid);
+				const char websocket_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+				const size_t key_length = strlen(key);
+				const size_t websocket_guid_length = ((sizeof(websocket_guid) / sizeof(char)) - 1);
+				const size_t final_length = (key_length + websocket_guid_length);
 
-				unsigned char *sha1_hash = allocate(NULL, 0, SHA_DIGEST_LENGTH + 1, sizeof(char));
+				char final[final_length + 1];
+				memcpy(final, key, key_length);
+				memcpy(final + key_length, websocket_guid, websocket_guid_length);
+				final[final_length] = 0;
+
+				unsigned char sha1_hash[SHA_DIGEST_LENGTH + 1];
 				SHA1((unsigned char *) final, final_length, sha1_hash);
 				char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
 
-				free((char *) key);
-				free(sha1_hash);
-				free(final);
+				free(key);
 
 				if (strcmp(result, value) != 0) {
 					free(result);
@@ -219,7 +222,7 @@ static void check_response(Websocket *websocket, const char *response, const cha
 static void switch_protocols(Websocket *websocket) {
 	unsigned char key_data[17];
 
-	for (int i = 0; i < 16; ++i) {
+	for (unsigned char i = 0; i < 16; ++i) {
 		key_data[i] = ((rand() % 255) + 1);
 	}
 
@@ -227,7 +230,7 @@ static void switch_protocols(Websocket *websocket) {
 
 	websocket->key = base64_encode((char *) key_data, 16);
 
-	char *request_message = allocate(NULL, -1, 512, sizeof(char));
+	char request_message[512];
 
 	sprintf(request_message,
 		"GET %s HTTP/1.1\r\n"
@@ -240,12 +243,11 @@ static void switch_protocols(Websocket *websocket) {
 
 	_write(websocket->ssl, websocket->sockfd, request_message, strlen(request_message));
 	websocket->connected = true;
-	free(request_message);
 }
 
 void send_websocket_message(Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;
-	size_t message_length = strlen(message);
+	const size_t message_length = strlen(message);
 	size_t data_length = message_length;
 	unsigned char masking_key[4];
 
@@ -277,7 +279,7 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 	strncpy(((char *) data) + data_length - message_length - 4, (char *) masking_key, 4);
 
 	for (int i = 0; i < message_length; ++i) {
-		char ch = (message[i] ^ masking_key[i % 4]);
+		const char ch = (message[i] ^ masking_key[i % 4]);
 		strncpy(((char *) data) + data_length - message_length + i, &ch, 1);
 	}
 
@@ -350,7 +352,7 @@ void connect_websocket(Websocket *websocket) {
 		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
 
 		do {
-			int num_events = epoll_wait(websocket->epollfd, events, 32, -1);
+			const int num_events = epoll_wait(websocket->epollfd, events, 32, -1);
 
 			if (num_events != 0) {
 				handle_events(websocket, websocket->epollfd, events, num_events);
