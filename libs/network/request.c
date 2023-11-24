@@ -48,7 +48,7 @@ void response_free(struct Response *response) {
 }
 
 struct Response request(struct RequestConfig config) {
-	struct Response response = { false, { 0, NULL }, NULL, NULL, 0 };
+	struct Response response = {0};
 	int sockfd;
 	struct sockaddr_in addr;
 	struct hostent *host = NULL;

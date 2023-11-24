@@ -23,16 +23,18 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		send_message(client, channel_id, reply);
 		return;
 	} else {
-		struct Embed embed = {0};
-		struct RequestConfig config = {
-			.header_size = 1,
-			.method = "GET",
-			.headers = allocate(NULL, -1, 1, sizeof(struct Header))
+		struct Header headers[] = {
+			(struct Header) {
+				.name = "User-Agent",
+				.value = "shivers"
+			}
 		};
 
-		config.headers[0] = (struct Header) {
-			.name = "User-Agent",
-			.value = "shivers"
+		struct Embed embed = {0};
+		struct RequestConfig config = {
+			.method = "GET",
+			.headers = headers,
+			.header_size = 1
 		};
 
 		char url[256];
@@ -145,7 +147,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		}
 
 		response_free(&response);
-		free(config.headers);
 	}
 }
 

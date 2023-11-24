@@ -41,7 +41,7 @@ static void handle_exit(int sig) {
 }
 
 static void send_heartbeat() {
-	char heartbeat_message[32];
+	char heartbeat_message[24];
 
 	if (last_sequence == -1) {
 		sprintf(heartbeat_message, "{"

@@ -23,18 +23,19 @@ struct Response api_request(const char *token, const char *path, const char *met
 	char authorization[128];
 	sprintf(authorization, "Bot %s", token);
 
+	struct Header headers[2] = {
+		(struct Header) {
+			.name = "Authorization",
+			.value = authorization
+		}
+	};
+
 	struct RequestConfig config = {
 		.url = url,
 		.method = (char *) method,
-		.headers = allocate(NULL, -1, 1 + !!formdata + !!body, sizeof(struct Header))
+		.headers = headers,
+		.header_size = 1
 	};
-
-	config.headers[0] = (struct Header) {
-		.name = "Authorization",
-		.value = authorization
-	};
-
-	config.header_size = 1;
 
 	if (body != NULL && formdata == NULL) {
 		const size_t body_length = strlen(body);
@@ -42,19 +43,19 @@ struct Response api_request(const char *token, const char *path, const char *met
 		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
 		strcpy(config.body.payload.data, body);
 
-		config.header_size = 2;
-
-		config.headers[1] = (struct Header) {
+		headers[1] = (struct Header) {
 			.name = "Content-Type",
 			.value = "application/json"
 		};
+
+		config.headers = headers;
+		config.header_size = 2;
 	} else if (body == NULL && formdata != NULL && formdata->field_size != 0) {
 		config.body.is_formdata = true;
 		config.body.payload.formdata = *formdata;
 	}
 
 	struct Response response = request(config);
-	free(config.headers);
 
 	if (body != NULL) {
 		free(config.body.payload.data);

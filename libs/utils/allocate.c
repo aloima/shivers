@@ -1,11 +1,11 @@
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
 
 #include <utils.h>
 
 void *allocate(void *value, const long old_count, const long new_count, const unsigned char size) {
 	if (value == NULL) {
-		return calloc(new_count, size); // remove it and fix uninitialization problem for strings
+		return calloc(new_count, size);
 	} else {
 		void *val = realloc(value, new_count * size);
 

@@ -15,17 +15,20 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	const size_t command_size = get_command_size();
 
 	if (args.size == 1) {
-		struct Command command = {0};
+		struct Command command;
+		bool is_found = false;
+
 		const char *query = args.data[0];
 
 		for (size_t i = 0; i < command_size; ++i) {
 			if (strcmp(query, commands[i].name) == 0) {
+				is_found = true;
 				memcpy(&command, &commands[i], sizeof(struct Command));
 				break;
 			}
 		}
 
-		if (command.name != NULL) {
+		if (is_found) {
 			struct Embed embed = {0};
 
 			char usage[64];

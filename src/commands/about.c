@@ -16,15 +16,15 @@
 
 static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	long seconds = ((get_timestamp(NULL) - client.ready_at) / 1000);
-	char years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
+	const char years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
 	seconds -= (years * SECONDS_IN_YEAR);
-	char months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
+	const char months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
 	seconds -= (months * SECONDS_IN_MONTH);
-	char days = ((seconds - (seconds % SECONDS_IN_DAY)) / SECONDS_IN_DAY);
+	const char days = ((seconds - (seconds % SECONDS_IN_DAY)) / SECONDS_IN_DAY);
 	seconds -= (days * SECONDS_IN_DAY);
-	char hours = ((seconds - (seconds % SECONDS_IN_HOUR)) / SECONDS_IN_HOUR);
+	const char hours = ((seconds - (seconds % SECONDS_IN_HOUR)) / SECONDS_IN_HOUR);
 	seconds -= (hours * SECONDS_IN_HOUR);
-	char minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
+	const char minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
 	seconds -= (minutes * SECONDS_IN_MINUTE);
 
 	char *uptime[6] = {0};
@@ -127,7 +127,5 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 const struct Command about = {
 	.execute = execute,
 	.name = "about",
-	.description = "Sends bot information",
-	.args = NULL,
-	.arg_size = 0
+	.description = "Sends bot information"
 };

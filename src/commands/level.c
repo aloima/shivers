@@ -33,7 +33,5 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 const struct Command level = {
 	.execute = execute,
 	.name = "level",
-	.description = "Display your level",
-	.args = NULL,
-	.arg_size = 0
+	.description = "Display your level"
 };
