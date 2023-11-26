@@ -4,7 +4,7 @@
 
 static void compare_elements(long *a, long *b) {
 	if (*b > *a) {
-		int temp = *a;
+		long temp = *a;
 		*a = *b;
 		*b = temp;
 	}

@@ -8,8 +8,9 @@
 jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 	Split splitter = split(search, ".");
 	jsonelement_t *value = element;
-	jsonresult_t result = {0};
-	result.exist = true;
+	jsonresult_t result = {
+		.exist = true
+	};
 
 	for (size_t ki = 0; ki < splitter.size; ++ki) {
 		if (value->type == JSON_ARRAY) {
@@ -52,11 +53,11 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		result.element = value;
 
 		if (value->type == JSON_NUMBER) {
-			result.value.number = ((double *) value->value)[0];
+			result.value.number = *((double *) value->value);
 		} else if (value->type == JSON_STRING) {
 			result.value.string = value->value;
 		} else if (value->type == JSON_BOOLEAN) {
-			result.value.boolean = ((bool *) value->value)[0];
+			result.value.boolean = *((bool *) value->value);
 		} else if (value->type == JSON_OBJECT) {
 			result.value.object = value;
 		} else if (value->type == JSON_ARRAY) {

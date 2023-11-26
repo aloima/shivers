@@ -7,9 +7,6 @@
 #include <network.h>
 #include <json.h>
 
-#define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
-#define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/%d.png?size=1024"
-
 static void execute(struct Client client, jsonelement_t *message, Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
@@ -30,9 +27,10 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			char user_id[19];
 
 			if (arg_length == 18) {
-				snprintf(user_id, 19, "%s", args.data[0]);
+				strcpy(user_id, args.data[0]);
 			} else {
-				snprintf(user_id, 19, "%s", args.data[0] + 2);
+				strncpy(user_id, args.data[0] + 2, 18);
+				user_id[18] = 0;
 			}
 
 			if (!check_snowflake(user_id)) {
@@ -40,42 +38,15 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				send_message(client, channel_id, reply);
 				return;
 			} else {
-				char path[26];
-				sprintf(path, "/users/%s", user_id);
-
-				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
-				jsonelement_t *user = json_parse(response.data);
-				const jsonresult_t avatar = json_get_val(user, "avatar");
-
-				if (avatar.exist && avatar.type != JSON_NULL) {
-					const char *avatar_hash = avatar.value.string;
-					const char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
-
-					sprintf(avatar_url, AVATAR_URL, user_id, avatar_hash, extension);
-				} else {
-					const char *discriminator = json_get_val(user, "discriminator").value.string;
-
-					sprintf(avatar_url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
-				}
-
-				json_free(user, false);
-				response_free(&response);
+				get_avatar_url(avatar_url, client.token, user_id, NULL, NULL);
 			}
 		}
 	} else {
 		const char *user_id = json_get_val(message, "author.id").value.string;
-		const jsonresult_t avatar = json_get_val(message, "author.avatar");
+		const char *discriminator = json_get_val(message, "author.discriminator").value.string;
+		const char *hash = json_get_val(message, "author.avatar").value.string;
 
-		if (avatar.exist && avatar.type != JSON_NULL) {
-			const char *avatar_hash = avatar.value.string;
-			const char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
-
-			sprintf(avatar_url, AVATAR_URL, user_id, avatar_hash, extension);
-		} else {
-			const char *discriminator = json_get_val(message, "author.discriminator").value.string;
-
-			sprintf(avatar_url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
-		}
+		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash);
 	}
 
 	embed.image_url = avatar_url;

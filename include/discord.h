@@ -6,6 +6,9 @@
 #ifndef DISCORD_H_
 	#define DISCORD_H_
 
+	#define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s?size=1024"
+	#define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/%d.png?size=1024"
+
 	struct Cache {
 		char **data;
 		size_t size;
@@ -73,6 +76,7 @@
 
 	unsigned int get_all_intents();
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
+	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash);
 
 	void send_message(const struct Client client, const char *channel_id, const struct Message message);
 	void free_message(struct Message message);

@@ -5,6 +5,7 @@
 
 #include <discord.h>
 #include <network.h>
+#include <json.h>
 
 unsigned int get_all_intents() {
 	unsigned int result = 0;
@@ -80,5 +81,38 @@ bool check_snowflake(const char *snowflake) {
 		}
 
 		return result;
+	}
+}
+
+void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash) {
+	if (discriminator == NULL) {
+		char path[26] = "/users/";
+		strcat(path, user_id);
+
+		struct Response response = api_request(token, path, "GET", NULL, NULL);
+		jsonelement_t *user = json_parse(response.data);
+		const jsonresult_t avatar = json_get_val(user, "avatar");
+
+		if (avatar.exist && avatar.type != JSON_NULL) {
+			const char *avatar_hash = avatar.value.string;
+			const char *extension = ((strncmp(avatar_hash, "a_", 2) == 0) ? "gif" : "png");
+
+			sprintf(url, AVATAR_URL, user_id, avatar_hash, extension);
+		} else {
+			const char *_discriminator = json_get_val(user, "discriminator").value.string;
+
+			sprintf(url, DEFAULT_AVATAR_URL, atoi(_discriminator) % 5);
+		}
+
+		json_free(user, false);
+		response_free(&response);
+	} else {
+		if (hash != NULL) {
+			const char *extension = ((strncmp(hash, "a_", 2) == 0) ? "gif" : "png");
+
+			sprintf(url, AVATAR_URL, user_id, hash, extension);
+		} else {
+			sprintf(url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
+		}
 	}
 }

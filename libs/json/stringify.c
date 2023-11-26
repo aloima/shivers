@@ -21,7 +21,7 @@ char *json_stringify(const jsonelement_t *element, const unsigned char fractiona
 		result[length + 1] = '"';
 		result[length + 2] = '\0';
 	} else if (element->type == JSON_NUMBER) {
-		const double number = ((double *) element->value)[0];
+		const double number = *((double *) element->value);
 		double integer;
 		double fractional = (modf(number, &integer) * pow(10, fractional_limit));
 
@@ -38,7 +38,7 @@ char *json_stringify(const jsonelement_t *element, const unsigned char fractiona
 			sprintf(result, formatter, integer);
 		}
 	} else if (element->type == JSON_BOOLEAN) {
-		const bool value = ((bool *) element->value)[0];
+		const bool value = *((bool *) element->value);
 
 		if (value) {
 			result = allocate(NULL, -1, 5, sizeof(char));
