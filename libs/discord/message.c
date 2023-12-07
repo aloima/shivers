@@ -111,27 +111,40 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	}
 
 	struct Response response;
-	char *body = json_stringify(payload, 5);
+	char *body = NULL;
 
 	if (message.file_size != 0 && payload->size != 0) {
 		struct FormData formdata = {
 			.boundary = "deneme"
 		};
 
-		add_field_to_formdata(&formdata, "payload_json", body, strlen(body), NULL);
-		add_header_to_formdata_field(&formdata, "payload_json", "Content-Type", "application/json");
+		jsonelement_t *attachments = create_empty_json_element(true);
 
 		for (size_t i = 0; i < message.file_size; ++i) {
 			struct File file = message.files[i];
+			jsonelement_t *attachment = create_empty_json_element(false);
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
 
+			double n = i;
+			json_set_val(attachment, "id", &n, JSON_NUMBER);
+			json_set_val(attachments, NULL, attachment, JSON_OBJECT);
+
 			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
 			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
+
+			json_free(attachment, true);
 			free(field_name);
 		}
 
+		json_set_val(payload, "attachments", attachments, JSON_ARRAY);
+
+		body = json_stringify(payload, 5);
+		add_field_to_formdata(&formdata, "payload_json", body, strlen(body), NULL);
+		add_header_to_formdata_field(&formdata, "payload_json", "Content-Type", "application/json");
+
 		response = api_request(client.token, path, "POST", NULL, &formdata);
+		json_free(attachments, false);
 		free_formdata(formdata);
 	} else if (message.file_size != 0) {
 		struct FormData formdata = {
@@ -151,6 +164,7 @@ void send_message(const struct Client client, const char *channel_id, const stru
 		response = api_request(client.token, path, "POST", NULL, &formdata);
 		free_formdata(formdata);
 	} else if (payload->size != 0) {
+		body = json_stringify(payload, 5);
 		response = api_request(client.token, path, "POST", body, NULL);
 	} else {
 		throw("cannot send empty message");

@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
@@ -21,15 +21,16 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		};
 
 		char search_query[512];
-		search_query[0] = 0;
-		join(args.data, search_query, args.size, " ");
+		struct Join arg_joins[args.size];
+		create_join_elements_nz(arg_joins, (const char **) args.data, args.size);
+		join(arg_joins, search_query, args.size, " ");
 
 		char search_url[512];
 		sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", search_query);
 		config.url = search_url;
 
 		struct Response search_response = request(config);
-		jsonelement_t *search_result = json_parse(search_response.data);
+		jsonelement_t *search_result = json_parse((const char *) search_response.data);
 		jsonresult_t page_name = json_get_val(search_result, "1.0");
 
 		if (page_name.exist) {
@@ -38,7 +39,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			config.url = url;
 
 			struct Response info_response = request(config);
-			jsonelement_t *info_data = json_parse(info_response.data);
+			jsonelement_t *info_data = json_parse((const char *) info_response.data);
 			jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
 			struct Embed embed = {0};
 
@@ -59,7 +60,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				config.url = image_url;
 
 				struct Response image_response = request(config);
-				jsonelement_t *image_data = json_parse(image_response.data);
+				jsonelement_t *image_data = json_parse((const char *) image_response.data);
 				jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
 				const char *final_image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
 				const size_t final_image_url_length = strlen(final_image_url);
@@ -67,12 +68,14 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
 					char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
 					char png_url[512];
-					Split svg_splitter = split(svg_url, "/");
+					struct Split svg_splitter = split(svg_url, strlen(svg_url), "/");
 					char image_code[32];
 					image_code[0] = 0;
 
-					join(svg_splitter.data + 5, image_code, 2, "/");
-					split_free(&svg_splitter);
+					struct Join svg_joins[2];
+					create_join_elements_nz(svg_joins, (const char **) svg_splitter.data + 5, 2);
+					join(svg_joins, image_code, 2, "/");
+					split_free(svg_splitter);
 
 					sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
 					embed.image_url = png_url;

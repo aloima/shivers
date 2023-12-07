@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
@@ -18,7 +18,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		struct Command command;
 		bool is_found = false;
 
-		const char *query = args.data[0];
+		const char *query = args.data[0].data;
 
 		for (size_t i = 0; i < command_size; ++i) {
 			if (strcmp(query, commands[i].name) == 0) {
@@ -41,18 +41,21 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			add_field_to_embed(&embed, "Description", command.description, false);
 
 			if (command.arg_size != 0) {
-				char **arguments_text = allocate(NULL, -1, command.arg_size, sizeof(char *));
+				struct Join *arguments_text = allocate(NULL, -1, command.arg_size, sizeof(struct Join));
 
 				for (unsigned char i = 0; i < command.arg_size; ++i) {
 					const struct CommandArgument argument = command.args[i];
-					arguments_text[i] = allocate(NULL, 0, 192, sizeof(char));
+					arguments_text[i].data = allocate(NULL, 0, 192, sizeof(char));
 
 					if (argument.examples) {
-						size_t length = calculate_join((char **) argument.examples, argument.example_size, ", ");
-						char *examples = allocate(NULL, -1, length + 1, sizeof(char));
-						join((char **) argument.examples, examples, argument.example_size, ", ");
+						struct Join example_joins[argument.example_size];
+						create_join_elements_nz(example_joins, argument.examples, argument.example_size);
 
-						sprintf(arguments_text[i], (
+						size_t length = calculate_join(example_joins, argument.example_size, ", ");
+						char *examples = allocate(NULL, -1, length + 1, sizeof(char));
+						join(example_joins, examples, argument.example_size, ", ");
+
+						sprintf((char *) arguments_text[i].data, (
 							"**Name**: %s\\n"
 							"**Description**: %s\\n"
 							"**Is optional?**: %s\\n"
@@ -61,7 +64,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 						free(examples);
 					} else {
-						sprintf(arguments_text[i], (
+						sprintf((char *) arguments_text[i].data, (
 							"**Name**: %s\\n"
 							"**Description**: %s\\n"
 							"**Is optional?**: %s"
@@ -81,10 +84,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 				add_field_to_embed(&embed, "Usage", usage, false);
 				add_field_to_embed(&embed, "Arguments", arguments_description, false);
-
-				for (unsigned char i = 0; i < command.arg_size; ++i) {
-					free(arguments_text[i]);
-				}
 
 				free(arguments_text);
 			} else {

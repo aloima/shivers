@@ -5,18 +5,29 @@
 #ifndef UTIL_H_
 	#define UTIL_H_
 
-	typedef struct {
-		char **data;
-		size_t size;
-	} Split;
+	struct SplitData {
+		char *data;
+		size_t length;
+	};
 
-	Split split(const char *text, const char *separator);
-	void split_free(Split *value);
+	struct Split {
+		struct SplitData *data;
+		size_t size;
+	};
+
+	struct Join {
+		char *data;
+		size_t length;
+	};
+
+	struct Split split(const char *text, const size_t length, const char *separator);
+	void split_free(struct Split value);
 
 	void *allocate(void *value, const long old_count, const long new_count, const unsigned char size);
 
-	size_t join(char **value, char *source, unsigned short size, const char *separator);
-	size_t calculate_join(char **value, unsigned short size, const char *separator);
+	size_t join(const struct Join *value, char *source, unsigned short size, const char *separator);
+	size_t calculate_join(const struct Join *value, unsigned short size, const char *separator);
+	void create_join_elements_nz(struct Join *joins, const char **list, const size_t list_size);
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);

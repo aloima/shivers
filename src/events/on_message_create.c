@@ -34,13 +34,13 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 		const unsigned char prefix_length = strlen(PREFIX);
 
 		if (content != NULL && strncmp(content, PREFIX, prefix_length) == 0) {
-			Split splitted = split(content + prefix_length, " ");
-			Split args = {
+			struct Split splitted = split(content + prefix_length, (strlen(content) - prefix_length), " ");
+			struct Split args = {
 				.data = splitted.data + 1,
 				.size = splitted.size - 1
 			};
 
-			const char *input = splitted.data[0];
+			const char *input = splitted.data[0].data;
 
 			const unsigned short command_size = get_command_size();
 			const struct Command *commands = get_commands();
@@ -54,7 +54,7 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 				}
 			}
 
-			split_free(&splitted);
+			split_free(splitted);
 		}
 	}
 }

@@ -15,23 +15,23 @@
 
 struct URL parse_url(const char *data) {
 	struct URL url = {0};
-	Split splitter = split(data, "/");
+	struct Split splitter = split(data, strlen(data), "/");
 
 	if (splitter.size < 3) {
 		throw("request(): invalid url format");
 	}
 
-	Split hostname_splitter = split(splitter.data[2], ":");
+	struct Split hostname_splitter = split(splitter.data[2].data, splitter.data[2].length, ":");
 
-	const size_t protocol_length = strlen(splitter.data[0]);
+	const size_t protocol_length = splitter.data[0].length;
 	url.protocol = allocate(NULL, -1, protocol_length, sizeof(char));
-	strncpy(url.protocol, splitter.data[0], protocol_length - 1);
+	strncpy(url.protocol, splitter.data[0].data, protocol_length - 1);
 
-	url.hostname = allocate(NULL, -1, strlen(hostname_splitter.data[0]) + 1, sizeof(char));
-	strcpy(url.hostname, hostname_splitter.data[0]);
+	url.hostname = allocate(NULL, -1, hostname_splitter.data[0].length + 1, sizeof(char));
+	strcpy(url.hostname, hostname_splitter.data[0].data);
 
 	if (hostname_splitter.size == 2) {
-		url.port = atoi(hostname_splitter.data[1]);
+		url.port = atoi(hostname_splitter.data[1].data);
 	} else {
 		if (strcmp(url.protocol, "https") == 0 || strcmp(url.protocol, "wss") == 0) {
 			url.port = 443;
@@ -44,14 +44,21 @@ struct URL parse_url(const char *data) {
 		url.path = allocate(NULL, 0, 2, sizeof(char));
 		url.path[0] = '/';
 	} else {
-		const size_t join_length = calculate_join(splitter.data + 3, splitter.size - 3, "/");
+		struct Join path_joins[splitter.size - 3];
+
+		for (size_t i = 3; i < splitter.size; ++i) {
+			path_joins[i - 3].data = splitter.data[i].data;
+			path_joins[i - 3].length = splitter.data[i].length;
+		}
+
+		const size_t join_length = calculate_join(path_joins, splitter.size - 3, "/");
 		url.path = allocate(NULL, 0, join_length + 2, sizeof(char));
 		url.path[0] = '/';
-		join(splitter.data + 3, url.path + 1, splitter.size - 3, "/");
+		join(path_joins, url.path + 1, splitter.size - 3, "/");
 	}
 
-	split_free(&splitter);
-	split_free(&hostname_splitter);
+	split_free(splitter);
+	split_free(hostname_splitter);
 
 	return url;
 }

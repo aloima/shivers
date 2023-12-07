@@ -234,63 +234,60 @@ struct Response request(struct RequestConfig config) {
 				close_socket(sockfd, ssl);
 				throw_network("read()", tls);
 			} else {
+				response_message = allocate(response_message, response_message_length + 1, response_message_length + read_size + 1, sizeof(char));
+				memcpy(response_message + response_message_length, buffer, read_size);
 				response_message_length += read_size;
-				response_message = allocate(response_message, response_message_length - read_size + 1, response_message_length + 1, sizeof(char));
-				strncat(response_message, buffer, read_size);
 			}
 		}
 
-		Split line_splitter = split(response_message, "\r\n");
-		Split status_splitter = split(line_splitter.data[0], " ");
-		const size_t status_message_length = calculate_join(status_splitter.data + 2, status_splitter.size - 2, " ");
+		struct Split line_splitter = split(response_message, response_message_length, "\r\n");
+		struct Split status_splitter = split(line_splitter.data[0].data, line_splitter.data[0].length, " ");
+		struct Join status_joins[status_splitter.size - 2];
+		create_join_elements_nz(status_joins, (const char **) status_splitter.data + 2, status_splitter.size - 2);
 
-		response.status.code = atoi(status_splitter.data[1]);
+		const size_t status_message_length = calculate_join(status_joins, status_splitter.size - 2, " ");
+
+		response.status.code = atoi(status_splitter.data[1].data);
 		response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
-		join(status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
+		join(status_joins, response.status.message, status_splitter.size - 2, " ");
 
-		split_free(&status_splitter);
+		split_free(status_splitter);
 
 		size_t i = 0;
 
 		for (i = 1; i < line_splitter.size; ++i) {
-			if (line_splitter.data[i][0] == 0) {
+			if (line_splitter.data[i].data[0] == 0) {
 				break;
 			} else {
-				Split header_splitter = split(line_splitter.data[i], ": ");
+				const char *value = strstr(line_splitter.data[i].data, ": ") + 2;
+				const size_t value_length = strlen(value);
+				const size_t name_length = (line_splitter.data[i].length - value_length - 2);
 
 				response.headers = allocate(response.headers, -1, i, sizeof(struct Header));
 				struct Header *header = &response.headers[i - 1];
 
-				const char *name = header_splitter.data[0];
-				const char *value = header_splitter.data[1];
-				const size_t name_length = strlen(name);
-				const size_t value_length = strlen(value);
-
 				header->name = allocate(NULL, -1, name_length + 1, sizeof(char));
 				header->value = allocate(NULL, -1, value_length + 1, sizeof(char));
-				strncpy(header->name, name, name_length);
+				strncpy(header->name, line_splitter.data[i].data, name_length);
 				strncpy(header->value, value, value_length);
 				++response.header_size;
-
-				split_free(&header_splitter);
 			}
 		}
 
-		size_t response_data_length = 0;
 		const char *transfer_encoding_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
 		if (transfer_encoding_value != NULL && strcmp(transfer_encoding_value, "chunked") == 0) {
 			++i;
 
 			while (i < line_splitter.size) {
-				size_t hex_length = ahtoi(line_splitter.data[i]);
-				const size_t line_length = strlen(line_splitter.data[i + 1]);
+				size_t hex_length = ahtoi(line_splitter.data[i].data);
+				const size_t line_length = line_splitter.data[i + 1].length;
 
 				if (line_length != 0) {
 					if (line_length == hex_length) {
-						response_data_length += hex_length;
-						response.data = allocate(response.data, -1, response_data_length + 1, sizeof(char));
-						strncat(response.data, line_splitter.data[i + 1], line_length);
+						response.data_size += hex_length;
+						response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
+						memcpy(response.data + response.data_size - hex_length, line_splitter.data[i + 1].data, line_length);
 					} else {
 						throw_network("invalid http message encoding", false);
 					}
@@ -300,25 +297,23 @@ struct Response request(struct RequestConfig config) {
 
 				i += 2;
 			}
+
+			response.data[response.data_size] = 0;
 		} else {
-			while (i < line_splitter.size) {
-				if (line_splitter.data[i][0] != 0) {
-					const bool last_line = ((i + 1) == line_splitter.size);
-					const size_t line_length = strlen(line_splitter.data[i]);
-					response_data_length += (line_length + !last_line);
-					response.data = allocate(response.data, -1, response_data_length + 1, sizeof(char));
-					strncat(response.data, line_splitter.data[i], line_length);
+			response.data_size = atoi(get_header(response.headers, response.header_size, "content-length").value);
+			response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
 
-					if (!last_line) {
-						strncat(response.data, "\n", 1);
-					}
-				}
+			struct Join data_joins[line_splitter.size - i];
 
-				++i;
+			for (size_t n = i + 1; n < line_splitter.size; ++n) {
+				data_joins[n - i - 1].data = line_splitter.data[n].data;
+				data_joins[n - i - 1].length = line_splitter.data[n].length;
 			}
+
+			join(data_joins, (char *) response.data, line_splitter.size - i - 1, "\r\n");
 		}
 
-		split_free(&line_splitter);
+		split_free(line_splitter);
 		free(response_message);
 
 		close_socket(sockfd, ssl);

@@ -104,7 +104,7 @@ static void onmessage(const WebsocketFrame frame) {
 
 			if (strcmp(event_name, "READY") == 0) {
 				struct Response response = api_request(token, "/users/@me", "GET", NULL, NULL);
-				client.user = json_parse(response.data);
+				client.user = json_parse((const char *) response.data);
 				client.token = token;
 				client.ready_at = get_timestamp(NULL);
 

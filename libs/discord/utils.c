@@ -90,7 +90,7 @@ void get_avatar_url(char *url, const char *token, const char *user_id, const cha
 		strcat(path, user_id);
 
 		struct Response response = api_request(token, path, "GET", NULL, NULL);
-		jsonelement_t *user = json_parse(response.data);
+		jsonelement_t *user = json_parse((const char *) response.data);
 		const jsonresult_t avatar = json_get_val(user, "avatar");
 
 		if (avatar.exist && avatar.type != JSON_NULL) {

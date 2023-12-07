@@ -66,14 +66,16 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 		sprintf(uptime[uptime_element_count - 1], "%ld secs", seconds);
 	}
 
-	join(uptime, uptime_text, uptime_element_count, " ");
+	struct Join uptime_joins[uptime_element_count];
+	create_join_elements_nz(uptime_joins, (const char **) uptime, uptime_element_count);
+	join(uptime_joins, uptime_text, uptime_element_count, " ");
 
 	for (unsigned char i = 0; i < uptime_element_count; ++i) {
 		free(uptime[i]);
 	}
 }
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
 

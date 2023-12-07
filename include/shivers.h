@@ -21,7 +21,7 @@
 	};
 
 	struct Command {
-		void (*execute)(struct Client client, jsonelement_t *message, Split args);
+		void (*execute)(struct Client client, jsonelement_t *message, const struct Split args);
 		const char *name;
 		const char *description;
 		const struct CommandArgument *args;
@@ -34,7 +34,7 @@
 	const unsigned short get_command_size();
 
 	void free_cooldowns();
-	void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args);
+	void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, const struct Split args), struct Client client, jsonelement_t *message, const struct Split args);
 
 	void add_cooldown(const char *user_id);
 	void remove_cooldown(const char *user_id);

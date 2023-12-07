@@ -59,7 +59,8 @@
 			char *message;
 		} status;
 
-		char *data;
+		unsigned char *data;
+		size_t data_size;
 		struct Header *headers;
 		size_t header_size;
 	};

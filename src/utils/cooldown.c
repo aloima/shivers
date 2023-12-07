@@ -16,7 +16,7 @@ void free_cooldowns() {
 	free(cooldowns);
 }
 
-void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, Split args), struct Client client, jsonelement_t *message, Split args) {
+void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, const struct Split args), struct Client client, jsonelement_t *message, const struct Split args) {
 	const unsigned long target = (get_cooldown(user_id).timestamp + 3000);
 	const unsigned long current = get_timestamp(NULL);
 

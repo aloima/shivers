@@ -6,7 +6,7 @@
 #include <utils.h>
 
 jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
-	Split splitter = split(search, ".");
+	struct Split splitter = split(search, strlen(search), ".");
 	jsonelement_t *value = element;
 	jsonresult_t result = {
 		.exist = true
@@ -14,7 +14,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 
 	for (size_t ki = 0; ki < splitter.size; ++ki) {
 		if (value->type == JSON_ARRAY) {
-			int index = atoi(splitter.data[ki]);
+			int index = atoi(splitter.data[ki].data);
 
 			if (value->size > index) {
 				value = ((jsonelement_t **) value->value)[index];
@@ -31,7 +31,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 				for (size_t i = 0; i < value->size; ++i) {
 					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
 
-					if (strcmp(data->key, splitter.data[ki]) == 0) {
+					if (strcmp(data->key, splitter.data[ki].data) == 0) {
 						value = data;
 						i = value->size;
 					} else if ((i + 1) == value->size) {
@@ -46,7 +46,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		}
 	}
 
-	split_free(&splitter);
+	split_free(splitter);
 
 	if (result.exist) {
 		result.type = value->type;

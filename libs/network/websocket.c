@@ -170,16 +170,16 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 }
 
 static void check_response(Websocket *websocket, const char *response, char *key) {
-	Split splitter = split((char *) response, "\r\n");
+	struct Split splitter = split(response, strlen(response), "\r\n");
 
 	for (int i = 0; i < splitter.size; ++i) {
-		if (strstr(splitter.data[i], ":") != NULL) {
-			Split line_splitter = split(splitter.data[i], ":");
+		if (strstr(splitter.data[i].data, ":") != NULL) {
+			struct Split line_splitter = split(splitter.data[i].data, strlen(splitter.data[i].data), ":");
 			char header_name[128];
-			strtolower(header_name, line_splitter.data[0]);
+			strtolower(header_name, line_splitter.data[0].data);
 
 			if (strcmp(header_name, "sec-websocket-accept") == 0) {
-				const char *value = ltrim(line_splitter.data[1]);
+				const char *value = ltrim(line_splitter.data[1].data);
 
 				const char websocket_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 				const size_t key_length = strlen(key);
@@ -199,8 +199,8 @@ static void check_response(Websocket *websocket, const char *response, char *key
 
 				if (strcmp(result, value) != 0) {
 					free(result);
-					split_free(&line_splitter);
-					split_free(&splitter);
+					split_free(line_splitter);
+					split_free(splitter);
 					close_websocket(websocket, -1, NULL);
 
 					throw_network("switch_protocols(): unmatched websocket keys", false);
@@ -208,15 +208,15 @@ static void check_response(Websocket *websocket, const char *response, char *key
 
 				free(result);
 
-				split_free(&line_splitter);
+				split_free(line_splitter);
 				break;
 			}
 
-			split_free(&line_splitter);
+			split_free(line_splitter);
 		}
 	}
 
-	split_free(&splitter);
+	split_free(splitter);
 }
 
 static void switch_protocols(Websocket *websocket) {

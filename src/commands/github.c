@@ -10,7 +10,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
@@ -40,8 +40,8 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 		char url[256];
 		struct Response response = {0};
 
-		if (char_at(args.data[0], '/') == -1) {
-			sprintf(url, "https://api.github.com/users/%s", args.data[0]);
+		if (char_at(args.data[0].data, '/') == -1) {
+			sprintf(url, "https://api.github.com/users/%s", args.data[0].data);
 
 			config.url = url;
 			response = request(config);
@@ -50,7 +50,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				reply.content = "Not found.";
 				send_message(client, channel_id, reply);
 			} else {
-				jsonelement_t *user = json_parse(response.data);
+				jsonelement_t *user = json_parse((const char *) response.data);
 				jsonresult_t login_data = json_get_val(user, "login");
 				jsonresult_t name_data = json_get_val(user, "name");
 				jsonresult_t bio = json_get_val(user, "bio");
@@ -101,7 +101,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				json_free(user, false);
 			}
 		} else {
-			sprintf(url, "https://api.github.com/repos/%s", args.data[0]);
+			sprintf(url, "https://api.github.com/repos/%s", args.data[0].data);
 
 			config.url = url;
 			response = request(config);
@@ -110,7 +110,7 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 				reply.content = "Not found.";
 				send_message(client, channel_id, reply);
 			} else {
-				jsonelement_t *repository = json_parse(response.data);
+				jsonelement_t *repository = json_parse((const char *) response.data);
 				jsonresult_t description = json_get_val(repository, "description");
 				jsonresult_t language = json_get_val(repository, "language");
 				jsonresult_t license = json_get_val(repository, "license");

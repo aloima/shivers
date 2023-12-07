@@ -13,7 +13,6 @@ jsonelement_t *create_empty_json_element(const bool is_array) {
 	return element;
 }
 
-// TODO: optimization for cpu instructions
 static void set_value(jsonelement_t *element, void *value, const unsigned char type) {
 	if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {
 		for (size_t i = 0; i < element->size; ++i) {
@@ -30,10 +29,10 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 		strcpy(element->value, value);
 	} else if (type == JSON_BOOLEAN) {
 		element->value = allocate(element->value, -1, 1, sizeof(char));
-		((bool *) element->value)[0] = ((bool *) value)[0];
+		((bool *) element->value)[0] = *((bool *) value);
 	} else if (type == JSON_NUMBER) {
 		element->value = allocate(element->value, -1, 1, sizeof(double));
-		memcpy(element->value, value, sizeof(double));
+		((double *) element->value)[0] = *((double *) value);
 	} else if (type == JSON_ARRAY) {
 		jsonelement_t *array = value;
 		element->size = array->size;
@@ -87,11 +86,12 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 		element = ((jsonelement_t **) element->value)[element->size - 1];
 		set_value(element, value, type);
 	} else {
-		Split splitter = split(key, ".");
+		const size_t key_length = strlen(key);
+		struct Split splitter = split(key, key_length, ".");
 
 		for (size_t i = 0; i < splitter.size; ++i) {
-			const char *skey = splitter.data[i];
-			const size_t skey_length = strlen(skey);
+			const char *skey = splitter.data[i].data;
+			const size_t skey_length = splitter.data[i].length;
 
 			char bwp[skey_length - 2 + 1];
 			bwp[skey_length - 2] = 0;
@@ -121,11 +121,17 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					element = ((jsonelement_t **) element->value)[iskey];
 					set_value(element, value, type);
 				} else {
-					char new_key[strlen(key) - strlen(skey) + 1];
-					new_key[0] = 0;
+					char new_key[key_length - skey_length + 1];
+					struct Join new_key_joins[splitter.size - 1];
+
+					for (size_t n = 1; n < splitter.size; ++n) {
+						new_key_joins[n - 1].data = splitter.data[n].data;
+						new_key_joins[n - 1].length = splitter.data[n].length;
+					}
 
 					element = ((jsonelement_t **) element->value)[iskey];
-					join(splitter.data + 1, new_key, splitter.size - 1, ".");
+					join(new_key_joins, new_key, splitter.size - 1, ".");
+
 					json_set_val(element, new_key, value, type);
 				}
 			} else {
@@ -140,7 +146,6 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					element->size = 0;
 				}
 
-				const size_t skey_length = strlen(skey);
 				long at = -1;
 
 				for (size_t n = 0; n < element->size; ++n) {
@@ -167,15 +172,20 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 				if (i == (splitter.size - 1)) {
 					set_value(element, value, type);
 				} else {
-					char new_key[strlen(key) - strlen(skey) + 1];
-					new_key[0] = 0;
+					char new_key[key_length - skey_length + 1];
+					struct Join new_key_joins[splitter.size - 1];
 
-					join(splitter.data + 1, new_key, splitter.size - 1, ".");
+					for (size_t n = 1; n < splitter.size; ++n) {
+						new_key_joins[n - 1].data = splitter.data[n].data;
+						new_key_joins[n - 1].length = splitter.data[n].length;
+					}
+
+					join(new_key_joins, new_key, splitter.size - 1, ".");
 					json_set_val(element, new_key, value, type);
 				}
 			}
 		}
 
-		split_free(&splitter);
+		split_free(splitter);
 	}
 }

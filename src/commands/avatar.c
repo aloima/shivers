@@ -7,7 +7,7 @@
 #include <network.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
@@ -15,8 +15,8 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 	char avatar_url[101];
 
 	if (args.size == 1) {
-		const char *arg = args.data[0];
-		const size_t arg_length = strlen(arg);
+		const char *arg = args.data[0].data;
+		const size_t arg_length = args.data[0].length;
 		const bool mention_error = (arg_length != 21 || strncmp(arg, "<@", 2) != 0 || arg[20] != '>');
 
 		if (mention_error && (arg_length != 18)) {
@@ -27,9 +27,9 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 			char user_id[19];
 
 			if (arg_length == 18) {
-				strcpy(user_id, args.data[0]);
+				strcpy(user_id, args.data[0].data);
 			} else {
-				strncpy(user_id, args.data[0] + 2, 18);
+				strncpy(user_id, args.data[0].data + 2, 18);
 				user_id[18] = 0;
 			}
 
