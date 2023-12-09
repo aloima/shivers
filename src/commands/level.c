@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <shivers.h>
@@ -6,7 +7,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, Split args) {
+static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
 	struct Message reply = {0};
 	struct Embed embed = {0};
 
@@ -23,7 +24,6 @@ static void execute(struct Client client, jsonelement_t *message, Split args) {
 
 	add_field_to_embed(&embed, "Level", level, true);
 	add_field_to_embed(&embed, "Experience", xp, true);
-
 	add_embed_to_message(embed, &reply);
 	send_message(client, json_get_val(message, "channel_id").value.string, reply);
 	free(embed.fields);
