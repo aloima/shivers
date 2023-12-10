@@ -22,7 +22,12 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 
 		char search_query[512];
 		struct Join arg_joins[args.size];
-		create_join_elements_nz(arg_joins, (const char **) args.data, args.size);
+
+		for (int i = 0; i < args.size; ++i) {
+			arg_joins[i].data = args.data[i].data;
+			arg_joins[i].length = args.data[i].length;
+		}
+
 		join(arg_joins, search_query, args.size, " ");
 
 		char search_url[512];
@@ -41,15 +46,41 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 			struct Response info_response = request(config);
 			jsonelement_t *info_data = json_parse((const char *) info_response.data);
 			jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
+			jsonresult_t page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
+
+			if (!page_description.exist) {
+				response_free(&info_response);
+
+				const char *page_id = page_info->key;
+				sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
+				config.url = url;
+				json_free(info_data, false);
+
+				struct Response redirect_response = request(config);
+				jsonelement_t *redirect_result = json_parse((const char *) redirect_response.data);
+				response_free(&redirect_response);
+
+				page_name = json_get_val(redirect_result, "query.redirects.[0].to");
+				sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
+				json_free(redirect_result, false);
+
+				config.url = url;
+				info_response = request(config);
+
+				info_data = json_parse((const char *) info_response.data);
+				page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
+				page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
+			}
+
 			struct Embed embed = {0};
 
-			char *title = json_get_val(page_info, "title").value.string;
+			const char *title = json_get_val(page_info, "title").value.string;
 			char page_url[512], *encoded_page_url = NULL;
 			sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
 			encoded_page_url = percent_encode(page_url);
 
 			embed.color = COLOR;
-			embed.description = json_get_val(page_info, "pageprops.wikibase-shortdesc").value.string;
+			embed.description = page_description.value.string;
 			set_embed_author(&embed, title, encoded_page_url, NULL);
 
 			jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
@@ -73,7 +104,12 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 					image_code[0] = 0;
 
 					struct Join svg_joins[2];
-					create_join_elements_nz(svg_joins, (const char **) svg_splitter.data + 5, 2);
+
+					for (unsigned char i = 0; i < 2; ++i) {
+						svg_joins[i].data = svg_splitter.data[i + 5].data;
+						svg_joins[i].length = svg_splitter.data[i + 5].length;
+					}
+
 					join(svg_joins, image_code, 2, "/");
 					split_free(svg_splitter);
 
