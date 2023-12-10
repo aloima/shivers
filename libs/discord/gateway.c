@@ -11,7 +11,7 @@
 #include <json.h>
 #include <network.h>
 
-static Websocket websocket = {0};
+static struct Websocket websocket = {0};
 
 static unsigned int heartbeat_interval;
 static pthread_t heartbeat_thread;
@@ -93,7 +93,7 @@ static void onstart() {
 	puts("Websocket is started.");
 }
 
-static void onmessage(const WebsocketFrame frame) {
+static void onmessage(const struct WebsocketFrame frame) {
 	jsonelement_t *data = json_parse(frame.payload);
 	const char *event_name = json_get_val(data, "t").value.string;
 	const unsigned short op = json_get_val(data, "op").value.number;
@@ -167,7 +167,7 @@ static void onclose(const short code, const char *reason) {
 void connect_gateway(const char *bot_token) {
 	strcpy(token, bot_token);
 
-	websocket = create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (WebsocketMethods) {
+	websocket = create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (struct WebsocketMethods) {
 		.onstart = onstart,
 		.onmessage = onmessage,
 		.onclose = onclose

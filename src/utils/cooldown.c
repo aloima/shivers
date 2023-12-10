@@ -70,7 +70,10 @@ void remove_cooldown(const char *user_id) {
 	free(cooldowns[cooldown_size - 1].user_id);
 
 	--cooldown_size;
-	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
+
+	if (cooldown_size != 0) {
+		cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
+	}
 }
 
 bool has_cooldown(const char *user_id) {
@@ -90,7 +93,7 @@ struct Cooldown get_cooldown(const char *user_id) {
 	struct Cooldown cooldown = {0};
 
 	for (unsigned short i = 0; i < cooldown_size; ++i) {
-		struct Cooldown data = cooldowns[i];
+		const struct Cooldown data = cooldowns[i];
 
 		if (strcmp(data.user_id, user_id) == 0) {
 			cooldown = data;

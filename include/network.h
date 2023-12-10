@@ -88,40 +88,40 @@
 	// Websocket Headers
 	#define WEBSOCKET_FRAME_MAGIC 0x81;
 
-	typedef struct {
+	struct WebsocketFrame {
 		bool fin, rsv[3], mask;
 		unsigned char opcode;
 		char *payload;
 		size_t payload_length;
-	} WebsocketFrame;
+	};
 
-	typedef struct {
+	struct WebsocketQueueElement {
 		char *data;
 		size_t size;
-	} WebsocketTBS;
+	};
 
-	typedef struct {
+	struct WebsocketMethods {
 		void (*onstart)(void);
-		void (*onmessage)(const WebsocketFrame frame);
+		void (*onmessage)(const struct WebsocketFrame frame);
 		void (*onclose)(const short code, const char *reason);
-	} WebsocketMethods;
+	};
 
-	typedef struct {
+	struct Websocket {
 		int sockfd;
 		int epollfd;
 		SSL *ssl;
 		struct URL url;
-		WebsocketMethods methods;
+		struct WebsocketMethods methods;
 		bool connected;
 		bool closed;
 		char *key;
 
-		WebsocketTBS *tbs; // to be sent
-		size_t tbs_size;
-	} Websocket;
+		struct WebsocketQueueElement *queue;
+		size_t queue_size;
+	};
 
-	Websocket create_websocket(const char *url, const WebsocketMethods methods);
-	void connect_websocket(Websocket *websocket);
-	void close_websocket(Websocket *websocket, const short code, const char *reason);
-	void send_websocket_message(Websocket *websocket, const char *message);
+	struct Websocket create_websocket(const char *url, const struct WebsocketMethods methods);
+	void connect_websocket(struct Websocket *websocket);
+	void close_websocket(struct Websocket *websocket, const short code, const char *reason);
+	void send_websocket_message(struct Websocket *websocket, const char *message);
 #endif

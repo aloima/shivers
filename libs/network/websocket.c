@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <errno.h>
 
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -17,19 +16,19 @@
 #include <network.h>
 #include <utils.h>
 
-static void create_epoll(Websocket *websocket);
-static void register_events(int epoll_fd, Websocket *websocket, uint32_t event_flags);
-static void unregister_events(int epoll_fd, Websocket *websocket, uint32_t event_flags);
-static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events);
+static void create_epoll(struct Websocket *websocket);
+static void register_events(int epoll_fd, const struct Websocket websocket, uint32_t event_flags);
+static void unregister_events(int epoll_fd, const struct Websocket websocket, uint32_t event_flags);
+static void handle_events(struct Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events);
 
-static void switch_protocols(Websocket *websocket);
-static void check_response(Websocket *websocket, const char *response, char *key);
+static void switch_protocols(struct Websocket *websocket);
+static void check_response(struct Websocket *websocket, const char *response, char *key);
 
-static void initialize_websocket(Websocket *websocket, const char *url);
+static void initialize_websocket(struct Websocket *websocket, const char *url);
 
 
 
-static void create_epoll(Websocket *websocket) {
+static void create_epoll(struct Websocket *websocket) {
 	websocket->epollfd = epoll_create1(0);
 
 	if (websocket->epollfd == -1) {
@@ -37,27 +36,27 @@ static void create_epoll(Websocket *websocket) {
 	}
 }
 
-static void register_events(int epoll_fd, Websocket *websocket, uint32_t event_flags) {
+static void register_events(int epoll_fd, const struct Websocket websocket, uint32_t event_flags) {
 	struct epoll_event event;
-	event.data.fd = websocket->sockfd;
+	event.data.fd = websocket.sockfd;
 	event.events = event_flags;
 
-	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, websocket->sockfd, &event) == -1) {
-		throw_network("epoll_ctl()", !!websocket->ssl);
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, websocket.sockfd, &event) == -1) {
+		throw_network("epoll_ctl()", !!websocket.ssl);
 	}
 }
 
-static void unregister_events(int epoll_fd, Websocket *websocket, uint32_t event_flags) {
+static void unregister_events(int epoll_fd, const struct Websocket websocket, uint32_t event_flags) {
 	struct epoll_event event;
-	event.data.fd = websocket->sockfd;
+	event.data.fd = websocket.sockfd;
 	event.events = event_flags;
 
-	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, websocket->sockfd, &event) == -1) {
-		throw_network("epoll_ctl()", !!websocket->ssl);
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, websocket.sockfd, &event) == -1) {
+		throw_network("epoll_ctl()", !!websocket.ssl);
 	}
 }
 
-static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events) {
+static void handle_events(struct Websocket *websocket, int epoll_fd, struct epoll_event *events, size_t num_events) {
 	for (int i = 0; i < num_events; ++i) {
 		const unsigned int event = events[i].events;
 
@@ -82,7 +81,7 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 							throw_network("invalid http status code", !!websocket->ssl);
 						}
 					} else {
-						WebsocketFrame frame;
+						struct WebsocketFrame frame;
 						unsigned char buffer[9];
 
 						_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
@@ -147,29 +146,33 @@ static void handle_events(Websocket *websocket, int epoll_fd, struct epoll_event
 			} else if (event & EPOLLOUT) {
 				if (!websocket->connected && !websocket->closed) {
 					switch_protocols(websocket);
-				} else if (websocket->tbs_size != 0) {
-					WebsocketTBS tbs = websocket->tbs[0];
+				} else if (websocket->queue_size != 0) {
+					const struct WebsocketQueueElement element = websocket->queue[0];
 
-					_write(websocket->ssl, websocket->sockfd, tbs.data, tbs.size);
+					_write(websocket->ssl, websocket->sockfd, element.data, element.size);
 
-					for (size_t i = 0; i < websocket->tbs_size; ++i) {
-						if ((i + 1) != websocket->tbs_size) {
-							websocket->tbs[i].data = allocate(websocket->tbs[i].data, -1, websocket->tbs[i + 1].size + 1, sizeof(char));
-							websocket->tbs[i].size = websocket->tbs[i + 1].size;
-							strncpy(websocket->tbs[i].data, websocket->tbs[i + 1].data, websocket->tbs[i + 1].size);
+					for (size_t i = 0; i < websocket->queue_size; ++i) {
+						if ((i + 1) != websocket->queue_size) {
+							const struct WebsocketQueueElement new_element = websocket->queue[i + 1];
+							websocket->queue[i].data = allocate(websocket->queue[i].data, -1, new_element.size + 1, sizeof(char));
+							websocket->queue[i].size = new_element.size;
+							strncpy(websocket->queue[i].data, new_element.data, new_element.size);
 						}
 					}
 
-					free(websocket->tbs[websocket->tbs_size - 1].data);
-					websocket->tbs = allocate(websocket->tbs, -1, websocket->tbs_size - 1, sizeof(WebsocketTBS));
-					--websocket->tbs_size;
+					--websocket->queue_size;
+					free(websocket->queue[websocket->queue_size].data);
+
+					if (websocket->queue_size != 0) {
+						websocket->queue = allocate(websocket->queue, -1, websocket->queue_size, sizeof(struct WebsocketQueueElement));
+					}
 				}
 			}
 		}
 	}
 }
 
-static void check_response(Websocket *websocket, const char *response, char *key) {
+static void check_response(struct Websocket *websocket, const char *response, char *key) {
 	struct Split splitter = split(response, strlen(response), "\r\n");
 
 	for (int i = 0; i < splitter.size; ++i) {
@@ -219,14 +222,12 @@ static void check_response(Websocket *websocket, const char *response, char *key
 	split_free(splitter);
 }
 
-static void switch_protocols(Websocket *websocket) {
-	unsigned char key_data[17];
+static void switch_protocols(struct Websocket *websocket) {
+	unsigned char key_data[16];
 
 	for (unsigned char i = 0; i < 16; ++i) {
 		key_data[i] = ((rand() % 255) + 1);
 	}
-
-	key_data[16] = '\0';
 
 	websocket->key = base64_encode((char *) key_data, 16);
 
@@ -245,7 +246,7 @@ static void switch_protocols(Websocket *websocket) {
 	websocket->connected = true;
 }
 
-void send_websocket_message(Websocket *websocket, const char *message) {
+void send_websocket_message(struct Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;
 	const size_t message_length = strlen(message);
 	size_t data_length = message_length;
@@ -283,18 +284,18 @@ void send_websocket_message(Websocket *websocket, const char *message) {
 		strncpy(((char *) data) + data_length - message_length + i, &ch, 1);
 	}
 
-	++websocket->tbs_size;
-	websocket->tbs = allocate(websocket->tbs, -1, websocket->tbs_size, sizeof(WebsocketTBS));
-	websocket->tbs[websocket->tbs_size - 1].data = allocate(NULL, -1, data_length, sizeof(char));
-	websocket->tbs[websocket->tbs_size - 1].size = data_length;
-	memcpy(websocket->tbs[websocket->tbs_size - 1].data, data, data_length);
+	++websocket->queue_size;
+	websocket->queue = allocate(websocket->queue, -1, websocket->queue_size, sizeof(struct WebsocketQueueElement));
+	websocket->queue[websocket->queue_size - 1].data = allocate(NULL, -1, data_length, sizeof(char));
+	websocket->queue[websocket->queue_size - 1].size = data_length;
+	memcpy(websocket->queue[websocket->queue_size - 1].data, data, data_length);
 
 	free(data);
 }
 
 
-Websocket create_websocket(const char *url, const WebsocketMethods methods) {
-	Websocket websocket = {0};
+struct Websocket create_websocket(const char *url, const struct WebsocketMethods methods) {
+	struct Websocket websocket = {0};
 	websocket.methods = methods;
 
 	initialize_websocket(&websocket, url);
@@ -303,7 +304,7 @@ Websocket create_websocket(const char *url, const WebsocketMethods methods) {
 	return websocket;
 }
 
-static void initialize_websocket(Websocket *websocket, const char *url) {
+static void initialize_websocket(struct Websocket *websocket, const char *url) {
 	websocket->url = parse_url(url);
 	websocket->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	websocket->ssl = NULL;
@@ -334,7 +335,7 @@ static void initialize_websocket(Websocket *websocket, const char *url) {
 	}
 }
 
-void connect_websocket(Websocket *websocket) {
+void connect_websocket(struct Websocket *websocket) {
 	struct hostent *host = resolve_hostname(websocket->url.hostname);
 
 	struct sockaddr_in addr;
@@ -349,7 +350,7 @@ void connect_websocket(Websocket *websocket) {
 
 		struct epoll_event events[16];
 
-		register_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
+		register_events(websocket->epollfd, *websocket, EPOLLIN | EPOLLOUT);
 
 		do {
 			const int num_events = epoll_wait(websocket->epollfd, events, 32, -1);
@@ -365,9 +366,9 @@ void connect_websocket(Websocket *websocket) {
 	}
 }
 
-void close_websocket(Websocket *websocket, const short code, const char *reason) {
+void close_websocket(struct Websocket *websocket, const short code, const char *reason) {
 	if (websocket->connected && !websocket->closed) {
-		unregister_events(websocket->epollfd, websocket, EPOLLIN | EPOLLOUT);
+		unregister_events(websocket->epollfd, *websocket, EPOLLIN | EPOLLOUT);
 
 		websocket->connected = false;
 		websocket->closed = true;
@@ -377,11 +378,11 @@ void close_websocket(Websocket *websocket, const short code, const char *reason)
 	}
 
 
-	for (size_t i = 0; i < websocket->tbs_size; ++i) {
-		free(websocket->tbs[i].data);
+	for (size_t i = 0; i < websocket->queue_size; ++i) {
+		free(websocket->queue[i].data);
 	}
 
-	free(websocket->tbs);
+	free(websocket->queue);
 	free_url(websocket->url);
 
 	if (websocket->methods.onclose) {
