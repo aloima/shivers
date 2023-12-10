@@ -12,15 +12,23 @@
 		unsigned int height;
 		unsigned char color_type;
 		bool is_interlaced;
-		unsigned char *png_data;
-		unsigned char *readable_data;
+		unsigned char *data;
+		size_t data_size;
 		unsigned char zlib_headers[2];
-		size_t png_data_size;
-		size_t readable_data_size;
+	};
+
+	struct OutputPNG {
+		unsigned char *data;
+		size_t data_size;
 	};
 
 	void initialize_png(struct PNG *png);
-	unsigned char *out_png(const struct PNG png);
-	size_t get_png_size(const struct PNG png);
+	struct PNG read_png(unsigned char *input, const size_t input_size);
+
+	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
+
+	struct OutputPNG out_png(const struct PNG png);
+
 	void png_free(struct PNG png);
+	void opng_free(struct OutputPNG opng);
 #endif
