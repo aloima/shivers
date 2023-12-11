@@ -5,6 +5,7 @@ Shivers is a Discord bot made for hobby.
 + Linux
 + A C compiler (clang is recommended)
 + OpenSSL and its headers
++ zlib and its headers
 
 ## Building
 ```sh
@@ -20,7 +21,7 @@ make
 + libs: Internal libraries
 	+ database: Database library
 	+ discord: Discord library which create connections with Discord
-	+ image: Image manipulation library
+	+ png: PNG manipulation library
 	+ json: JSON library
 	+ network: Network library that contains websocket part and HTTP request
 	+ utils: Utility library which used in source files or other internal libraries
