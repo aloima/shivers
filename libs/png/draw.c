@@ -2,7 +2,7 @@
 
 #include <png.h>
 
-void set_pixel(struct PNG *png, unsigned int x, unsigned int y, unsigned char *color, unsigned char color_size) {
+void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size) {
 	if (!png->is_interlaced) {
 		const unsigned char png_color_size = get_byte_size_of_pixel(png->color_type);
 		const size_t start = ((y + 1) + (y * png->width * png_color_size) + (x * png_color_size));
@@ -53,16 +53,52 @@ void set_pixel(struct PNG *png, unsigned int x, unsigned int y, unsigned char *c
 	}
 }
 
-void draw_image(struct PNG *image, const struct PNG data, unsigned int x, unsigned int y) {
+void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle) {
 	const unsigned char data_color_size = get_byte_size_of_pixel(data.color_type);
 	const unsigned char image_color_size = get_byte_size_of_pixel(image->color_type);
 
-	for (unsigned int a = 0; a < data.width; ++a) {
-		for (unsigned int b = 0; b < data.height; ++b) {
-			unsigned char color[data_color_size];
-			get_orig_color(data, a, b, color);
+	if (as_circle && (data.width == data.height)) {
+		const unsigned int radius = (data.width / 2);
+		const unsigned int rr = (radius * radius);
 
-			set_pixel(image, x + a, y + b, color, image_color_size);
+		for (unsigned int a = 0; a < data.width; ++a) {
+			const unsigned int aa = ((a - radius) * (a - radius));
+
+			for (unsigned int b = 0; b < data.height; ++b) {
+				if ((aa + ((b - radius) * (b - radius))) <= rr) {
+					unsigned char color[data_color_size];
+					get_orig_color(data, a, b, color);
+
+					set_pixel(image, x + a, y + b, color, image_color_size);
+				}
+			}
+		}
+	} else {
+		for (unsigned int a = 0; a < data.width; ++a) {
+			for (unsigned int b = 0; b < data.height; ++b) {
+				unsigned char color[data_color_size];
+				get_orig_color(data, a, b, color);
+
+				set_pixel(image, x + a, y + b, color, image_color_size);
+			}
+		}
+	}
+}
+
+void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y) {
+	const unsigned int rr = (circle.radius * circle.radius);
+	const unsigned int a_limit = (x + circle.radius);
+	const unsigned int b_limit = (y + circle.radius);
+
+	if (circle.fill) {
+		for (unsigned int a = 0; a < a_limit; ++a) {
+			const unsigned int aa = ((a - circle.radius) * (a - circle.radius));
+
+			for (unsigned int b = 0; b < b_limit; ++b) {
+				if ((aa + ((b - circle.radius) * (b - circle.radius))) <= rr) {
+					set_pixel(png, a + x - circle.radius, b + y - circle.radius, circle.color, circle.color_size);
+				}
+			}
 		}
 	}
 }

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
 #include <shivers.h>
 #include <database.h>
@@ -31,7 +31,7 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 		.method = "GET"
 	});
 
-	FILE *background_file = fopen("assets/background.png", "r");
+	FILE *background_file = fopen("assets/level_background.png", "r");
 	fseek(background_file, 0, SEEK_END);
 	size_t background_size = ftell(background_file);
 	unsigned char background_data[background_size];
@@ -44,7 +44,7 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 
 	response_free(&response);
 
-	draw_image(&background_image, avatar_image, 0, 0);
+	draw_image(&background_image, avatar_image, 90, 114, true);
 
 	struct OutputPNG opng = out_png(background_image);
 	add_file_to_message(&reply, "level.png", (const char *) opng.data, opng.data_size, "image/png");

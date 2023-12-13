@@ -7,6 +7,13 @@
 	#define RGB 2
 	#define RGBA 6
 
+	struct Circle {
+		unsigned int radius;
+		unsigned char *color;
+		unsigned char color_size;
+		bool fill;
+	};
+
 	struct PNG {
 		unsigned int width;
 		unsigned int height;
@@ -25,11 +32,12 @@
 	void initialize_png(struct PNG *png);
 	struct PNG read_png(unsigned char *input, const size_t input_size);
 
-	void draw_image(struct PNG *image, const struct PNG data, unsigned int x, unsigned int y);
-	void set_pixel(struct PNG *png, unsigned int x, unsigned int y, unsigned char *color, unsigned char color_size);
+	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
+	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);
+	void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size);
 
 	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
-	void get_orig_color(const struct PNG png, unsigned int x, unsigned int y, unsigned char *orig_color);
+	void get_orig_color(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *orig_color);
 
 	struct OutputPNG out_png(const struct PNG png);
 

@@ -18,7 +18,7 @@ unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 	return pixel_count;
 }
 
-void get_orig_color(const struct PNG png, unsigned int x, unsigned int y, unsigned char *orig_color) {
+void get_orig_color(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *orig_color) {
 	const unsigned char color_pixels = get_byte_size_of_pixel(png.color_type);
 	const size_t start = ((y + 1) + (y * png.width * color_pixels) + (x * color_pixels));
 	const unsigned char filter_method = png.data[(y * png.width * color_pixels) + y];
