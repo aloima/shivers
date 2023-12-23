@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <json.h>
 #include <network.h>
@@ -76,7 +77,7 @@
 
 	unsigned int get_all_intents();
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
-	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash);
+	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png);
 
 	void send_message(const struct Client client, const char *channel_id, const struct Message message);
 	void free_message(struct Message message);

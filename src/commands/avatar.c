@@ -12,7 +12,10 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	struct Embed embed = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
-	char avatar_url[101];
+	char gif_avatar_url[101];
+	char png_avatar_url[101];
+
+	char user_id[19];
 
 	if (args.size == 1) {
 		const char *arg = args.data[0].data;
@@ -24,8 +27,6 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 			send_message(client, channel_id, reply);
 			return;
 		} else {
-			char user_id[19];
-
 			if (arg_length == 18) {
 				strcpy(user_id, args.data[0].data);
 			} else {
@@ -38,7 +39,20 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 				send_message(client, channel_id, reply);
 				return;
 			} else {
-				get_avatar_url(avatar_url, client.token, user_id, NULL, NULL);
+				char path[26] = "/users/";
+				strcat(path, user_id);
+
+				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
+				jsonelement_t *user = json_parse((const char *) response.data);
+
+				const char *discriminator = json_get_val(user, "discriminator").value.string;
+				const char *hash = json_get_val(user, "avatar").value.string;
+
+				get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true);
+				get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false);
+
+				json_free(user, false);
+				response_free(&response);
 			}
 		}
 	} else {
@@ -46,10 +60,20 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 		const char *discriminator = json_get_val(message, "author.discriminator").value.string;
 		const char *hash = json_get_val(message, "author.avatar").value.string;
 
-		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash);
+		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false);
+		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true);
 	}
 
-	embed.image_url = avatar_url;
+	if (strstr(gif_avatar_url, ".gif") != NULL) {
+		char description[128];
+		sprintf(description, "[Display as PNG](%s)", png_avatar_url);
+
+		embed.description = description;
+		embed.image_url = gif_avatar_url;
+	} else {
+		embed.image_url = png_avatar_url;
+	}
+
 	embed.color = COLOR;
 
 	add_embed_to_message(embed, &reply);
