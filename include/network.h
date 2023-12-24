@@ -7,6 +7,8 @@
 #ifndef NETWORK_H_
 	#define NETWORK_H_
 
+	#define HTTP_BUFFER_SIZE 16384
+
 	struct URL {
 		char *protocol;
 		char *hostname;

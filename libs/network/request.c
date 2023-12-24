@@ -75,7 +75,8 @@ struct Response request(struct RequestConfig config) {
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
 		char request_message_information[12288], *request_message = NULL;
 		size_t request_message_length;
-		char buffer[1024] = {0}, *response_message = NULL;
+		char buffer[HTTP_BUFFER_SIZE + 1], *response_message = NULL;
+		buffer[HTTP_BUFFER_SIZE] = 0;
 
 		if (tls) {
 			SSL_load_error_strings();
@@ -229,7 +230,7 @@ struct Response request(struct RequestConfig config) {
 		size_t read_size = 0;
 		size_t response_message_length = 0;
 
-		while ((read_size = _read(ssl, sockfd, buffer, 1023)) > 0) {
+		while ((read_size = _read(ssl, sockfd, buffer, HTTP_BUFFER_SIZE)) > 0) {
 			if (errno != 0) {
 				close_socket(sockfd, ssl);
 				throw_network("read()", tls);
