@@ -39,7 +39,7 @@ void get_orig_color(const struct PNG png, const unsigned int x, const unsigned i
 				const size_t at = ((y + 1) + (y * png.width * color_pixels) + (i * color_pixels));
 
 				for (unsigned char n = 0; n < color_pixels; ++n) {
-					orig_color[n] = (orig_color[n] + png.data[at + n]) & 0xFF;
+					orig_color[n] = (orig_color[n] + png.data[at + n]);
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <zconf.h>
 #include <zlib.h>
 
 #include <png.h>
@@ -146,7 +147,7 @@ struct OutputPNG out_png(const struct PNG png) {
 	defstream.avail_out = idat_size;
 	defstream.next_out = (output.data + 41);
 
-	deflateInit(&defstream, Z_DEFAULT_COMPRESSION);
+	deflateInit2(&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 9, 4, Z_DEFAULT_STRATEGY);
 	deflate(&defstream, Z_FINISH);
 	deflateEnd(&defstream);
 

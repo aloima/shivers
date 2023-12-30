@@ -36,7 +36,7 @@ static void handle_exit(int sig) {
 	}
 
 	pthread_cancel(heartbeat_thread);
-	sleep(1);
+	usleep(250000);
 	exit(EXIT_SUCCESS);
 }
 

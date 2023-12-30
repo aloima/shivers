@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sys/resource.h>
+#include <unistd.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -79,11 +79,12 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	struct Message reply = {0};
 	struct Embed embed = {0};
 
-	struct rusage r_usage;
 	char memory_usage[11];
+	size_t rss, vram;
 
-	getrusage(RUSAGE_SELF, &r_usage);
-	sprintf(memory_usage, "%.2f MB", r_usage.ru_maxrss / 1024.0);
+	FILE *statm = fopen("/proc/self/statm", "r");
+	fscanf(statm, "%lu %lu", &vram, &rss);
+	sprintf(memory_usage, "%.2f MB", (rss * getpagesize()) / 1024.0 / 1024.0);
 
 	char uptime_text[41];
 	uptime_text[0] = 0;

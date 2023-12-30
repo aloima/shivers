@@ -21,7 +21,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	char url[256];
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
-	char authorization[128];
+	char authorization[100];
 	sprintf(authorization, "Bot %s", token);
 
 	struct Header headers[2] = {

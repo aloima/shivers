@@ -34,17 +34,18 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	FILE *background_file = fopen("assets/level_background.png", "r");
 	fseek(background_file, 0, SEEK_END);
 	size_t background_size = ftell(background_file);
-	unsigned char background_data[background_size];
+	unsigned char *background_data = allocate(NULL, -1, background_size, sizeof(unsigned char));
 	rewind(background_file);
 	fread(background_data, sizeof(unsigned char), background_size, background_file);
 	fclose(background_file);
 
 	struct PNG background_image = read_png(background_data, background_size);
+	free(background_data);
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 
 	response_free(&response);
 
-	draw_image(&background_image, avatar_image, 90, 114, true);
+	draw_image(&background_image, avatar_image, 0, 0, true);
 
 	struct OutputPNG opng = out_png(background_image);
 	add_file_to_message(&reply, "level.png", (const char *) opng.data, opng.data_size, "image/png");

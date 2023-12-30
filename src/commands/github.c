@@ -51,9 +51,9 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 				send_message(client, channel_id, reply);
 			} else {
 				jsonelement_t *user = json_parse((const char *) response.data);
-				jsonresult_t login_data = json_get_val(user, "login");
-				jsonresult_t name_data = json_get_val(user, "name");
-				jsonresult_t bio = json_get_val(user, "bio");
+				const jsonresult_t login_data = json_get_val(user, "login");
+				const jsonresult_t name_data = json_get_val(user, "name");
+				const jsonresult_t bio = json_get_val(user, "bio");
 
 				char following[8];
 				sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
