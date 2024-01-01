@@ -102,3 +102,25 @@ void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int
 		}
 	}
 }
+
+void draw_rect(struct PNG *png, const struct Rectangle rectangle, const unsigned int x, const unsigned int y) {
+	if (rectangle.fill) {
+		if (rectangle.width == (rectangle.border_radius * 2) && rectangle.height == rectangle.width) {
+			const unsigned int rr = (rectangle.border_radius * rectangle.border_radius);
+			const unsigned int a_limit = (x + (rectangle.border_radius * 2));
+			const unsigned int b_limit = (y + (rectangle.border_radius * 2));
+
+			for (unsigned int a = 0; a < a_limit; ++a) {
+				const unsigned int aa = ((a - rectangle.border_radius) * (a - rectangle.border_radius));
+
+				for (unsigned int b = 0; b < b_limit; ++b) {
+					const unsigned int bb = ((b - rectangle.border_radius) * (b - rectangle.border_radius));
+
+					if ((aa + bb) <= rr) {
+						set_pixel(png, a + x, b + y, rectangle.color, rectangle.color_size);
+					}
+				}
+			}
+		}
+	}
+}

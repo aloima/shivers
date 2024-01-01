@@ -41,11 +41,13 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 
 	struct PNG background_image = read_png(background_data, background_size);
 	free(background_data);
+
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 
 	response_free(&response);
 
-	draw_image(&background_image, avatar_image, 0, 0, true);
+	struct PNG avatar_image_scaled = scale(avatar_image, 512, 512);
+	draw_image(&background_image, avatar_image_scaled, 256, 256, true);
 
 	struct OutputPNG opng = out_png(background_image);
 	add_file_to_message(&reply, "level.png", (const char *) opng.data, opng.data_size, "image/png");
@@ -53,6 +55,7 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	send_message(client, json_get_val(message, "channel_id").value.string, reply);
 	free_message(reply);
 	png_free(avatar_image);
+	png_free(avatar_image_scaled);
 	png_free(background_image);
 	opng_free(opng);
 }
