@@ -31,23 +31,21 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 		.method = "GET"
 	});
 
-	FILE *background_file = fopen("assets/level_background.png", "r");
-	fseek(background_file, 0, SEEK_END);
-	size_t background_size = ftell(background_file);
-	unsigned char *background_data = allocate(NULL, -1, background_size, sizeof(unsigned char));
-	rewind(background_file);
-	fread(background_data, sizeof(unsigned char), background_size, background_file);
-	fclose(background_file);
+	struct PNG background_image = {
+		.width = 1548,
+		.height = 512,
+		.color_type = RGB,
+		.is_interlaced = false
+	};
 
-	struct PNG background_image = read_png(background_data, background_size);
-	free(background_data);
+	initialize_png(&background_image);
 
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 
 	response_free(&response);
 
-	struct PNG avatar_image_scaled = scale(avatar_image, 512, 512);
-	draw_image(&background_image, avatar_image_scaled, 256, 256, true);
+	struct PNG avatar_image_scaled = scale(avatar_image, 384, 384);
+	draw_image(&background_image, avatar_image_scaled, 64, 64, true);
 
 	struct OutputPNG opng = out_png(background_image);
 	add_file_to_message(&reply, "level.png", (const char *) opng.data, opng.data_size, "image/png");

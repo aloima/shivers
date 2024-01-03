@@ -35,9 +35,15 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 					png->data[start + n] = (color[n] - prev_orig_colors[n]) & 0xFF;
 				}
 			} else {
-				unsigned char prev_orig_colors[png_color_size];
+				unsigned char prev_orig_colors[png_color_size], current_data[png_color_size], next_data[png_color_size];
 				get_orig_color(*png, x - 1, y, prev_orig_colors);
-				get_orig_color(*png, x + 1, y, next_orig_colors);
+
+				get_pixel_data(*png, x, y, current_data);
+				get_pixel_data(*png, x + 1, y, next_data);
+
+				for (unsigned char n = 0; n < png_color_size; ++n) {
+					next_orig_colors[n] = (prev_orig_colors[n] + current_data[n] + next_data[n]);
+				}
 
 				const size_t next = ((y + 1) + (y * png->width * png_color_size) + ((x + 1) * png_color_size));
 

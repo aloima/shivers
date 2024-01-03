@@ -45,3 +45,9 @@ void get_orig_color(const struct PNG png, const unsigned int x, const unsigned i
 		}
 	}
 }
+
+void get_pixel_data(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *data) {
+	const unsigned char color_pixels = get_byte_size_of_pixel(png.color_type);
+	const size_t start = ((y + 1) + (y * png.width * color_pixels) + (x * color_pixels));
+	memcpy(data, png.data + start, color_pixels);
+}

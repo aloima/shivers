@@ -41,7 +41,7 @@
 	void initialize_png(struct PNG *png);
 	struct PNG read_png(unsigned char *input, const size_t input_size);
 
-	struct PNG scale(struct PNG png, const unsigned int width, const unsigned int height);
+	struct PNG scale(const struct PNG png, const unsigned int width, const unsigned int height);
 
 	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
 	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);
@@ -50,6 +50,7 @@
 
 	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
 	void get_orig_color(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *orig_color);
+	void get_pixel_data(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *data);
 
 	struct OutputPNG out_png(const struct PNG png);
 
