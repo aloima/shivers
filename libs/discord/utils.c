@@ -84,7 +84,7 @@ bool check_snowflake(const char *snowflake) {
 	}
 }
 
-void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png) {
+void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {
 	if (discriminator == NULL) {
 		char path[26] = "/users/";
 		strcat(path, user_id);
@@ -97,11 +97,11 @@ void get_avatar_url(char *url, const char *token, const char *user_id, const cha
 			const char *avatar_hash = avatar.value.string;
 			const char *extension = ((!force_png && (strncmp(avatar_hash, "a_", 2) == 0)) ? "gif" : "png");
 
-			sprintf(url, AVATAR_URL, user_id, avatar_hash, extension);
+			sprintf(url, AVATAR_URL "?size=%d", user_id, avatar_hash, extension, size);
 		} else {
 			const char *_discriminator = json_get_val(user, "discriminator").value.string;
 
-			sprintf(url, DEFAULT_AVATAR_URL, atoi(_discriminator) % 5);
+			sprintf(url, DEFAULT_AVATAR_URL "?size=%d", atoi(_discriminator) % 5, size);
 		}
 
 		json_free(user, false);
@@ -110,9 +110,9 @@ void get_avatar_url(char *url, const char *token, const char *user_id, const cha
 		if (hash != NULL) {
 			const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
 
-			sprintf(url, AVATAR_URL, user_id, hash, extension);
+			sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
 		} else {
-			sprintf(url, DEFAULT_AVATAR_URL, atoi(discriminator) % 5);
+			sprintf(url, DEFAULT_AVATAR_URL "?size=%d", atoi(discriminator) % 5, size);
 		}
 	}
 }

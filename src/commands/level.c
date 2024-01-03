@@ -24,7 +24,7 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	sprintf(level, "%.0f", database_has(level_key) ? database_get(level_key).number : 0.0);
 
 	char avatar_url[101];
-	get_avatar_url(avatar_url, client.token, user_id, user_discriminator, user_avatar, true);
+	get_avatar_url(avatar_url, client.token, user_id, user_discriminator, user_avatar, true, 1024);
 
 	struct Response response = request((struct RequestConfig) {
 		.url = avatar_url,

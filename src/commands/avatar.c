@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -12,10 +13,10 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	struct Embed embed = {0};
 	const char *channel_id = json_get_val(message, "channel_id").value.string;
 
-	char gif_avatar_url[101];
-	char png_avatar_url[101];
+	char gif_avatar_url[103];
+	char png_avatar_url[103];
 
-	char user_id[19];
+	char user_id[19], discriminator[5], hash[33];
 
 	if (args.size == 1) {
 		const char *arg = args.data[0].data;
@@ -45,32 +46,69 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
 				jsonelement_t *user = json_parse((const char *) response.data);
 
-				const char *discriminator = json_get_val(user, "discriminator").value.string;
-				const char *hash = json_get_val(user, "avatar").value.string;
+				strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+				strcpy(hash, json_get_val(user, "avatar").value.string);
 
-				get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true);
-				get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false);
+				get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
+				get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
 
 				json_free(user, false);
 				response_free(&response);
 			}
 		}
 	} else {
-		const char *user_id = json_get_val(message, "author.id").value.string;
-		const char *discriminator = json_get_val(message, "author.discriminator").value.string;
-		const char *hash = json_get_val(message, "author.avatar").value.string;
+		strcpy(user_id, json_get_val(message, "author.id").value.string);
+		strcpy(discriminator, json_get_val(message, "author.discriminator").value.string);
+		strcpy(hash, json_get_val(message, "author.avatar").value.string);
 
-		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false);
-		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true);
+		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
+		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
 	}
 
 	if (strstr(gif_avatar_url, ".gif") != NULL) {
-		char description[128];
-		sprintf(description, "[Display as PNG](%s)", png_avatar_url);
+		char description[1536];
+
+		char png_avatar_urls[5][102];
+		char gif_avatar_urls[5][104];
+
+		for (unsigned char i = 0; i < 5; ++i) {
+			if (i == 2) {
+				strcpy(png_avatar_urls[i], png_avatar_url);
+			} else {
+				const size_t size = pow(2, (8 + i));
+				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
+				get_avatar_url(gif_avatar_urls[i], client.token, user_id, discriminator, hash, false, size);
+			}
+		}
+
+		sprintf(description, (
+			"PNG\\n"
+			"[0.25x](%s) **|** [0.5x](%s) **|** [1x](%s) **|** [2x](%s) **|** [4x](%s)\\n\\n"
+			"GIF\\n"
+			"[0.25x](%s) **|** [0.5x](%s) **|** 1x **|** [2x](%s) **|** [4x](%s)"
+		), png_avatar_urls[0], png_avatar_urls[1], png_avatar_urls[2], png_avatar_urls[3], png_avatar_urls[4],
+		gif_avatar_urls[0], gif_avatar_urls[1], gif_avatar_urls[3], gif_avatar_urls[4]);
 
 		embed.description = description;
 		embed.image_url = gif_avatar_url;
 	} else {
+		char description[1024];
+
+		char png_avatar_urls[5][102];
+
+		for (unsigned char i = 0; i < 5; ++i) {
+			if (i != 2) {
+				const size_t size = pow(2, (8 + i));
+				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
+			}
+		}
+
+		sprintf(description, (
+			"PNG\\n"
+			"[0.25x](%s) **|** [0.5x](%s) **|** 1x **|** [2x](%s) **|** [4x](%s)"
+		), png_avatar_urls[0], png_avatar_urls[1], png_avatar_urls[3], png_avatar_urls[4]);
+
+		embed.description = description;
 		embed.image_url = png_avatar_url;
 	}
 
