@@ -243,14 +243,12 @@ struct Response request(struct RequestConfig config) {
 
 		struct Split line_splitter = split(response_message, response_message_length, "\r\n");
 		struct Split status_splitter = split(line_splitter.data[0].data, line_splitter.data[0].length, " ");
-		struct Join status_joins[status_splitter.size - 2];
-		create_join_elements_nz(status_joins, (const char **) status_splitter.data + 2, status_splitter.size - 2);
 
-		const size_t status_message_length = calculate_join(status_joins, status_splitter.size - 2, " ");
+		const size_t status_message_length = calculate_join((struct Join *) status_splitter.data + 2, status_splitter.size - 2, " ");
 
 		response.status.code = atoi(status_splitter.data[1].data);
 		response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
-		join(status_joins, response.status.message, status_splitter.size - 2, " ");
+		join((struct Join *) status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 
 		split_free(status_splitter);
 
@@ -300,18 +298,11 @@ struct Response request(struct RequestConfig config) {
 			}
 
 			response.data[response.data_size] = 0;
-		} else {
+		} else if (response.status.code != 204) {
 			response.data_size = atoi(get_header(response.headers, response.header_size, "content-length").value);
 			response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
 
-			struct Join data_joins[line_splitter.size - i];
-
-			for (size_t n = i + 1; n < line_splitter.size; ++n) {
-				data_joins[n - i - 1].data = line_splitter.data[n].data;
-				data_joins[n - i - 1].length = line_splitter.data[n].length;
-			}
-
-			join(data_joins, (char *) response.data, line_splitter.size - i - 1, "\r\n");
+			join((struct Join *) line_splitter.data + i + 1, (char *) response.data, line_splitter.size - i - 1, "\r\n");
 		}
 
 		split_free(line_splitter);
