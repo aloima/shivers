@@ -1,17 +1,69 @@
 #include <string.h>
+#include <stdbool.h>
 
 #include <shivers.h>
 #include <utils.h>
+#include <json.h>
 
 static struct Command *commands = NULL;
 static unsigned short command_size = 0;
 
-void setup_commands() {
-	const struct Command command_array[] = {about, avatar, github, help, level, wikipedia};
+void setup_commands(const struct Client client) {
+	const struct Command command_array[] = {about, avatar, github, level, wikipedia};
 	command_size = sizeof(command_array) / sizeof(struct Command);
 
 	commands = allocate(NULL, -1, command_size, sizeof(struct Command));
 	memcpy(commands, command_array, sizeof(command_array));
+
+	jsonelement_t *commands_body = create_empty_json_element(true);
+	double command_type = 1.0;
+	char key[5], argument_key[5];
+
+	for (unsigned char i = 0; i < command_size; ++i) {
+		const struct Command command = command_array[i];
+		jsonelement_t *command_body = create_empty_json_element(false);
+		sprintf(key, "[%d]", i);
+
+		json_set_val(command_body, "name", (char *) command.name, JSON_STRING);
+		json_set_val(command_body, "type", &command_type, JSON_NUMBER);
+		json_set_val(command_body, "description", (char *) command.description, JSON_STRING);
+
+		if (command.arg_size != 0) {
+			jsonelement_t *arguments_body = create_empty_json_element(true);
+
+			for (unsigned char a = 0; a < command.arg_size; ++a) {
+				const struct CommandArgument argument = command.args[a];
+				bool argument_required = !argument.optional;
+				double argument_type = argument.type;
+				jsonelement_t *argument_body = create_empty_json_element(false);
+				sprintf(argument_key, "[%d]", a);
+
+				json_set_val(argument_body, "name", (char *) argument.name, JSON_STRING);
+				json_set_val(argument_body, "description", (char *) argument.description, JSON_STRING);
+				json_set_val(argument_body, "type", &argument_type, JSON_NUMBER);
+				json_set_val(argument_body, "required", &argument_required, JSON_BOOLEAN);
+
+				json_set_val(arguments_body, argument_key, argument_body, JSON_OBJECT);
+				json_free(argument_body, false);
+			}
+
+			json_set_val(command_body, "options", arguments_body, JSON_ARRAY);
+			json_free(arguments_body, false);
+		}
+
+		json_set_val(commands_body, key, command_body, JSON_OBJECT);
+		json_free(command_body, false);
+	}
+
+	char *body = json_stringify(commands_body, 2);
+	json_free(commands_body, false);
+
+	char path[42];
+	sprintf(path, "/applications/%s/commands", json_get_val(client.user, "id").value.string);
+	struct Response response = api_request(client.token, path, "PUT", body, NULL);
+
+	response_free(&response);
+	free(body);
 }
 
 void free_commands() {

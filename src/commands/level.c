@@ -8,12 +8,17 @@
 #include <json.h>
 #include <png.h>
 
-static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
-	struct Message reply = {0};
+static void execute(const struct Client client, const struct InteractionCommand command) {
+	struct Message message = {
+		.target_type = TARGET_INTERACTION_COMMAND,
+		.target = {
+			.interaction_command = command,
+		}
+	};
 
-	const char *user_id = json_get_val(message, "author.id").value.string;
-	const char *user_discriminator = json_get_val(message, "author.discriminator").value.string;
-	const char *user_avatar = json_get_val(message, "author.avatar").value.string;
+	const char *user_id = json_get_val(command.user, "id").value.string;
+	const char *user_discriminator = json_get_val(command.user, "discriminator").value.string;
+	const char *user_avatar = json_get_val(command.user, "avatar").value.string;
 
 	char xp_key[22], level_key[25];
 	sprintf(xp_key, "%s.xp", user_id);
@@ -24,7 +29,7 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	sprintf(level, "%.0f", database_has(level_key) ? database_get(level_key).number : 0.0);
 
 	char avatar_url[101];
-	get_avatar_url(avatar_url, client.token, user_id, user_discriminator, user_avatar, true, 1024);
+	get_avatar_url(avatar_url, client.token, user_id, user_discriminator, user_avatar, true, 256);
 
 	struct Response response = request((struct RequestConfig) {
 		.url = avatar_url,
@@ -45,13 +50,14 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 	response_free(&response);
 
 	struct PNG avatar_image_scaled = scale(avatar_image, 384, 384);
-	draw_image(&background_image, avatar_image_scaled, 64, 64, true);
+	draw_image(&background_image, avatar_image_scaled, 64, 64, false);
 
 	struct OutputPNG opng = out_png(background_image);
-	add_file_to_message(&reply, "level.png", (const char *) opng.data, opng.data_size, "image/png");
 
-	send_message(client, json_get_val(message, "channel_id").value.string, reply);
-	free_message(reply);
+	add_file_to_message_payload(&(message.payload), "level.png", (const char *) opng.data, opng.data_size, "image/png");
+
+	send_message(client, message);
+	free_message_payload(message.payload);
 	png_free(avatar_image);
 	png_free(avatar_image_scaled);
 	png_free(background_image);

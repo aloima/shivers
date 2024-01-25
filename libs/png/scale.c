@@ -30,6 +30,9 @@ struct PNG scale(const struct PNG png, const unsigned int width, const unsigned 
 	const double scale_x = ((double) png.width / new_png.width);
 	const double scale_y = ((double) png.height / new_png.height);
 
+	unsigned char *data;
+	get_orig_data(png, &data);
+
 	for (unsigned int y = 0; y < new_png.height; y++) {
 		for (unsigned int x = 0; x < new_png.width; x++) {
 			const double source_x = (x * scale_x);
@@ -52,11 +55,11 @@ struct PNG scale(const struct PNG png, const unsigned int width, const unsigned 
 						const double weight_y = sinc(source_y - y_index);
 						const double weight = (weight_x * weight_y);
 
-						unsigned char pixels[color_size];
-						get_orig_color(png, x_index, y_index, pixels);
+						unsigned char color[color_size];
+						get_pixel_from_data(png, data, x_index, y_index, color);
 
 						for (unsigned char c = 0; c < color_size; c++) {
-							result[c] += (weight * pixels[c]);
+							result[c] += (weight * color[c]);
 						}
 
 						weight_sum += weight;

@@ -6,21 +6,28 @@
 #include <network.h>
 #include <json.h>
 
-void send_message(const struct Client client, const char *channel_id, const struct Message message) {
+void send_message(const struct Client client, const struct Message message) {
+	const struct MessagePayload message_payload = message.payload;
 	jsonelement_t *payload = create_empty_json_element(false);
 
-	char path[64];
-	sprintf(path, "/channels/%s/messages", channel_id);
+	char path[512];
 
-	if (message.content) {
-		json_set_val(payload, "content", message.content, JSON_STRING);
+	if (message.target_type == TARGET_CHANNEL) {
+		sprintf(path, "/channels/%s/messages", message.target.channel_id);
+	} else {
+		const struct InteractionCommand interaction_command = message.target.interaction_command;
+		sprintf(path, "/interactions/%s/%s/callback", interaction_command.id, interaction_command.token);
 	}
 
-	if (message.embed_size != 0) {
+	if (message_payload.content) {
+		json_set_val(payload, "content", message_payload.content, JSON_STRING);
+	}
+
+	if (message_payload.embed_size != 0) {
 		jsonelement_t *embeds_payload = create_empty_json_element(true);
 
-		for (unsigned char i = 0; i < message.embed_size; ++i) {
-			struct Embed embed = message.embeds[i];
+		for (unsigned char i = 0; i < message_payload.embed_size; ++i) {
+			struct Embed embed = message_payload.embeds[i];
 			jsonelement_t *embed_payload = create_empty_json_element(false);
 
 			if (embed.author.name) {
@@ -113,15 +120,15 @@ void send_message(const struct Client client, const char *channel_id, const stru
 	struct Response response;
 	char *body = NULL;
 
-	if (message.file_size != 0 && payload->size != 0) {
+	if (message_payload.file_size != 0 && payload->size != 0) {
 		struct FormData formdata = {
 			.boundary = "deneme"
 		};
 
 		jsonelement_t *attachments = create_empty_json_element(true);
 
-		for (size_t i = 0; i < message.file_size; ++i) {
-			struct File file = message.files[i];
+		for (size_t i = 0; i < message_payload.file_size; ++i) {
+			struct File file = message_payload.files[i];
 			jsonelement_t *attachment = create_empty_json_element(false);
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
@@ -140,31 +147,63 @@ void send_message(const struct Client client, const char *channel_id, const stru
 		json_set_val(payload, "attachments", attachments, JSON_ARRAY);
 
 		body = json_stringify(payload, 5);
-		add_field_to_formdata(&formdata, "payload_json", body, strlen(body), NULL);
+		const size_t body_length = strlen(body);
+
+		if (message.target_type == TARGET_INTERACTION_COMMAND) {
+			body = allocate(body, -1, body_length + 19, sizeof(char));
+			memcpy(body + 17, body, body_length);
+			memcpy(body, "{\"type\":4,\"data\":", 17);
+			body[body_length + 17] = '}';
+			body[body_length + 18] = 0;
+
+			add_field_to_formdata(&formdata, "payload_json", body, body_length + 18, NULL);
+		} else {
+			add_field_to_formdata(&formdata, "payload_json", body, body_length, NULL);
+		}
+
 		add_header_to_formdata_field(&formdata, "payload_json", "Content-Type", "application/json");
 
 		response = api_request(client.token, path, "POST", NULL, &formdata);
 		json_free(attachments, false);
 		free_formdata(formdata);
-	} else if (message.file_size != 0) {
+	} else if (message_payload.file_size != 0) {
 		struct FormData formdata = {
 			.boundary = "deneme"
 		};
 
-		for (size_t i = 0; i < message.file_size; ++i) {
-			struct File file = message.files[i];
+		for (size_t i = 0; i < message_payload.file_size; ++i) {
+			struct File file = message_payload.files[i];
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
 
 			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
 			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
+
 			free(field_name);
+		}
+
+		if (message.target_type == TARGET_INTERACTION_COMMAND) {
+			body = allocate(body, -1, 21, sizeof(char));
+			memcpy(body, "{\"type\":4,\"data\":{}}", 20);
+
+			add_field_to_formdata(&formdata, "payload_json", body, 20, NULL);
+			add_header_to_formdata_field(&formdata, "payload_json", "Content-Type", "application/json");
 		}
 
 		response = api_request(client.token, path, "POST", NULL, &formdata);
 		free_formdata(formdata);
 	} else if (payload->size != 0) {
 		body = json_stringify(payload, 5);
+
+		if (message.target_type == TARGET_INTERACTION_COMMAND) {
+			const size_t body_length = strlen(body);
+			body = allocate(body, -1, body_length + 19, sizeof(char));
+			memcpy(body + 17, body, body_length);
+			memcpy(body, "{\"type\":4,\"data\":", 17);
+			body[body_length + 17] = '}';
+			body[body_length + 18] = 0;
+		}
+
 		response = api_request(client.token, path, "POST", body, NULL);
 	} else {
 		throw("cannot send empty message");
@@ -201,26 +240,26 @@ void set_embed_footer(struct Embed *embed, const char *text, const char *icon_ur
 	};
 }
 
-void add_embed_to_message(const struct Embed embed, struct Message *message) {
-	++message->embed_size;
-	message->embeds = allocate(message->embeds, -1, message->embed_size, sizeof(struct Embed));
-	message->embeds[message->embed_size - 1] = embed;
+void add_embed_to_message_payload(const struct Embed embed, struct MessagePayload *message_payload) {
+	++message_payload->embed_size;
+	message_payload->embeds = allocate(message_payload->embeds, -1, message_payload->embed_size, sizeof(struct Embed));
+	message_payload->embeds[message_payload->embed_size - 1] = embed;
 }
 
-void free_message(struct Message message) {
-	if (message.embed_size != 0) {
-		free(message.embeds);
+void free_message_payload(struct MessagePayload message_payload) {
+	if (message_payload.embed_size != 0) {
+		free(message_payload.embeds);
 	}
 
-	if (message.file_size != 0) {
-		free(message.files);
+	if (message_payload.file_size != 0) {
+		free(message_payload.files);
 	}
 }
 
-void add_file_to_message(struct Message *message, const char *name, const char *data, const size_t size, const char *type) {
-	++message->file_size;
-	message->files = allocate(message->files, -1, message->file_size, sizeof(struct File));
-	message->files[message->file_size - 1] = (struct File) {
+void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const size_t size, const char *type) {
+	++message_payload->file_size;
+	message_payload->files = allocate(message_payload->files, -1, message_payload->file_size, sizeof(struct File));
+	message_payload->files[message_payload->file_size - 1] = (struct File) {
 		.name = (char *) name,
 		.data = (char *) data,
 		.type = (char *) type,

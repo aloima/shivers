@@ -8,58 +8,63 @@
 #include <network.h>
 #include <json.h>
 
-static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
-	struct Message reply = {0};
+static void execute(const struct Client client, const struct InteractionCommand command) {
 	struct Embed embed = {0};
-	const char *channel_id = json_get_val(message, "channel_id").value.string;
-
-	char gif_avatar_url[103];
-	char png_avatar_url[103];
-
-	char user_id[19], discriminator[5], hash[33];
-
-	if (args.size == 1) {
-		const char *arg = args.data[0].data;
-		const size_t arg_length = args.data[0].length;
-		const bool mention_error = (arg_length != 21 || strncmp(arg, "<@", 2) != 0 || arg[20] != '>');
-
-		if (mention_error && (arg_length != 18)) {
-			reply.content = INVALID_ARGUMENT;
-			send_message(client, channel_id, reply);
-			return;
-		} else {
-			if (arg_length == 18) {
-				strcpy(user_id, args.data[0].data);
-			} else {
-				strncpy(user_id, args.data[0].data + 2, 18);
-				user_id[18] = 0;
-			}
-
-			if (!check_snowflake(user_id)) {
-				reply.content = INVALID_ARGUMENT;
-				send_message(client, channel_id, reply);
-				return;
-			} else {
-				char path[26] = "/users/";
-				strcat(path, user_id);
-
-				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
-				jsonelement_t *user = json_parse((const char *) response.data);
-
-				strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-				strcpy(hash, json_get_val(user, "avatar").value.string);
-
-				get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
-				get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
-
-				json_free(user, false);
-				response_free(&response);
-			}
+	struct Message message = {
+		.target_type = TARGET_INTERACTION_COMMAND,
+		.target = {
+			.interaction_command = command
 		}
+	};
+
+	char gif_avatar_url[104];
+	char png_avatar_url[104];
+
+	char user_id[20], discriminator[5], hash[33];
+
+	if (command.argument_size == 1) {
+		if (strcmp(command.arguments[0].name, "id") == 0) {
+			const char *input = command.arguments[0].value.string;
+
+			if (!check_snowflake(input)) {
+				message.payload.content = INVALID_ARGUMENT;
+				send_message(client, message);
+				return;
+			}
+
+			strcpy(user_id, input);
+
+			char path[27] = "/users/";
+			strcat(path, user_id);
+
+			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
+			jsonelement_t *user = json_parse((const char *) response.data);
+
+			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+			strcpy(hash, json_get_val(user, "avatar").value.string);
+
+			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
+			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
+
+			json_free(user, false);
+			response_free(&response);
+		} else {
+			jsonelement_t *user = command.arguments[0].value.user;
+			strcpy(user_id, json_get_val(user, "id").value.string);
+			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+			strcpy(hash, json_get_val(user, "avatar").value.string);
+
+			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
+			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
+		}
+	} else if (command.argument_size == 2) {
+		message.payload.content = "You cannot specify two arguments, please specify `id` or `member`.";
+		send_message(client, message);
+		return;
 	} else {
-		strcpy(user_id, json_get_val(message, "author.id").value.string);
-		strcpy(discriminator, json_get_val(message, "author.discriminator").value.string);
-		strcpy(hash, json_get_val(message, "author.avatar").value.string);
+		strcpy(user_id, json_get_val(command.user, "id").value.string);
+		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
+		strcpy(hash, json_get_val(command.user, "avatar").value.string);
 
 		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
 		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
@@ -114,17 +119,22 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 
 	embed.color = COLOR;
 
-	add_embed_to_message(embed, &reply);
-	send_message(client, channel_id, reply);
-	free_message(reply);
+	add_embed_to_message_payload(embed, &message.payload);
+	send_message(client, message);
+	free_message_payload(message.payload);
 }
 
 static const struct CommandArgument args[] = {
 	(const struct CommandArgument) {
 		.name = "member",
-		.description = "The mention or the ID of a member whose avatar that you want to view",
-		.examples = (const char *[]) {"840217542400409630", "<@840217542400409630>"},
-		.example_size = 2,
+		.description = "The mention of a member whose avatar that you want to view",
+		.type = USER_ARGUMENT,
+		.optional = true
+	},
+	(const struct CommandArgument) {
+		.name = "id",
+		.description = "The ID of a member whose avatar that you want to view",
+		.type = STRING_ARGUMENT,
 		.optional = true
 	}
 };

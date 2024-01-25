@@ -15,26 +15,32 @@
 	struct CommandArgument {
 		const char *name;
 		const char *description;
+		const unsigned char type;
 		const char **examples;
 		const size_t example_size;
 		const bool optional;
 	};
 
 	struct Command {
-		void (*execute)(struct Client client, jsonelement_t *message, const struct Split args);
+		void (*execute)(const struct Client client, const struct InteractionCommand command);
 		const char *name;
 		const char *description;
 		const struct CommandArgument *args;
 		const size_t arg_size;
 	};
 
-	void setup_commands();
+	void setup_commands(const struct Client client);
 	void free_commands();
 	const struct Command *get_commands();
 	const unsigned short get_command_size();
 
 	void free_cooldowns();
-	void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, const struct Split args), struct Client client, jsonelement_t *message, const struct Split args);
+	void run_with_cooldown(
+		const char *user_id,
+		void (*execute)(const struct Client client, const struct InteractionCommand command),
+		struct Client client,
+		const struct InteractionCommand
+	);
 
 	void add_cooldown(const char *user_id);
 	void remove_cooldown(const char *user_id);
@@ -49,6 +55,7 @@
 	void on_handle_guilds(struct Client client);
 	void on_force_close();
 	void on_message_create(struct Client client, jsonelement_t *message);
+	void on_interaction_command(struct Client client, struct InteractionCommand command);
 
 	extern const struct Command about;
 	extern const struct Command avatar;

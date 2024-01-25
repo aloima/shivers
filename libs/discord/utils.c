@@ -68,7 +68,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 bool check_snowflake(const char *snowflake) {
 	const size_t length = strlen(snowflake);
 
-	if (length != 18) {
+	if (length != 18 && length != 19) {
 		return false;
 	} else {
 		bool result = true;

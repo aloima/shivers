@@ -8,7 +8,7 @@
 void on_ready(struct Client client) {
 	const char *username = json_get_val(client.user, "username").value.string;
 
-	setup_commands();
+	setup_commands(client);
 	puts("Set up all commands.");
 
 	database_initialize("database.json");

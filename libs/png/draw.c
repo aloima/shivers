@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include <png.h>
 
@@ -16,52 +17,16 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 
 		if (filter_method == 0) {
 			memcpy(png->data + start, color, png_color_size);
-		} else if (filter_method == 1) {
-			unsigned char next_orig_colors[png_color_size];
-
-			if (x == 0) {
-				get_orig_color(*png, 1, y, next_orig_colors);
-
-				const size_t next = ((y + 1) + (y * png->width * png_color_size) + png_color_size);
-
-				for (unsigned char n = 0; n < png_color_size; ++n) {
-					png->data[next + n] = (next_orig_colors[n] - fix_color[n]) & 0xFF;
-				}
-			} else if ((x - 1) == png->width) {
-				unsigned char prev_orig_colors[png_color_size];
-				get_orig_color(*png, x - 1, y, prev_orig_colors);
-
-				for (unsigned char n = 0; n < png_color_size; ++n) {
-					png->data[start + n] = (color[n] - prev_orig_colors[n]) & 0xFF;
-				}
-			} else {
-				unsigned char prev_orig_colors[png_color_size], current_data[png_color_size], next_data[png_color_size];
-				get_orig_color(*png, x - 1, y, prev_orig_colors);
-
-				get_pixel_data(*png, x, y, current_data);
-				get_pixel_data(*png, x + 1, y, next_data);
-
-				for (unsigned char n = 0; n < png_color_size; ++n) {
-					next_orig_colors[n] = (prev_orig_colors[n] + current_data[n] + next_data[n]);
-				}
-
-				const size_t next = ((y + 1) + (y * png->width * png_color_size) + ((x + 1) * png_color_size));
-
-				for (unsigned char n = 0; n < png_color_size; ++n) {
-					png->data[next + n] = (next_orig_colors[n] - fix_color[n]) & 0xFF;
-				}
-
-				for (unsigned char n = 0; n < png_color_size; ++n) {
-					png->data[start + n] = (fix_color[n] - prev_orig_colors[n]) & 0xFF;
-				}
-			}
-		}
+		} // TODO: other filter methods for png parameter will be added.
 	}
 }
 
 void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle) {
 	const unsigned char data_color_size = get_byte_size_of_pixel(data.color_type);
 	const unsigned char image_color_size = get_byte_size_of_pixel(image->color_type);
+
+	unsigned char *unfiltered_data, color[data_color_size];
+	get_orig_data(data, &unfiltered_data);
 
 	if (as_circle && (data.width == data.height)) {
 		const unsigned int radius = (data.width / 2);
@@ -72,8 +37,7 @@ void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, 
 
 			for (unsigned int b = 0; b < data.height; ++b) {
 				if ((aa + ((b - radius) * (b - radius))) <= rr) {
-					unsigned char color[data_color_size];
-					get_orig_color(data, a, b, color);
+					get_pixel_from_data(data, unfiltered_data, a, b, color);
 
 					set_pixel(image, x + a, y + b, color, image_color_size);
 				}
@@ -82,13 +46,14 @@ void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, 
 	} else {
 		for (unsigned int a = 0; a < data.width; ++a) {
 			for (unsigned int b = 0; b < data.height; ++b) {
-				unsigned char color[data_color_size];
-				get_orig_color(data, a, b, color);
+				get_pixel_from_data(data, unfiltered_data, a, b, color);
 
 				set_pixel(image, x + a, y + b, color, image_color_size);
 			}
 		}
 	}
+
+	free(unfiltered_data);
 }
 
 void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y) {

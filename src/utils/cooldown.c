@@ -16,7 +16,7 @@ void free_cooldowns() {
 	free(cooldowns);
 }
 
-void run_with_cooldown(const char *user_id, void (*command)(struct Client client, jsonelement_t *message, const struct Split args), struct Client client, jsonelement_t *message, const struct Split args) {
+void run_with_cooldown(const char *user_id, void (*execute)(const struct Client client, const struct InteractionCommand command), const struct Client client, const struct InteractionCommand command) {
 	const unsigned long target = (get_cooldown(user_id).timestamp + 3000);
 	const unsigned long current = get_timestamp(NULL);
 
@@ -24,18 +24,24 @@ void run_with_cooldown(const char *user_id, void (*command)(struct Client client
 		char warning[51];
 		sprintf(warning, "You need to wait `%.2Lf seconds` to use a command.", ((long double) target - (long double) current) / 1000.0);
 
-		struct Message reply = {
-			.content = warning
+		struct Message message = {
+			.target_type = TARGET_INTERACTION_COMMAND,
+			.target = {
+				.interaction_command = command
+			},
+			.payload = {
+				.content = warning
+			}
 		};
 
-		send_message(client, json_get_val(message, "channel_id").value.string, reply);
+		send_message(client, message);
 	} else {
 		if (has_cooldown(user_id)) {
 			remove_cooldown(user_id);
 		}
 
 		add_cooldown(user_id);
-		command(client, message, args);
+		execute(client, command);
 	}
 }
 

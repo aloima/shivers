@@ -75,9 +75,14 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	}
 }
 
-static void execute(struct Client client, jsonelement_t *message, const struct Split args) {
-	struct Message reply = {0};
+static void execute(const struct Client client, const struct InteractionCommand command) {
 	struct Embed embed = {0};
+	struct Message message = {
+		.target_type = TARGET_INTERACTION_COMMAND,
+		.target = {
+			.interaction_command = command
+		}
+	};
 
 	char memory_usage[11];
 	size_t rss, vram;
@@ -121,10 +126,10 @@ static void execute(struct Client client, jsonelement_t *message, const struct S
 		set_embed_footer(&embed, footer, NULL);
 	#endif
 
-	add_embed_to_message(embed, &reply);
-	send_message(client, json_get_val(message, "channel_id").value.string, reply);
+	add_embed_to_message_payload(embed, &(message.payload));
+	send_message(client, message);
 	free(embed.fields);
-	free_message(reply);
+	free_message_payload(message.payload);
 }
 
 const struct Command about = {

@@ -9,8 +9,18 @@
 #include <utils.h>
 
 void initialize_png(struct PNG *png) {
-	png->data_size = (png->width * png->height * get_byte_size_of_pixel(png->color_type) + png->height);
-	png->data = allocate(NULL, 0, png->data_size, sizeof(char));
+	const unsigned char color_size = get_byte_size_of_pixel(png->color_type);
+
+	png->data_size = (png->width * png->height * color_size + png->height);
+	png->data = allocate(NULL, 0, png->data_size, sizeof(unsigned char));
+
+	if (png->color_type == RGBA) {
+		for (unsigned int x = 0; x < png->width; ++x) {
+			for (unsigned int y = 0; y < png->height; ++y) {
+				png->data[((y + 1) + ((y * png->width) + x) * color_size) + 3] = 0xFF;
+			}
+		}
+	}
 }
 
 struct PNG read_png(unsigned char *input, const size_t input_size) {

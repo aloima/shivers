@@ -57,12 +57,55 @@
 		size_t size;
 	};
 
-	struct Message {
+	#define TARGET_INTERACTION_COMMAND 1
+	#define TARGET_CHANNEL 2
+
+	#define STRING_ARGUMENT 3
+	#define INTEGER_ARGUMENT 4
+	#define BOOLEAN_ARGUMENT 5
+	#define USER_ARGUMENT 6
+	#define CHANNEL_ARGUMENT 7
+	#define ROLE_ARGUMENT 8
+
+	struct MessagePayload {
 		char *content;
 		struct Embed *embeds;
 		size_t embed_size;
 		struct File *files;
 		size_t file_size;
+	};
+
+	struct InteractionArgument {
+		char *name;
+		unsigned char type;
+
+		union {
+			char *string;
+			long number;
+			jsonelement_t *user;
+		} value;
+	};
+
+	struct InteractionCommand {
+		char *id;
+		char *token;
+
+		char *guild_id;
+		char *channel_id;
+		jsonelement_t *user;
+		char *name;
+		struct InteractionArgument *arguments;
+		size_t argument_size;
+	};
+
+	struct Message {
+		union {
+			struct InteractionCommand interaction_command;
+			char *channel_id;
+		} target;
+
+		struct MessagePayload payload;
+		unsigned char target_type;
 	};
 
 	void connect_gateway(const char *token);
@@ -79,13 +122,14 @@
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
 	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
 
-	void send_message(const struct Client client, const char *channel_id, const struct Message message);
-	void free_message(struct Message message);
+	void send_message(const struct Client client, const struct Message message);
+	void free_message_payload(struct MessagePayload message_payload);
+
 	void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline);
 	void set_embed_author(struct Embed *embed, const char *name, const char *url, const char *icon_url);
 	void set_embed_footer(struct Embed *embed, const char *text, const char *icon_url);
-	void add_embed_to_message(const struct Embed embed, struct Message *message);
-	void add_file_to_message(struct Message *message, const char *name, const char *data, const size_t size, const char *type);
+	void add_embed_to_message_payload(const struct Embed embed, struct MessagePayload *message_payload);
+	void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const size_t size, const char *type);
 
 	bool check_snowflake(const char *snowflake);
 #endif

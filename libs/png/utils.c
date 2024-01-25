@@ -1,6 +1,9 @@
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include <png.h>
+#include <utils.h>
 
 unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 	unsigned char pixel_count = 0;
@@ -18,36 +21,87 @@ unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 	return pixel_count;
 }
 
-void get_orig_color(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *orig_color) {
+unsigned char paeth_predictor(const unsigned char a, const unsigned char b, const unsigned char c) {
+	const unsigned char p = (a + b - c);
+	const unsigned char pa = abs(p - a);
+	const unsigned char pb = abs(p - b);
+	const unsigned char pc = abs(p - c);
+
+	if (pa <= pb && pa <= pc) {
+		return a;
+	} else if (pb <= pc) {
+		return b;
+	} else {
+		return c;
+	}
+}
+
+size_t get_orig_size(const struct PNG png) {
+	const unsigned char color_size = get_byte_size_of_pixel(png.color_type);
+
+	return (png.width * png.height * color_size);
+}
+
+void get_orig_data(const struct PNG png, unsigned char **data) {
 	const unsigned char color_pixels = get_byte_size_of_pixel(png.color_type);
-	const size_t start = ((y + 1) + (y * png.width * color_pixels) + (x * color_pixels));
-	const unsigned char filter_method = png.data[(y * png.width * color_pixels) + y];
 
-	if (filter_method == 0) {
-		memcpy(orig_color, png.data + start, color_pixels);
-	} else if (filter_method == 1) {
-		if (x == 0) {
-			memcpy(orig_color, png.data + start, color_pixels);
-		} else if (x == 1) {
-			for (unsigned char n = 0; n < color_pixels; ++n) {
-				orig_color[n] = png.data[start - color_pixels + n] + png.data[start + n];
+	*data = allocate(NULL, -1, get_orig_size(png), sizeof(unsigned char));
+
+	for (unsigned int y = 0; y < png.height; ++y) {
+		const unsigned char filter_code = png.data[(y * png.width * color_pixels) + y];
+
+		if (filter_code == 0) {
+			for (unsigned int x = 0; x < png.width; ++x) {
+				const unsigned int pos = ((y + 1) + ((y * png.width) + x) * color_pixels);
+				memcpy(*data + ((x + (y * png.width)) * color_pixels), png.data + pos, color_pixels);
 			}
-		} else {
-			memcpy(orig_color, png.data + (y + 1) + (y * png.width * color_pixels), color_pixels);
+		} else if (filter_code == 1) {
+			memcpy(*data + (y * png.width * color_pixels), png.data + ((y + 1) + (y * png.width * color_pixels)), color_pixels);
 
-			for (unsigned int i = 1; i <= x; ++i) {
-				const size_t at = ((y + 1) + (y * png.width * color_pixels) + (i * color_pixels));
+			for (unsigned int x = 1; x < png.width; ++x) {
+				const unsigned int at_a = (((y * png.width) + (x - 1)) * color_pixels);
+				const unsigned int at_x = ((y + 1) + ((y * png.width) + x) * color_pixels);
 
-				for (unsigned char n = 0; n < color_pixels; ++n) {
-					orig_color[n] = (orig_color[n] + png.data[at + n]);
+				for (unsigned char c = 0; c < color_pixels; ++c) {
+					(*data)[((x + (y * png.width)) * color_pixels) + c] = (png.data[at_x + c] + (*data)[at_a + c]);
+				}
+			}
+		} else if (filter_code == 2) {
+			for (unsigned int x = 0; x < png.width; ++x) {
+				const unsigned int at_b = ((((y - 1) * png.width) + x) * color_pixels);
+				const unsigned int at_x = ((y + 1) + ((y * png.width) + x) * color_pixels);
+
+				for (unsigned char c = 0; c < color_pixels; ++c) {
+					(*data)[((x + (y * png.width)) * color_pixels) + c] = (png.data[at_x + c] + (*data)[at_b + c]);
+				}
+			}
+		} else if (filter_code == 3) {
+			for (unsigned int x = 0; x < png.width; ++x) {
+				const unsigned int at_b = ((((y - 1) * png.width) + x) * color_pixels);
+				const unsigned int at_a = (((y * png.width) + (x - 1)) * color_pixels);
+				const unsigned int at_x = ((y + 1) + ((y * png.width) + x) * color_pixels);
+
+				for (unsigned char c = 0; c < color_pixels; ++c) {
+					(*data)[((x + (y * png.width)) * color_pixels) + c] = (png.data[at_x + c] + floor((((*data)[at_a + c] + (*data)[at_b + c]) / 2.0)));
+				}
+			}
+		} else if (filter_code == 4) {
+			for (unsigned int x = 0; x < png.width; ++x) {
+				const unsigned int at_c = ((((y - 1) * png.width) + (x - 1)) * color_pixels);
+				const unsigned int at_b = ((((y - 1) * png.width) + x) * color_pixels);
+				const unsigned int at_a = (((y * png.width) + (x - 1)) * color_pixels);
+				const unsigned int at_x = ((y + 1) + ((y * png.width) + x) * color_pixels);
+
+				for (unsigned char c = 0; c < color_pixels; ++c) {
+					const unsigned char value = paeth_predictor((*data)[at_a + c], (*data)[at_b + c], (*data)[at_c + c]);
+					(*data)[((x + (y * png.width)) * color_pixels) + c] = (png.data[at_x + c] + value);
 				}
 			}
 		}
 	}
 }
 
-void get_pixel_data(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *data) {
+void get_pixel_from_data(const struct PNG png, const unsigned char *data, const unsigned int x, const unsigned int y, unsigned char *pixel) {
 	const unsigned char color_pixels = get_byte_size_of_pixel(png.color_type);
-	const size_t start = ((y + 1) + (y * png.width * color_pixels) + (x * color_pixels));
-	memcpy(data, png.data + start, color_pixels);
+	memcpy(pixel, data + ((x + (y * png.width)) * color_pixels), color_pixels);
 }

@@ -48,9 +48,12 @@
 	void draw_rect(struct PNG *png, const struct Rectangle rectangle, const unsigned int x, const unsigned int y);
 	void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size);
 
+	unsigned char paeth_predictor(const unsigned char a, const unsigned char b, const unsigned char c);
 	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
-	void get_orig_color(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *orig_color);
-	void get_pixel_data(const struct PNG png, const unsigned int x, const unsigned int y, unsigned char *data);
+
+	void get_orig_data(const struct PNG png, unsigned char **data);
+	size_t get_orig_size(const struct PNG png);
+	void get_pixel_from_data(const struct PNG png, const unsigned char *data, const unsigned int x, const unsigned int y, unsigned char *pixel);
 
 	struct OutputPNG out_png(const struct PNG png);
 
