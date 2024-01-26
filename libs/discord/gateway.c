@@ -68,6 +68,7 @@ static void *start_heartbeat_thread() {
 	} while (websocket.connected && !websocket.closed);
 
 	pthread_exit(NULL);
+	return NULL;
 }
 
 static void send_identify() {
