@@ -30,7 +30,8 @@ void run_with_cooldown(const char *user_id, void (*execute)(const struct Client 
 				.interaction_command = command
 			},
 			.payload = {
-				.content = warning
+				.content = warning,
+				.ephemeral = true
 			}
 		};
 

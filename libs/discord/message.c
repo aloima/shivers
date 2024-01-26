@@ -117,6 +117,11 @@ void send_message(const struct Client client, const struct Message message) {
 		json_free(embeds_payload, false);
 	}
 
+	if (message.payload.ephemeral && message.target_type == TARGET_INTERACTION_COMMAND) {
+		double value = (1 << 6);
+		json_set_val(payload, "flags", &value, JSON_NUMBER);
+	}
+
 	struct Response response;
 	char *body = NULL;
 

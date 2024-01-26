@@ -73,6 +73,7 @@
 		size_t embed_size;
 		struct File *files;
 		size_t file_size;
+		bool ephemeral;
 	};
 
 	struct InteractionArgument {
