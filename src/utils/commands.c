@@ -17,7 +17,7 @@ void setup_commands(const struct Client client) {
 
 	jsonelement_t *commands_body = create_empty_json_element(true);
 	double command_type = 1.0;
-	char key[5], argument_key[5];
+	char key[6], argument_key[6];
 
 	for (unsigned char i = 0; i < command_size; ++i) {
 		const struct Command command = command_array[i];

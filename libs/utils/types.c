@@ -49,14 +49,14 @@ char *base64_encode(const char *data, const size_t data_length) {
 			strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
 			strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
 			strncat(response, &base64_alphabet[number & 0x3F], 1);
-			strncat(response, "=", 1);
+			strcat(response, "=");
 		} else if (m3 == 1) {
 			number |= (unsigned char) data[di];
 			number = number << 4;
 
 			strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
 			strncat(response, &base64_alphabet[number & 0x3F], 1);
-			strncat(response, "==", 2);
+			strcat(response, "==");
 		}
 	}
 

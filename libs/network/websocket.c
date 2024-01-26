@@ -353,7 +353,7 @@ void connect_websocket(struct Websocket *websocket) {
 		register_events(websocket->epollfd, *websocket, EPOLLIN | EPOLLOUT);
 
 		do {
-			const int num_events = epoll_wait(websocket->epollfd, events, 32, -1);
+			const int num_events = epoll_wait(websocket->epollfd, events, 16, -1);
 
 			if (num_events != 0) {
 				handle_events(websocket, websocket->epollfd, events, num_events);
