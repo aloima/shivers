@@ -31,6 +31,7 @@ void remove_from_cache_index(struct Cache *cache, const size_t index) {
 		strcpy(cache->data[i - 1], cache->data[i]);
 	}
 
+	free(cache->data[cache->size - 1]);
 	--cache->size;
 	cache->data = allocate(cache->data, -1, cache->size, sizeof(char *));
 }

@@ -122,7 +122,22 @@ static void onmessage(const struct WebsocketFrame frame) {
 						handled_ready_guilds = true;
 						on_handle_guilds(client);
 					}
+				} else {
+					on_guild_create(client);
 				}
+			} else if (strcmp(event_name, "GUILD_DELETE") == 0) {
+				struct Cache *guilds = get_guilds_cache();
+				const char *guild_id = json_get_val(data, "d.id").value.string;
+				size_t i;
+
+				for (i = 0; i < guilds->size; ++i) {
+					if (strcmp(guilds->data[i], guild_id) == 0) {
+						break;
+					}
+				}
+
+				remove_from_cache_index(get_guilds_cache(), i);
+				on_guild_delete(client);
 			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
 				on_message_create(client, message);

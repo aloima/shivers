@@ -51,11 +51,13 @@
 	#define MISSING_ARGUMENT "Missing argument, please use `help` command."
 	#define ADDITIONAL_ARGUMENT "Additional argument, please use `help` command."
 
-	void on_ready(struct Client client);
-	void on_handle_guilds(struct Client client);
 	void on_force_close();
-	void on_message_create(struct Client client, jsonelement_t *message);
+	void on_guild_create(struct Client client);
+	void on_guild_delete(struct Client client);
+	void on_handle_guilds(struct Client client);
 	void on_interaction_command(struct Client client, struct InteractionCommand command);
+	void on_message_create(struct Client client, jsonelement_t *message);
+	void on_ready(struct Client client);
 
 	extern const struct Command about;
 	extern const struct Command avatar;
