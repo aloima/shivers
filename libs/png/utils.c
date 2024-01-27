@@ -9,11 +9,11 @@ unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 	unsigned char pixel_count = 0;
 
 	switch (color_type) {
-		case RGB:
+		case RGB_COLOR:
 			pixel_count = 3;
 			break;
 
-		case RGBA:
+		case RGBA_COLOR:
 			pixel_count = 4;
 			break;
 	}
@@ -36,7 +36,7 @@ unsigned char paeth_predictor(const unsigned char a, const unsigned char b, cons
 	}
 }
 
-size_t get_orig_size(const struct PNG png) {
+unsigned long get_orig_size(const struct PNG png) {
 	const unsigned char color_size = get_byte_size_of_pixel(png.color_type);
 
 	return (png.width * png.height * color_size);

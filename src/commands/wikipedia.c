@@ -83,7 +83,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			jsonelement_t *image_data = json_parse((const char *) image_response.data);
 			jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
 			const char *final_image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
-			const size_t final_image_url_length = strlen(final_image_url);
+			const unsigned long final_image_url_length = strlen(final_image_url);
 
 			if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
 				char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;

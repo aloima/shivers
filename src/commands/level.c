@@ -39,7 +39,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	struct PNG background_image = {
 		.width = 1548,
 		.height = 512,
-		.color_type = RGB,
+		.color_type = RGB_COLOR,
 		.is_interlaced = false
 	};
 

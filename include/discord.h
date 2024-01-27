@@ -12,7 +12,7 @@
 
 	struct Cache {
 		char **data;
-		size_t size;
+		unsigned long size;
 	};
 
 	struct Client {
@@ -54,7 +54,7 @@
 		char *name;
 		char *data;
 		char *type;
-		size_t size;
+		unsigned long size;
 	};
 
 	#define TARGET_INTERACTION_COMMAND 1
@@ -70,9 +70,9 @@
 	struct MessagePayload {
 		char *content;
 		struct Embed *embeds;
-		size_t embed_size;
+		unsigned long embed_size;
 		struct File *files;
-		size_t file_size;
+		unsigned long file_size;
 		bool ephemeral;
 	};
 
@@ -96,7 +96,7 @@
 		jsonelement_t *user;
 		char *name;
 		struct InteractionArgument *arguments;
-		size_t argument_size;
+		unsigned long argument_size;
 	};
 
 	struct Message {
@@ -115,7 +115,7 @@
 
 	void clear_cache(struct Cache *cache);
 	void add_to_cache(struct Cache *cache, const char *data);
-	void remove_from_cache_index(struct Cache *cache, const size_t index);
+	void remove_from_cache_index(struct Cache *cache, const unsigned long index);
 
 	struct Cache *get_guilds_cache();
 
@@ -130,7 +130,7 @@
 	void set_embed_author(struct Embed *embed, const char *name, const char *url, const char *icon_url);
 	void set_embed_footer(struct Embed *embed, const char *text, const char *icon_url);
 	void add_embed_to_message_payload(const struct Embed embed, struct MessagePayload *message_payload);
-	void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const size_t size, const char *type);
+	void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const unsigned long size, const char *type);
 
 	bool check_snowflake(const char *snowflake);
 #endif

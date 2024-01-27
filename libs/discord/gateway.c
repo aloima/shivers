@@ -19,7 +19,7 @@ static int last_sequence = -1;
 static bool heartbeat_waiting = false;
 
 static char token[96];
-static size_t ready_guild_size = 0;
+static unsigned long ready_guild_size = 0;
 static bool handled_ready_guilds = false;
 
 static struct Client client = {0};
@@ -129,7 +129,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 			} else if (strcmp(event_name, "GUILD_DELETE") == 0) {
 				struct Cache *guilds = get_guilds_cache();
 				const char *guild_id = json_get_val(data, "d.id").value.string;
-				size_t i;
+				unsigned long i;
 
 				for (i = 0; i < guilds->size; ++i) {
 					if (strcmp(guilds->data[i], guild_id) == 0) {

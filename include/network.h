@@ -1,5 +1,10 @@
 #include <stdbool.h>
 
+#if defined(_WIN32)
+	#include <winsock2.h>
+	#include <windows.h>
+#endif
+
 #include <openssl/ssl.h>
 
 #include <utils.h>
@@ -24,15 +29,15 @@
 	struct FormDataField {
 		char *name;
 		char *data;
-		size_t data_size;
+		unsigned long data_size;
 		struct Header *headers;
-		size_t header_size;
+		unsigned long header_size;
 		char *filename;
 	};
 
 	struct FormData {
 		struct FormDataField *fields;
-		size_t field_size;
+		unsigned long field_size;
 		char *boundary;
 	};
 
@@ -49,7 +54,7 @@
 		char *url;
 		char *method;
 		struct Header *headers;
-		size_t header_size;
+		unsigned long header_size;
 		struct RequestBody body;
 	};
 
@@ -62,9 +67,9 @@
 		} status;
 
 		unsigned char *data;
-		size_t data_size;
+		unsigned long data_size;
 		struct Header *headers;
-		size_t header_size;
+		unsigned long header_size;
 	};
 
 	struct Response request(struct RequestConfig config);
@@ -76,14 +81,22 @@
 	void free_url(struct URL url);
 	char *percent_encode(const char *data);
 
-	size_t _read(SSL *ssl, int sockfd, char *buffer, size_t size);
-	size_t _write(SSL *ssl, int sockfd, char *buffer, size_t size);
+	#if defined(_WIN32)
+		unsigned long s_read(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size);
+		unsigned long s_write(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size);
 
-	unsigned long combine_bytes(unsigned char *bytes, size_t byte_count);
-	struct Header get_header(struct Header *headers, const size_t header_size, const char *name);
+		void close_socket(SOCKET sockfd, SSL *ssl);
+	#elif defined(__linux__)
+		unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size);
+		unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size);
+
+		void close_socket(int sockfd, SSL *ssl);
+	#endif
+
+	unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count);
+	struct Header get_header(struct Header *headers, const unsigned long header_size, const char *name);
 	struct hostent *resolve_hostname(char *hostname);
-	void close_socket(int sockfd, SSL *ssl);
-	void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const size_t data_size, const char *filename);
+	void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const unsigned long data_size, const char *filename);
 	void add_header_to_formdata_field(struct FormData *formdata, const char *field_name, const char *header_name, const char *header_value);
 	void free_formdata(struct FormData formdata);
 
@@ -94,12 +107,12 @@
 		bool fin, rsv[3], mask;
 		unsigned char opcode;
 		char *payload;
-		size_t payload_length;
+		unsigned long payload_length;
 	};
 
 	struct WebsocketQueueElement {
 		char *data;
-		size_t size;
+		unsigned long size;
 	};
 
 	struct WebsocketMethods {
@@ -109,7 +122,12 @@
 	};
 
 	struct Websocket {
-		int sockfd;
+		#if defined(_WIN32)
+			SOCKET sockfd;
+		#elif defined(__linux__)
+			int sockfd;
+		#endif
+
 		int epollfd;
 		SSL *ssl;
 		struct URL url;
@@ -119,7 +137,7 @@
 		char *key;
 
 		struct WebsocketQueueElement *queue;
-		size_t queue_size;
+		unsigned long queue_size;
 	};
 
 	struct Websocket create_websocket(const char *url, const struct WebsocketMethods methods);

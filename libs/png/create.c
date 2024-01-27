@@ -14,7 +14,7 @@ void initialize_png(struct PNG *png) {
 	png->data_size = (png->width * png->height * color_size + png->height);
 	png->data = allocate(NULL, 0, png->data_size, sizeof(unsigned char));
 
-	if (png->color_type == RGBA) {
+	if (png->color_type == RGBA_COLOR) {
 		for (unsigned int x = 0; x < png->width; ++x) {
 			for (unsigned int y = 0; y < png->height; ++y) {
 				png->data[((y + 1) + ((y * png->width) + x) * color_size) + 3] = 0xFF;
@@ -23,14 +23,14 @@ void initialize_png(struct PNG *png) {
 	}
 }
 
-struct PNG read_png(unsigned char *input, const size_t input_size) {
+struct PNG read_png(unsigned char *input, const unsigned long input_size) {
 	struct PNG png = {0};
 
 	bool taken_headers = false;
 	unsigned char *data = NULL;
-	size_t data_size = 0;
+	unsigned long data_size = 0;
 
-	for (size_t i = 0; i < input_size; ++i) {
+	for (unsigned long i = 0; i < input_size; ++i) {
 		const unsigned char ch = input[i];
 
 		if (ch == 'I') {
@@ -56,7 +56,7 @@ struct PNG read_png(unsigned char *input, const size_t input_size) {
 			} else if (strncmp(chunk_name, "DAT", 3) == 0) {
 				i += 3;
 
-				const size_t sub_data_size = combine_bytes(input + i - 8, 4);
+				const unsigned long sub_data_size = combine_bytes(input + i - 8, 4);
 				data_size += sub_data_size;
 
 				if (taken_headers == false) {
@@ -151,7 +151,7 @@ struct OutputPNG out_png(const struct PNG png) {
 		.next_out = (Bytef *) NULL
 	};
 
-	size_t idat_size = deflateBound(&defstream, png.data_size);
+	unsigned long idat_size = deflateBound(&defstream, png.data_size);
 	output.data = allocate(output.data, -1, 57 + idat_size, sizeof(unsigned char));
 
 	defstream.avail_out = idat_size;

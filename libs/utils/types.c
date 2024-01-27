@@ -4,13 +4,13 @@
 
 #include <utils.h>
 
-char *base64_encode(const char *data, const size_t data_length) {
+char *base64_encode(const char *data, const unsigned long data_length) {
 	const char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	const unsigned char m3 = (data_length % 3);
-	const size_t d3 = ((data_length - m3) / 3);
-	const size_t loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
+	const unsigned long d3 = ((data_length - m3) / 3);
+	const unsigned long loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
 
-	size_t response_length;
+	unsigned long response_length;
 
 	switch (m3) {
 		case 0:
@@ -28,8 +28,8 @@ char *base64_encode(const char *data, const size_t data_length) {
 
 	char *response = allocate(NULL, 0, response_length + 1, sizeof(char));
 
-	for (size_t i = 0; i < loop_limit; ++i) {
-		size_t number = 0;
+	for (unsigned long i = 0; i < loop_limit; ++i) {
+		unsigned long number = 0;
 		const int di = i * 3;
 
 		if (m3 == 0 || (i + 1) != loop_limit) {
@@ -63,13 +63,13 @@ char *base64_encode(const char *data, const size_t data_length) {
 	return response;
 }
 
-size_t ahtoi(const char *data) {
+unsigned long ahtoi(const char *data) {
 	const char hex_alphabet[17] = "0123456789ABCDEF";
-	const size_t size = strlen(data);
-	size_t result = 0;
+	const unsigned long size = strlen(data);
+	unsigned long result = 0;
 
 	for (int i = 0; i < size; ++i) {
-		size_t base = pow(16, (size - i - 1));
+		unsigned long base = pow(16, (size - i - 1));
 		result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
 	}
 

@@ -6,12 +6,12 @@
 void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size) {
 	if (!png->is_interlaced) {
 		const unsigned char png_color_size = get_byte_size_of_pixel(png->color_type);
-		const size_t start = ((y + 1) + (y * png->width * png_color_size) + (x * png_color_size));
+		const unsigned long start = ((y + 1) + (y * png->width * png_color_size) + (x * png_color_size));
 		const unsigned char filter_method = png->data[(y * png->width * png_color_size) + y];
 		unsigned char fix_color[png_color_size];
 		memcpy(fix_color, color, color_size);
 
-		if (png->color_type == RGBA && color_size == 3) {
+		if (png->color_type == RGBA_COLOR && color_size == 3) {
 			fix_color[3] = 0xFF;
 		}
 

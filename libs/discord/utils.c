@@ -39,7 +39,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	};
 
 	if (body != NULL && formdata == NULL) {
-		const size_t body_length = strlen(body);
+		const unsigned long body_length = strlen(body);
 		config.body.is_formdata = false;
 		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
 		strcpy(config.body.payload.data, body);
@@ -66,7 +66,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 }
 
 bool check_snowflake(const char *snowflake) {
-	const size_t length = strlen(snowflake);
+	const unsigned long length = strlen(snowflake);
 
 	if (length != 18 && length != 19) {
 		return false;

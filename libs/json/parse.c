@@ -8,11 +8,11 @@
 #include <json.h>
 #include <utils.h>
 
-static void parse_v(jsonelement_t *element, const char *text, const size_t length, size_t *i);
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const size_t length, size_t *i);
+static void parse_v(jsonelement_t *element, const char *text, const unsigned long length, unsigned long *i);
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long length, unsigned long *i);
 
-static void parse_v(jsonelement_t *element, const char *text, const size_t length, size_t *i) {
-	size_t value_length = 0;
+static void parse_v(jsonelement_t *element, const char *text, const unsigned long length, unsigned long *i) {
+	unsigned long value_length = 0;
 	bool escaping = false;
 
 	while (*i < length) {
@@ -160,7 +160,7 @@ static void parse_v(jsonelement_t *element, const char *text, const size_t lengt
 					((double *) element->value)[0] = ((((double *) element->value)[0] * 10) + (ch - 48));
 				} else if (ch == '.') {
 					++(*i);
-					size_t starts_at = *i;
+					unsigned long starts_at = *i;
 
 					bool condition = (*i < length);
 
@@ -187,8 +187,8 @@ static void parse_v(jsonelement_t *element, const char *text, const size_t lengt
 	}
 }
 
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const size_t length, size_t *i) {
-	size_t key_length = 0;
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long length, unsigned long *i) {
+	unsigned long key_length = 0;
 	bool parsing_key = false;
 	bool parsing_value = false;
 
@@ -245,8 +245,8 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 
 jsonelement_t *json_parse(const char *text) {
 	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
-	const size_t length = strlen(text);
-	size_t i = 0;
+	const unsigned long length = strlen(text);
+	unsigned long i = 0;
 
 	parse_v(result, text, length, &i);
 

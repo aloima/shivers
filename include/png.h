@@ -4,8 +4,8 @@
 #ifndef PNG_H_
 	#define PNG_H_
 
-	#define RGB 2
-	#define RGBA 6
+	#define RGB_COLOR 2
+	#define RGBA_COLOR 6
 
 	struct Circle {
 		unsigned int radius;
@@ -29,17 +29,17 @@
 		unsigned char color_type;
 		bool is_interlaced;
 		unsigned char *data;
-		size_t data_size;
+		unsigned long data_size;
 		unsigned char zlib_headers[2];
 	};
 
 	struct OutputPNG {
 		unsigned char *data;
-		size_t data_size;
+		unsigned long data_size;
 	};
 
 	void initialize_png(struct PNG *png);
-	struct PNG read_png(unsigned char *input, const size_t input_size);
+	struct PNG read_png(unsigned char *input, const unsigned long input_size);
 
 	struct PNG scale(const struct PNG png, const unsigned int width, const unsigned int height);
 
@@ -52,7 +52,7 @@
 	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
 
 	void get_orig_data(const struct PNG png, unsigned char **data);
-	size_t get_orig_size(const struct PNG png);
+	unsigned long get_orig_size(const struct PNG png);
 	void get_pixel_from_data(const struct PNG png, const unsigned char *data, const unsigned int x, const unsigned int y, unsigned char *pixel);
 
 	struct OutputPNG out_png(const struct PNG png);

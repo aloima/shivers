@@ -12,7 +12,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		.exist = true
 	};
 
-	for (size_t ki = 0; ki < splitter.size; ++ki) {
+	for (unsigned long ki = 0; ki < splitter.size; ++ki) {
 		if (value->type == JSON_ARRAY) {
 			int index = atoi(splitter.data[ki].data);
 
@@ -23,12 +23,12 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 				break;
 			}
 		} else if (value->type == JSON_OBJECT) {
-			size_t size = value->size;
+			unsigned long size = value->size;
 
 			if (size == 0) {
 				result.exist = false;
 			} else {
-				for (size_t i = 0; i < value->size; ++i) {
+				for (unsigned long i = 0; i < value->size; ++i) {
 					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
 
 					if (strcmp(data->key, splitter.data[ki].data) == 0) {

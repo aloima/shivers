@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <utils.h>
 
 static void compare_elements(long *a, long *b) {
@@ -10,9 +8,9 @@ static void compare_elements(long *a, long *b) {
 	}
 }
 
-void sort(long *data, const size_t size) {
-	for (size_t a = 0; a < size - 1; ++a) {
-		for (size_t i = 0; i < size - a - 1; ++i) {
+void sort(long *data, const unsigned long size) {
+	for (unsigned long a = 0; a < size - 1; ++a) {
+		for (unsigned long i = 0; i < size - a - 1; ++i) {
 			compare_elements(&data[i], &data[i + 1]);
 		}
 	}

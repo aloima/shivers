@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 
 #include <json.h>
 #include <utils.h>
@@ -28,7 +27,7 @@ void database_initialize(const char *filename) {
 	} else {
 		FILE *file = fopen(filename, "r");
 		fseek(file, 0, SEEK_END);
-		const size_t size = ftell(file);
+		const unsigned long size = ftell(file);
 		rewind(file);
 
 		char content[size + 1];

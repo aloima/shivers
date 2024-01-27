@@ -3,7 +3,7 @@
 
 #include <utils.h>
 
-void *allocate(void *value, const long old_count, const long new_count, const unsigned char size) {
+void *allocate(void *value, const unsigned long old_count, const unsigned long new_count, const unsigned char size) {
 	if (value == NULL) {
 		return calloc(new_count, size);
 	} else {

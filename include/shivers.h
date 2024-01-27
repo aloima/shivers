@@ -17,7 +17,7 @@
 		const char *description;
 		const unsigned char type;
 		const char **examples;
-		const size_t example_size;
+		const unsigned long example_size;
 		const bool optional;
 	};
 
@@ -26,7 +26,7 @@
 		const char *name;
 		const char *description;
 		const struct CommandArgument *args;
-		const size_t arg_size;
+		const unsigned long arg_size;
 	};
 
 	void setup_commands(const struct Client client);

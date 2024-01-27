@@ -132,7 +132,7 @@ void send_message(const struct Client client, const struct Message message) {
 
 		jsonelement_t *attachments = create_empty_json_element(true);
 
-		for (size_t i = 0; i < message_payload.file_size; ++i) {
+		for (unsigned long i = 0; i < message_payload.file_size; ++i) {
 			struct File file = message_payload.files[i];
 			jsonelement_t *attachment = create_empty_json_element(false);
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
@@ -152,7 +152,7 @@ void send_message(const struct Client client, const struct Message message) {
 		json_set_val(payload, "attachments", attachments, JSON_ARRAY);
 
 		body = json_stringify(payload, 5);
-		const size_t body_length = strlen(body);
+		const unsigned long body_length = strlen(body);
 
 		if (message.target_type == TARGET_INTERACTION_COMMAND) {
 			body = allocate(body, -1, body_length + 19, sizeof(char));
@@ -176,7 +176,7 @@ void send_message(const struct Client client, const struct Message message) {
 			.boundary = "deneme"
 		};
 
-		for (size_t i = 0; i < message_payload.file_size; ++i) {
+		for (unsigned long i = 0; i < message_payload.file_size; ++i) {
 			struct File file = message_payload.files[i];
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
 			sprintf(field_name, "files[%ld]", i);
@@ -201,7 +201,7 @@ void send_message(const struct Client client, const struct Message message) {
 		body = json_stringify(payload, 5);
 
 		if (message.target_type == TARGET_INTERACTION_COMMAND) {
-			const size_t body_length = strlen(body);
+			const unsigned long body_length = strlen(body);
 			body = allocate(body, -1, body_length + 19, sizeof(char));
 			memcpy(body + 17, body, body_length);
 			memcpy(body, "{\"type\":4,\"data\":", 17);
@@ -261,7 +261,7 @@ void free_message_payload(struct MessagePayload message_payload) {
 	}
 }
 
-void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const size_t size, const char *type) {
+void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const unsigned long size, const char *type) {
 	++message_payload->file_size;
 	message_payload->files = allocate(message_payload->files, -1, message_payload->file_size, sizeof(struct File));
 	message_payload->files[message_payload->file_size - 1] = (struct File) {

@@ -80,7 +80,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			if (i == 2) {
 				strcpy(png_avatar_urls[i], png_avatar_url);
 			} else {
-				const size_t size = pow(2, (8 + i));
+				const unsigned long size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
 				get_avatar_url(gif_avatar_urls[i], client.token, user_id, discriminator, hash, false, size);
 			}
@@ -103,7 +103,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		for (unsigned char i = 0; i < 5; ++i) {
 			if (i != 2) {
-				const size_t size = pow(2, (8 + i));
+				const unsigned long size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
 			}
 		}

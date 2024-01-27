@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <unistd.h>
+#if defined(_WIN32)
+	#include <winsock2.h>
+	#include <windows.h>
+	#include <psapi.h>
+#elif defined(__linux__)
+	#include <unistd.h>
+#endif
 
 #include <shivers.h>
 #include <discord.h>
@@ -85,11 +91,20 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	};
 
 	char memory_usage[11];
-	size_t rss, vram;
 
-	FILE *statm = fopen("/proc/self/statm", "r");
-	fscanf(statm, "%lu %lu", &vram, &rss);
-	sprintf(memory_usage, "%.2f MB", (rss * getpagesize()) / 1024.0 / 1024.0);
+	#if defined(_WIN32)
+		HINSTANCE hProcHandle = GetModuleHandle(NULL);
+		PPROCESS_MEMORY_COUNTERS memory = {0};
+		GetProcessMemoryInfo(hProcHandle, memory, sizeof(memory));
+
+		sprintf(memory_usage, "%.2f MB", memory->WorkingSetSize / 1024.0 / 1024.0);
+	#elif defined(__linux__)
+		FILE *statm = fopen("/proc/self/statm", "r");
+		unsigned long rss, vram;
+
+		fscanf(statm, "%lu %lu", &vram, &rss);
+		sprintf(memory_usage, "%.2f MB", (rss * getpagesize()) / 1024.0 / 1024.0);
+	#endif
 
 	char uptime_text[41];
 	uptime_text[0] = 0;

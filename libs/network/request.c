@@ -4,10 +4,14 @@
 #include <stdbool.h>
 #include <errno.h>
 
-#include <sys/socket.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#if defined(_WIN32)
+	#include <winsock2.h>
+#elif defined(__linux__)
+	#include <sys/socket.h>
+	#include <unistd.h>
+	#include <arpa/inet.h>
+	#include <netdb.h>
+#endif
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -17,7 +21,7 @@
 
 static void check_config(struct RequestConfig config) {
 	const char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
-	const size_t allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
+	const unsigned long allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
 	bool is_allowed_method = false;
 
 	if (config.method == NULL || config.url == NULL) {
@@ -49,7 +53,13 @@ void response_free(struct Response *response) {
 
 struct Response request(struct RequestConfig config) {
 	struct Response response = {0};
-	int sockfd;
+
+	#if defined(_WIN32)
+		SOCKET sockfd;
+	#elif defined(__linux__)
+		int sockfd;
+	#endif
+
 	struct sockaddr_in addr;
 	struct hostent *host = NULL;
 	SSL *ssl = NULL;
@@ -66,7 +76,7 @@ struct Response request(struct RequestConfig config) {
 	host = resolve_hostname(url.hostname);
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(url.port);
-	memcpy(&addr.sin_addr, host->h_addr_list[0], (size_t) host->h_length);
+	memcpy(&addr.sin_addr, host->h_addr_list[0], (unsigned long) host->h_length);
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		throw_network("socket()", tls);
@@ -74,7 +84,7 @@ struct Response request(struct RequestConfig config) {
 
 	if (connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0) {
 		char request_message_information[12288], *request_message = NULL;
-		size_t request_message_length;
+		unsigned long request_message_length;
 		char buffer[HTTP_BUFFER_SIZE + 1], *response_message = NULL;
 		buffer[HTTP_BUFFER_SIZE] = 0;
 
@@ -107,10 +117,10 @@ struct Response request(struct RequestConfig config) {
 
 		if (config.body.is_formdata) {
 			const char *boundary = config.body.payload.formdata.boundary;
-			const size_t boundary_length = strlen(boundary);
+			const unsigned long boundary_length = strlen(boundary);
 
 			char *data = NULL;
-			size_t data_length = 0;
+			unsigned long data_length = 0;
 
 			char separator[32];
 			sprintf(separator, "--%s\r\n", boundary);
@@ -121,9 +131,9 @@ struct Response request(struct RequestConfig config) {
 				const struct FormDataField field = config.body.payload.formdata.fields[i];
 
 				char line[128];
-				size_t line_length = 0;
-				const size_t disposition_length = ((field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name));
-				size_t field_length = (4 + boundary_length + disposition_length);
+				unsigned long line_length = 0;
+				const unsigned long disposition_length = ((field.filename ? (54 + strlen(field.filename)) : 41) + strlen(field.name));
+				unsigned long field_length = (4 + boundary_length + disposition_length);
 
 				data = allocate(data, -1, data_length + field_length + 1, sizeof(char));
 				memcpy(data + data_length, separator, 4 + boundary_length);
@@ -187,7 +197,7 @@ struct Response request(struct RequestConfig config) {
 			free(data);
 		} else if (config.body.payload.data != NULL) {
 			const char *body = config.body.payload.data;
-			const size_t body_length = strlen(body);
+			const unsigned long body_length = strlen(body);
 
 			sprintf(request_message_information, (
 				"%s %s HTTP/1.1\r\n"
@@ -220,17 +230,17 @@ struct Response request(struct RequestConfig config) {
 
 		free_url(url);
 
-		if (_write(ssl, sockfd, request_message, request_message_length) <= 0) {
+		if (s_write(ssl, sockfd, request_message, request_message_length) <= 0) {
 			close_socket(sockfd, ssl);
 			throw_network("write()", tls);
 		}
 
 		free(request_message);
 
-		size_t read_size = 0;
-		size_t response_message_length = 0;
+		unsigned long read_size = 0;
+		unsigned long response_message_length = 0;
 
-		while ((read_size = _read(ssl, sockfd, buffer, HTTP_BUFFER_SIZE)) > 0) {
+		while ((read_size = s_read(ssl, sockfd, buffer, HTTP_BUFFER_SIZE)) > 0) {
 			if (errno != 0) {
 				close_socket(sockfd, ssl);
 				throw_network("read()", tls);
@@ -244,7 +254,7 @@ struct Response request(struct RequestConfig config) {
 		struct Split line_splitter = split(response_message, response_message_length, "\r\n");
 		struct Split status_splitter = split(line_splitter.data[0].data, line_splitter.data[0].length, " ");
 
-		const size_t status_message_length = calculate_join((struct Join *) status_splitter.data + 2, status_splitter.size - 2, " ");
+		const unsigned long status_message_length = calculate_join((struct Join *) status_splitter.data + 2, status_splitter.size - 2, " ");
 
 		response.status.code = atoi(status_splitter.data[1].data);
 		response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
@@ -252,15 +262,15 @@ struct Response request(struct RequestConfig config) {
 
 		split_free(status_splitter);
 
-		size_t i = 0;
+		unsigned long i = 0;
 
 		for (i = 1; i < line_splitter.size; ++i) {
 			if (line_splitter.data[i].data[0] == 0) {
 				break;
 			} else {
 				const char *value = strstr(line_splitter.data[i].data, ": ") + 2;
-				const size_t value_length = strlen(value);
-				const size_t name_length = (line_splitter.data[i].length - value_length - 2);
+				const unsigned long value_length = strlen(value);
+				const unsigned long name_length = (line_splitter.data[i].length - value_length - 2);
 
 				response.headers = allocate(response.headers, -1, i, sizeof(struct Header));
 				struct Header *header = &response.headers[i - 1];
@@ -279,8 +289,8 @@ struct Response request(struct RequestConfig config) {
 			++i;
 
 			while (i < line_splitter.size) {
-				size_t hex_length = ahtoi(line_splitter.data[i].data);
-				const size_t line_length = line_splitter.data[i + 1].length;
+				unsigned long hex_length = ahtoi(line_splitter.data[i].data);
+				const unsigned long line_length = line_splitter.data[i + 1].length;
 
 				if (line_length != 0) {
 					if (line_length == hex_length) {

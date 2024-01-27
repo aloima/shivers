@@ -1,6 +1,3 @@
-#define _XOPEN_SOURCE
-
-#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -65,10 +62,16 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			sprintf(gists, "%ld", (unsigned long) json_get_val(user, "public_gists").value.number);
 
 			char joined_at[18];
-			struct tm tm;
+			const char *joined_at_string = json_get_val(user, "created_at").value.string;
+			const char *months[12] = {
+				"January", "February", "March", "April", "May", "June",
+				"July", "August", "September", "October", "November", "December"
+			};
+			char month_string[3];
+			memcpy(month_string, joined_at_string + 5, 2);
+			month_string[2] = 0;
 
-			strptime(json_get_val(user, "created_at").value.string, "%Y-%m-%dT%H:%M:%SZ", &tm);
-			strftime(joined_at, sizeof(joined_at), "%d %B %Y", &tm);
+			sprintf(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi(month_string) - 1], joined_at_string);
 
 			char name[128];
 			sprintf(name, "@%s", login_data.value.string);

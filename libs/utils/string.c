@@ -4,9 +4,9 @@
 #include <utils.h>
 
 void strtolower(char *source, const char *dest) {
-	const size_t length = strlen(dest);
+	const unsigned long length = strlen(dest);
 
-	for (size_t i = 0; i < length; ++i) {
+	for (unsigned long i = 0; i < length; ++i) {
 		const char ch = dest[i];
 
 		if (isupper(ch)) {
@@ -20,9 +20,9 @@ void strtolower(char *source, const char *dest) {
 }
 
 void strtoupper(char *source, const char *dest) {
-	const size_t length = strlen(dest);
+	const unsigned long length = strlen(dest);
 
-	for (size_t i = 0; i < length; ++i) {
+	for (unsigned long i = 0; i < length; ++i) {
 		const char ch = dest[i];
 
 		if (islower(ch)) {
@@ -36,7 +36,7 @@ void strtoupper(char *source, const char *dest) {
 }
 
 const char *ltrim(const char *src) {
-	size_t i = 0;
+	unsigned long i = 0;
 
 	while (isblank(src[i])) {
 		++i;

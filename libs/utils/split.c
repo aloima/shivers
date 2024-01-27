@@ -5,22 +5,22 @@
 #include <utils.h>
 
 void split_free(struct Split value) {
-	for (size_t i = 0; i < value.size; ++i) {
+	for (unsigned long i = 0; i < value.size; ++i) {
 		free(value.data[i].data);
 	}
 
 	free(value.data);
 }
 
-struct Split split(const char *text, const size_t length, const char *separator) {
-	const size_t separator_length = strlen(separator);
+struct Split split(const char *text, const unsigned long length, const char *separator) {
+	const unsigned long separator_length = strlen(separator);
 
 	struct Split result = {
 		.data = allocate(NULL, -1, 1, sizeof(struct SplitData)),
 		.size = 1
 	};
 
-	for (size_t i = 0; i < length; ++i) {
+	for (unsigned long i = 0; i < length; ++i) {
 		char **data = (char **) &(result.data[result.size - 1].data);
 		struct SplitData *splitdata = &result.data[result.size - 1];
 		const char ch = text[i];
@@ -37,7 +37,7 @@ struct Split split(const char *text, const size_t length, const char *separator)
 		} else {
 			bool completed = true;
 
-			for (size_t _i = 1; _i < separator_length; ++_i) {
+			for (unsigned long _i = 1; _i < separator_length; ++_i) {
 				if (separator[_i] != text[i + _i]) {
 					completed = false;
 					_i = separator_length;
