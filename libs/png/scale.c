@@ -1,5 +1,6 @@
-#include <math.h>
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include <png.h>
 
@@ -82,6 +83,8 @@ struct PNG scale(const struct PNG png, const unsigned int width, const unsigned 
 			}
 		}
 	}
+
+	free(data);
 
 	return new_png;
 }

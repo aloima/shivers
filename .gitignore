@@ -3,4 +3,5 @@
 /token
 /database.json
 /compile_commands.json
+/vgcore.*
 .cache/
