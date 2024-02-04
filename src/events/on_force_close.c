@@ -7,12 +7,14 @@
 
 #include <database.h>
 #include <shivers.h>
+#include <png.h>
 
 void on_force_close() {
 	free_cooldowns();
 	free_commands();
 	database_save();
 	database_destroy();
+	free_fonts();
 
 	#if defined(_WIN32)
 		WSACleanup();

@@ -78,7 +78,7 @@ static void initialize_websocket(struct Websocket *websocket, const char *url);
 	}
 #elif defined(_WIN32)
 	static void unregister_events(const struct Websocket websocket) {
-		// WSACloseEvent(event);
+		WSACloseEvent(event);
 	}
 #endif
 
@@ -188,7 +188,6 @@ static void handle_events(struct Websocket *websocket, WSAEVENT event) {
 #elif defined(_WIN32)
 			} else if (networkEvents.lNetworkEvents & FD_WRITE) {
 #endif
-
 				if (!websocket->connected && !websocket->closed) {
 					switch_protocols(websocket);
 				} else if (websocket->queue_size != 0) {
@@ -408,11 +407,10 @@ void connect_websocket(struct Websocket *websocket) {
 
 		do {
 			#if defined(_WIN32)
-				const int result = WSAWaitForMultipleEvents(1, &event, FALSE, WSA_INFINITE, FALSE);
+				// const int result = WSAWaitForMultipleEvents(1, &event, FALSE, WSA_INFINITE, FALSE);
+				const int result = WaitForSingleObject(event, INFINITE);
 
-				WSAResetEvent(event);
-
-				if (result == WSA_WAIT_EVENT_0) {
+				if (result == WAIT_OBJECT_O) {
 					handle_events(websocket, event);
 				}
 

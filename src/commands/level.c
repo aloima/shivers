@@ -39,7 +39,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	struct PNG background_image = {
 		.width = 1548,
 		.height = 512,
-		.color_type = RGB_COLOR,
+		.color_type = RGBA_COLOR,
 		.is_interlaced = false
 	};
 
@@ -49,7 +49,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	response_free(&response);
 
-	struct PNG avatar_image_scaled = scale(avatar_image, 384, 384);
+	unsigned char *orig_data_of_avatar;
+	get_orig_data(avatar_image, &orig_data_of_avatar);
+
+	struct PNG avatar_image_scaled = scale(avatar_image, orig_data_of_avatar, 384, 384);
 	draw_image(&background_image, avatar_image_scaled, 64, 64, false);
 
 	struct OutputPNG opng = out_png(background_image);
@@ -59,6 +62,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	send_message(client, message);
 	free_message_payload(message.payload);
 	png_free(avatar_image);
+	free(orig_data_of_avatar);
 	png_free(avatar_image_scaled);
 	png_free(background_image);
 	opng_free(opng);
@@ -67,5 +71,5 @@ static void execute(const struct Client client, const struct InteractionCommand 
 const struct Command level = {
 	.execute = execute,
 	.name = "level",
-	.description = "Display your level"
+	.description = "Displays your level"
 };

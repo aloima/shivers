@@ -1,9 +1,9 @@
 ifeq ($(OS),Windows_NT)
 	CC := gcc
-	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lws2_32 -lwsock32
+	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -lws2_32 -lwsock32
 else
 	CC := clang
-	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz
+	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -I/usr/include/freetype2/
 endif
 
 CFLAGS := --optimize=3 --warn-all --std=gnu99

@@ -153,8 +153,6 @@ static const struct CommandArgument args[] = {
 	(struct CommandArgument) {
 		.name = "query",
 		.description = "The repository or the user that you want to get information",
-		.examples = (const char *[]) {"aloima", "torvalds", "aloima/shivers", "torvalds/linux"},
-		.example_size = 4,
 		.type = STRING_ARGUMENT,
 		.optional = false
 	}

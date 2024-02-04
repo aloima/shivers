@@ -134,8 +134,6 @@ const static struct CommandArgument args[] = {
 	(struct CommandArgument) {
 		.name = "query",
 		.description = "The search query of the page which you want to get information",
-		.examples = (const char *[]) {"federal republic of germany", "ottoman"},
-		.example_size = 2,
 		.type = STRING_ARGUMENT,
 		.optional = false
 	}

@@ -16,8 +16,6 @@
 		const char *name;
 		const char *description;
 		const unsigned char type;
-		const char **examples;
-		const unsigned long example_size;
 		const bool optional;
 	};
 

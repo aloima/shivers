@@ -15,7 +15,7 @@ Shivers is a Discord bot made for hobby.
 + zlib and its headers for MinGW
 
 ## Building
-```sh
+```bash
 make
 ```
 

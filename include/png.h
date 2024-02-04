@@ -1,5 +1,7 @@
-#include <stddef.h>
 #include <stdbool.h>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #ifndef PNG_H_
 	#define PNG_H_
@@ -23,6 +25,10 @@
 		bool fill;
 	};
 
+	struct Fonts {
+		FT_Face arial;
+	};
+
 	struct PNG {
 		unsigned int width;
 		unsigned int height;
@@ -41,7 +47,12 @@
 	void initialize_png(struct PNG *png);
 	struct PNG read_png(unsigned char *input, const unsigned long input_size);
 
-	struct PNG scale(const struct PNG png, const unsigned int width, const unsigned int height);
+	struct PNG scale(const struct PNG png, const unsigned char *orig_data, const unsigned int width, const unsigned int height);
+
+	void initialize_fonts();
+	struct Fonts get_fonts();
+	void free_fonts();
+	void write_text(struct PNG *png, unsigned int x, unsigned int y, const char *text, FT_Face font);
 
 	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
 	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);

@@ -16,7 +16,14 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 		}
 
 		if (filter_method == 0) {
-			memcpy(png->data + start, color, png_color_size);
+			if (png->color_type == RGBA_COLOR && color_size == 4) {
+				const unsigned char alpha = color[3];
+				const unsigned char diff = (255 - alpha);
+
+				for (unsigned int i = 0; i < 3; ++i) {
+					png->data[start + i] = ((png->data[start + i] * diff / 255) + (color[i] * alpha / 255));
+				}
+			}
 		} // TODO: other filter methods for png parameter will be added.
 	}
 }

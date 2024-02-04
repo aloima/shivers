@@ -16,7 +16,7 @@ static double sinc(double x) {
 }
 
 // used Lanczos resampling
-struct PNG scale(const struct PNG png, const unsigned int width, const unsigned int height) {
+struct PNG scale(const struct PNG png, const unsigned char *orig_data, const unsigned int width, const unsigned int height) {
 	const unsigned char color_size = get_byte_size_of_pixel(png.color_type);
 
 	struct PNG new_png = {
@@ -32,7 +32,12 @@ struct PNG scale(const struct PNG png, const unsigned int width, const unsigned 
 	const double scale_y = ((double) png.height / new_png.height);
 
 	unsigned char *data;
-	get_orig_data(png, &data);
+
+	if (orig_data == NULL) {
+		get_orig_data(png, &data);
+	} else {
+		data = (unsigned char *) orig_data;
+	}
 
 	for (unsigned int y = 0; y < new_png.height; y++) {
 		for (unsigned int x = 0; x < new_png.width; x++) {
