@@ -21,10 +21,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	const char *user_avatar = json_get_val(command.user, "avatar").value.string;
 
 	char xp_key[22], level_key[25];
-	sprintf(xp_key, "%s.xp", user_id);
-	sprintf(level_key, "%s.level", user_id);
+	sprintf(xp_key, "%s.levels.%s.xp", command.guild_id, user_id);
+	sprintf(level_key, "%s.levels.%s.level", command.guild_id, user_id);
 
-	char xp[12], level[12];
+	char xp[12], level[12], *username = json_get_val(command.user, "username").value.string;
 	sprintf(xp, "%.0f", database_has(xp_key) ? database_get(xp_key).number : 0.0);
 	sprintf(level, "%.0f", database_has(level_key) ? database_get(level_key).number : 0.0);
 
@@ -45,6 +45,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	initialize_png(&background_image);
 
+	const unsigned char font_color[3] = {255, 255, 255};
+	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18);
+
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 
 	response_free(&response);
@@ -53,7 +56,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	get_orig_data(avatar_image, &orig_data_of_avatar);
 
 	struct PNG avatar_image_scaled = scale(avatar_image, orig_data_of_avatar, 384, 384);
-	draw_image(&background_image, avatar_image_scaled, 64, 64, false);
+	draw_image(&background_image, avatar_image_scaled, 64, 64, true);
 
 	struct OutputPNG opng = out_png(background_image);
 

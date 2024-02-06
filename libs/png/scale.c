@@ -89,7 +89,9 @@ struct PNG scale(const struct PNG png, const unsigned char *orig_data, const uns
 		}
 	}
 
-	free(data);
+	if (orig_data == NULL) {
+		free(data);
+	}
 
 	return new_png;
 }

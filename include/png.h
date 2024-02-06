@@ -52,7 +52,7 @@
 	void initialize_fonts();
 	struct Fonts get_fonts();
 	void free_fonts();
-	void write_text(struct PNG *png, unsigned int x, unsigned int y, const char *text, FT_Face font);
+	void write_text(struct PNG *png, unsigned int x, unsigned int y, const char *text, FT_Face font, const unsigned char *color, const unsigned char size);
 
 	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
 	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);
