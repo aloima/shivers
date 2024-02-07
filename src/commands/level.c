@@ -16,20 +16,73 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		}
 	};
 
-	const char *user_id = json_get_val(command.user, "id").value.string;
-	const char *user_discriminator = json_get_val(command.user, "discriminator").value.string;
-	const char *user_avatar = json_get_val(command.user, "avatar").value.string;
+	char user_id[20], username[33], discriminator[5], hash[33], avatar_url[104];
 
-	char xp_key[22], level_key[25];
+	if (command.argument_size == 1) {
+		if (strcmp(command.arguments[0].name, "id") == 0) {
+			const char *input = command.arguments[0].value.string;
+
+			if (!check_snowflake(input)) {
+				message.payload.content = INVALID_ARGUMENT;
+				send_message(client, message);
+				return;
+			}
+
+			strcpy(user_id, input);
+
+			char path[27] = "/users/";
+			strcat(path, user_id);
+
+			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
+			jsonelement_t *user = json_parse((const char *) response.data);
+
+			strcpy(username, json_get_val(user, "username").value.string);
+			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+
+			jsonresult_t avatar_result = json_get_val(user, "avatar");
+
+			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+				strcpy(hash, avatar_result.value.string);
+			}
+
+			get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+
+			json_free(user, false);
+			response_free(&response);
+		} else {
+			jsonelement_t *user = command.arguments[0].value.user;
+			strcpy(user_id, json_get_val(user, "id").value.string);
+			strcpy(username, json_get_val(user, "username").value.string);
+			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+			jsonresult_t avatar_result = json_get_val(user, "avatar");
+
+			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+				strcpy(hash, avatar_result.value.string);
+			}
+
+			get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+		}
+	} else {
+		strcpy(user_id, json_get_val(command.user, "id").value.string);
+		strcpy(username, json_get_val(command.user, "username").value.string);
+		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
+		jsonresult_t avatar_result = json_get_val(command.user, "avatar");
+
+			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+				strcpy(hash, avatar_result.value.string);
+			}
+
+		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+	}
+
+	char xp_key[50], level_key[53], factor_key[42];
 	sprintf(xp_key, "%s.levels.%s.xp", command.guild_id, user_id);
 	sprintf(level_key, "%s.levels.%s.level", command.guild_id, user_id);
+	sprintf(factor_key, "%s.settings.level.factor", command.guild_id);
 
-	char xp[12], level[12], *username = json_get_val(command.user, "username").value.string;
-	sprintf(xp, "%.0f", database_has(xp_key) ? database_get(xp_key).number : 0.0);
-	sprintf(level, "%.0f", database_has(level_key) ? database_get(level_key).number : 0.0);
-
-	char avatar_url[101];
-	get_avatar_url(avatar_url, client.token, user_id, user_discriminator, user_avatar, true, 256);
+	unsigned long xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
+	unsigned long level = (database_has(level_key) ? database_get(level_key).number : 1);
+	unsigned int factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
 
 	struct Response response = request((struct RequestConfig) {
 		.url = avatar_url,
@@ -47,6 +100,28 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	const unsigned char font_color[3] = {255, 255, 255};
 	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18);
+
+	unsigned char xp_bar_color[4] = {0, 221, 255, 255};
+	const unsigned short xp_bar_width = (968 * (xp / (factor * level)));
+
+	unsigned char empty_bar_color[4] = {163, 163, 163, 255};
+	const unsigned short empty_bar_width = (968 - xp_bar_width);
+
+	draw_rect(&background_image, (struct Rectangle) {
+		.fill = true,
+		.color = xp_bar_color,
+		.color_size = 4,
+		.height = 64,
+		.width = xp_bar_width
+	}, 518, 236);
+
+	draw_rect(&background_image, (struct Rectangle) {
+		.fill = true,
+		.color = empty_bar_color,
+		.color_size = 4,
+		.height = 64,
+		.width = empty_bar_width
+	}, (518 + xp_bar_width), 236);
 
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 
@@ -71,8 +146,25 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	opng_free(opng);
 }
 
+static const struct CommandArgument args[] = {
+	(const struct CommandArgument) {
+		.name = "member",
+		.description = "The mention of a member whose level status that you want to view",
+		.type = USER_ARGUMENT,
+		.optional = true
+	},
+	(const struct CommandArgument) {
+		.name = "id",
+		.description = "The ID of a member whose level status that you want to view",
+		.type = STRING_ARGUMENT,
+		.optional = true
+	}
+};
+
 const struct Command level = {
 	.execute = execute,
 	.name = "level",
-	.description = "Displays your level"
+	.description = "Displays your level",
+	.args = args,
+	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

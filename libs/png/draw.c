@@ -99,6 +99,15 @@ void draw_rect(struct PNG *png, const struct Rectangle rectangle, const unsigned
 					}
 				}
 			}
+		} else {
+			const unsigned int max_y = (rectangle.height + y);
+			const unsigned int max_x = (rectangle.width + x);
+
+			for (unsigned int j = y; j < max_y; ++j) {
+				for (unsigned int i = x; i < max_x; ++i) {
+					set_pixel(png, i, j, rectangle.color, rectangle.color_size);
+				}
+			}
 		}
 	}
 }
