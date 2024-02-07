@@ -85,34 +85,18 @@ bool check_snowflake(const char *snowflake) {
 }
 
 void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {
-	if (discriminator == NULL) {
-		char path[26] = "/users/";
-		strcat(path, user_id);
-
-		struct Response response = api_request(token, path, "GET", NULL, NULL);
-		jsonelement_t *user = json_parse((const char *) response.data);
-		const jsonresult_t avatar = json_get_val(user, "avatar");
-
-		if (avatar.exist && avatar.type != JSON_NULL) {
-			const char *avatar_hash = avatar.value.string;
-			const char *extension = ((!force_png && (strncmp(avatar_hash, "a_", 2) == 0)) ? "gif" : "png");
-
-			sprintf(url, AVATAR_URL "?size=%d", user_id, avatar_hash, extension, size);
-		} else {
-			const char *_discriminator = json_get_val(user, "discriminator").value.string;
-
-			sprintf(url, DEFAULT_AVATAR_URL "?size=%d", atoi(_discriminator) % 5, size);
-		}
-
-		json_free(user, false);
-		response_free(&response);
+	if (hash && hash[0] != 0) {
+		const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
+		sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
 	} else {
-		if (hash != NULL) {
-			const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
+		unsigned char index;
 
-			sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
+		if (discriminator && discriminator[1] != 0) {
+			index = (atoi(discriminator) % 5);
 		} else {
-			sprintf(url, DEFAULT_AVATAR_URL "?size=%d", atoi(discriminator) % 5, size);
+			index = ((atoi(user_id) >> 22) % 6);
 		}
+
+		sprintf(url, DEFAULT_AVATAR_URL "?size=%d", index, size);
 	}
 }

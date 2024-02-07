@@ -7,6 +7,7 @@ Shivers is a Discord bot made for hobby.
 + A C compiler (clang is recommended)
 + OpenSSL and its headers
 + zlib and its headers
++ freetype and its headers
 
 ### Windows (experimental)
 + MinGW

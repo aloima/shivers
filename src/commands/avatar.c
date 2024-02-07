@@ -20,7 +20,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char gif_avatar_url[104];
 	char png_avatar_url[104];
 
-	char user_id[20], discriminator[5], hash[33];
+	char user_id[20], discriminator[5] = {0}, hash[33] = {0};
 
 	if (command.argument_size == 1) {
 		if (strcmp(command.arguments[0].name, "id") == 0) {
@@ -40,8 +40,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
 			jsonelement_t *user = json_parse((const char *) response.data);
 
+			jsonresult_t avatar_result = json_get_val(user, "avatar");
+
 			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-			strcpy(hash, json_get_val(user, "avatar").value.string);
+
+			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+				strcpy(hash, avatar_result.value.string);
+			}
 
 			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
 			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
@@ -52,7 +57,12 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			jsonelement_t *user = command.arguments[0].value.user;
 			strcpy(user_id, json_get_val(user, "id").value.string);
 			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-			strcpy(hash, json_get_val(user, "avatar").value.string);
+
+			jsonresult_t avatar_result = json_get_val(user, "avatar");
+
+			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+				strcpy(hash, avatar_result.value.string);
+			}
 
 			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
 			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
@@ -64,7 +74,12 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	} else {
 		strcpy(user_id, json_get_val(command.user, "id").value.string);
 		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
-		strcpy(hash, json_get_val(command.user, "avatar").value.string);
+
+		jsonresult_t avatar_result = json_get_val(command.user, "avatar");
+
+		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+			strcpy(hash, avatar_result.value.string);
+		}
 
 		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
 		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
@@ -72,7 +87,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	if (strstr(gif_avatar_url, ".gif") != NULL) {
 		char description[1536];
-
 		char png_avatar_urls[5][102];
 		char gif_avatar_urls[5][104];
 
@@ -98,7 +112,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		embed.image_url = gif_avatar_url;
 	} else {
 		char description[1024];
-
 		char png_avatar_urls[5][102];
 
 		for (unsigned char i = 0; i < 5; ++i) {
