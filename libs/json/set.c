@@ -182,6 +182,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 
 					join(new_key_joins, new_key, splitter.size - 1, ".");
 					json_set_val(element, new_key, value, type);
+					i = splitter.size;
 				}
 			}
 		}
