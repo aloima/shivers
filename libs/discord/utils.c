@@ -18,7 +18,7 @@ unsigned int get_all_intents() {
 }
 
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
-	char url[256];
+	char url[1024];
 	sprintf(url, "https://discord.com/api/v10%s", path);
 
 	char authorization[100];

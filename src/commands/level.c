@@ -68,9 +68,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
 		jsonresult_t avatar_result = json_get_val(command.user, "avatar");
 
-			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-				strcpy(hash, avatar_result.value.string);
-			}
+		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+			strcpy(hash, avatar_result.value.string);
+		}
 
 		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
 	}

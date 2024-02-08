@@ -105,7 +105,7 @@ struct Response request(struct RequestConfig config) {
 			SSL_connect(ssl);
 		}
 
-		char header_text[65536];
+		char header_text[9216];
 		header_text[0] = '\0';
 
 		for (int i = 0; i < config.header_size; ++i) {
