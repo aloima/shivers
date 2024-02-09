@@ -11,7 +11,7 @@
 
 	#define PNG_TEXT_LEFT 0
 	#define PNG_TEXT_CENTER 1
-	#define PNG_TEXT_RIGHT 1
+	#define PNG_TEXT_RIGHT 2
 
 	struct Circle {
 		unsigned int radius;
