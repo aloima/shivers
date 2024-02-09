@@ -9,11 +9,11 @@ unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 	unsigned char pixel_count = 0;
 
 	switch (color_type) {
-		case RGB_COLOR:
+		case PNG_RGB_COLOR:
 			pixel_count = 3;
 			break;
 
-		case RGBA_COLOR:
+		case PNG_RGBA_COLOR:
 			pixel_count = 4;
 			break;
 	}

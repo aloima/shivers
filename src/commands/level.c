@@ -80,9 +80,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	sprintf(level_key, "%s.levels.%s.level", command.guild_id, user_id);
 	sprintf(factor_key, "%s.settings.level.factor", command.guild_id);
 
-	unsigned long xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
-	unsigned long level = (database_has(level_key) ? database_get(level_key).number : 1);
-	unsigned int factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
+	const unsigned int xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
+	const unsigned int level = (database_has(level_key) ? database_get(level_key).number : 1);
+	const unsigned short factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
+
+	char xp_text[16], level_text[16];
+	sprintf(level_text, "Level %d", level);
+	sprintf(xp_text, "XP %d / %d", xp, (level * factor));
 
 	struct Response response = request((struct RequestConfig) {
 		.url = avatar_url,
@@ -92,17 +96,19 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	struct PNG background_image = {
 		.width = 1548,
 		.height = 512,
-		.color_type = RGBA_COLOR,
+		.color_type = PNG_RGBA_COLOR,
 		.is_interlaced = false
 	};
 
 	initialize_png(&background_image);
 
 	const unsigned char font_color[3] = {255, 255, 255};
-	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18);
+	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18, PNG_TEXT_LEFT);
+	write_text(&background_image, 518, 364, level_text, get_fonts().arial, font_color, 16, PNG_TEXT_LEFT);
+	write_text(&background_image, 1486, 364, xp_text, get_fonts().arial, font_color, 16, PNG_TEXT_RIGHT);
 
 	unsigned char xp_bar_color[4] = {0, 221, 255, 255};
-	const unsigned short xp_bar_width = (968 * (xp / (factor * level)));
+	const unsigned short xp_bar_width = (968 * ((double) xp / (factor * level)));
 
 	unsigned char empty_bar_color[4] = {163, 163, 163, 255};
 	const unsigned short empty_bar_width = (968 - xp_bar_width);

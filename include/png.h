@@ -6,8 +6,12 @@
 #ifndef PNG_H_
 	#define PNG_H_
 
-	#define RGB_COLOR 2
-	#define RGBA_COLOR 6
+	#define PNG_RGB_COLOR 2
+	#define PNG_RGBA_COLOR 6
+
+	#define PNG_TEXT_LEFT 0
+	#define PNG_TEXT_CENTER 1
+	#define PNG_TEXT_RIGHT 1
 
 	struct Circle {
 		unsigned int radius;
@@ -52,7 +56,7 @@
 	void initialize_fonts();
 	struct Fonts get_fonts();
 	void free_fonts();
-	void write_text(struct PNG *png, unsigned int x, unsigned int y, const char *text, FT_Face font, const unsigned char *color, const unsigned char size);
+	void write_text(struct PNG *png, unsigned int x, unsigned int y, const char *text, FT_Face font, const unsigned char *color, const unsigned char size, const unsigned char text_alignment);
 
 	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
 	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);

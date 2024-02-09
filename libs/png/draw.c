@@ -11,12 +11,12 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 		unsigned char fix_color[png_color_size];
 		memcpy(fix_color, color, color_size);
 
-		if (png->color_type == RGBA_COLOR && color_size == 3) {
+		if (png->color_type == PNG_RGBA_COLOR && color_size == 3) {
 			fix_color[3] = 0xFF;
 		}
 
 		if (filter_method == 0) {
-			if (png->color_type == RGBA_COLOR && color_size == 4) {
+			if (png->color_type == PNG_RGBA_COLOR && color_size == 4) {
 				const unsigned char alpha = color[3];
 				const unsigned char diff = (255 - alpha);
 
