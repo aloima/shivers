@@ -18,7 +18,7 @@
 		char *key;
 		void *value;
 		struct JSONElement *parent;
-		size_t size;
+		unsigned long size;
 	};
 
 	typedef struct JSONElement jsonelement_t;

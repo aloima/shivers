@@ -9,7 +9,7 @@ static struct Command *commands = NULL;
 static unsigned short command_size = 0;
 
 void setup_commands(const struct Client client) {
-	const struct Command command_array[] = {about, avatar, github, level, wikipedia};
+	const struct Command command_array[] = {about, avatar, github, level, level_settings, wikipedia};
 	command_size = sizeof(command_array) / sizeof(struct Command);
 
 	commands = allocate(NULL, -1, command_size, sizeof(struct Command));
@@ -17,7 +17,7 @@ void setup_commands(const struct Client client) {
 
 	jsonelement_t *commands_body = create_empty_json_element(true);
 	double command_type = 1.0;
-	char key[6], argument_key[6];
+	char key[32], argument_key[32], sc_argument_key[32];
 
 	for (unsigned char i = 0; i < command_size; ++i) {
 		const struct Command command = command_array[i];
@@ -41,7 +41,31 @@ void setup_commands(const struct Client client) {
 				json_set_val(argument_body, "name", (char *) argument.name, JSON_STRING);
 				json_set_val(argument_body, "description", (char *) argument.description, JSON_STRING);
 				json_set_val(argument_body, "type", &argument_type, JSON_NUMBER);
-				json_set_val(argument_body, "required", &argument_required, JSON_BOOLEAN);
+
+				if (argument_type == SUBCOMMAND_ARGUMENT) {
+					jsonelement_t *sc_arguments_body = create_empty_json_element(true);
+
+					for (unsigned char b = 0; b < argument.arg_size; ++b) {
+						const struct CommandArgument sc_argument = argument.args[b];
+						bool sc_argument_required = !sc_argument.optional;
+						double sc_argument_type = sc_argument.type;
+						jsonelement_t *sc_argument_body = create_empty_json_element(false);
+						sprintf(sc_argument_key, "[%d]", a);
+
+						json_set_val(sc_argument_body, "name", (char *) sc_argument.name, JSON_STRING);
+						json_set_val(sc_argument_body, "description", (char *) sc_argument.description, JSON_STRING);
+						json_set_val(sc_argument_body, "type", &sc_argument_type, JSON_NUMBER);
+						json_set_val(sc_argument_body, "required", &sc_argument_required, JSON_BOOLEAN);
+
+						json_set_val(sc_arguments_body, sc_argument_key, sc_argument_body, JSON_OBJECT);
+						json_free(sc_argument_body, false);
+					}
+
+					json_set_val(argument_body, "options", sc_arguments_body, JSON_ARRAY);
+					json_free(sc_arguments_body, false);
+				} else {
+					json_set_val(argument_body, "required", &argument_required, JSON_BOOLEAN);
+				}
 
 				json_set_val(arguments_body, argument_key, argument_body, JSON_OBJECT);
 				json_free(argument_body, false);

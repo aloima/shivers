@@ -60,6 +60,8 @@
 	#define TARGET_INTERACTION_COMMAND 1
 	#define TARGET_CHANNEL 2
 
+	#define SUBCOMMAND_ARGUMENT 1
+	#define SUBCOMMAND_GROUP_ARGUMENT 2
 	#define STRING_ARGUMENT 3
 	#define INTEGER_ARGUMENT 4
 	#define BOOLEAN_ARGUMENT 5
@@ -70,10 +72,15 @@
 	struct MessagePayload {
 		char *content;
 		struct Embed *embeds;
-		unsigned long embed_size;
+		unsigned char embed_size;
 		struct File *files;
-		unsigned long file_size;
+		unsigned char file_size;
 		bool ephemeral;
+	};
+
+	struct InteractionSubcommand {
+		struct InteractionArgument *arguments;
+		unsigned char argument_size;
 	};
 
 	struct InteractionArgument {
@@ -83,7 +90,11 @@
 		union {
 			char *string;
 			long number;
+			bool boolean;
 			jsonelement_t *user;
+			jsonelement_t *role;
+			jsonelement_t *channel;
+			struct InteractionSubcommand subcommand;
 		} value;
 	};
 
@@ -96,7 +107,7 @@
 		jsonelement_t *user;
 		char *name;
 		struct InteractionArgument *arguments;
-		unsigned long argument_size;
+		unsigned char argument_size;
 	};
 
 	struct Message {

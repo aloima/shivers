@@ -17,6 +17,8 @@
 		const char *description;
 		const unsigned char type;
 		const bool optional;
+		const struct CommandArgument *args;
+		const unsigned char arg_size;
 	};
 
 	struct Command {
@@ -24,7 +26,7 @@
 		const char *name;
 		const char *description;
 		const struct CommandArgument *args;
-		const unsigned long arg_size;
+		const unsigned char arg_size;
 	};
 
 	void setup_commands(const struct Client client);
@@ -62,5 +64,6 @@
 	extern const struct Command github;
 	extern const struct Command help;
 	extern const struct Command level;
+	extern const struct Command level_settings;
 	extern const struct Command wikipedia;
 #endif

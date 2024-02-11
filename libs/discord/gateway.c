@@ -94,6 +94,82 @@ static void onstart() {
 	puts("Websocket is started.");
 }
 
+static void parse_interaction_base_arguments(struct InteractionArgument *argument, jsonelement_t *data, unsigned char type, char *name, jsonvalue_t value) {
+	switch (type) {
+		case STRING_ARGUMENT:
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.string = value.string
+				}
+			};
+
+			break;
+
+		case INTEGER_ARGUMENT:
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.number = value.number
+				}
+			};
+
+			break;
+
+		case BOOLEAN_ARGUMENT:
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.boolean = value.boolean
+				}
+			};
+
+			break;
+
+		case USER_ARGUMENT: {
+			char search[35];
+			sprintf(search, "resolved.users.%s", value.string);
+
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.user = json_get_val(data, search).value.object
+				}
+			};
+
+			break;
+		}
+
+		case CHANNEL_ARGUMENT: {
+			char search[38];
+			sprintf(search, "resolved.channels.%s", value.string);
+
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.channel = json_get_val(data, search).value.object
+				}
+			};
+
+			break;
+		}
+
+		case ROLE_ARGUMENT: {
+			char search[35];
+			sprintf(search, "resolved.roles.%s", value.string);
+
+			*argument = (struct InteractionArgument) {
+				.name = name,
+				.value = {
+					.channel = json_get_val(data, search).value.object
+				}
+			};
+
+			break;
+		}
+	}
+}
+
 static void onmessage(const struct WebsocketFrame frame) {
 	jsonelement_t *data = json_parse(frame.payload);
 	const char *event_name = json_get_val(data, "t").value.string;
@@ -129,7 +205,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 			} else if (strcmp(event_name, "GUILD_DELETE") == 0) {
 				struct Cache *guilds = get_guilds_cache();
 				const char *guild_id = json_get_val(data, "d.id").value.string;
-				unsigned long i;
+				unsigned int i;
 
 				for (i = 0; i < guilds->size; ++i) {
 					if (strcmp(guilds->data[i], guild_id) == 0) {
@@ -165,9 +241,9 @@ static void onmessage(const struct WebsocketFrame frame) {
 					}
 
 					jsonresult_t options_result = json_get_val(interaction_data, "options");
+					const unsigned char options_size = options_result.value.array->size;
 
-					if (options_result.type == JSON_ARRAY) {
-						const unsigned char options_size = options_result.value.array->size;
+					if (options_result.type == JSON_ARRAY && options_size != 0) {
 						command.arguments = allocate(NULL, -1, options_size, sizeof(struct InteractionArgument));
 						command.argument_size = options_size;
 
@@ -175,47 +251,45 @@ static void onmessage(const struct WebsocketFrame frame) {
 							jsonelement_t *option_element = ((jsonelement_t **) options_result.element->value)[i];
 							const unsigned int option_type = json_get_val(option_element, "type").value.number;
 							char *option_name = json_get_val(option_element, "name").value.string;
-							jsonvalue_t option_value = json_get_val(option_element, "value").value;
 
-							switch (option_type) {
-								case STRING_ARGUMENT:
-									command.arguments[i] = (struct InteractionArgument) {
-										.name = option_name,
-										.value = {
-											.string = option_value.string
-										}
-									};
+							if (option_type == SUBCOMMAND_ARGUMENT) {
+								command.arguments[i].name = option_name;
 
-									break;
+								jsonresult_t sc_options_result = json_get_val(option_element, "options");
+								const unsigned char sc_options_size = sc_options_result.value.array->size;
 
-								case INTEGER_ARGUMENT:
-									command.arguments[i] = (struct InteractionArgument) {
-										.name = option_name,
-										.value = {
-											.number = option_value.number
-										}
-									};
+								if (sc_options_result.type == JSON_ARRAY && sc_options_size != 0) {
+									command.arguments[i].value.subcommand.arguments = allocate(NULL, -1, sc_options_size, sizeof(struct InteractionArgument));
+									command.arguments[i].value.subcommand.argument_size = sc_options_size;
 
-									break;
+									for (unsigned char s = 0; s < sc_options_size; ++s) {
+										jsonelement_t *sc_option_element = ((jsonelement_t **) sc_options_result.element->value)[s];
+										const unsigned int sc_option_type = json_get_val(sc_option_element, "type").value.number;
+										char *sc_option_name = json_get_val(sc_option_element, "name").value.string;
 
-								case USER_ARGUMENT: {
-									char search[34];
-									sprintf(search, "resolved.users.%s", option_value.string);
-
-									command.arguments[i] = (struct InteractionArgument) {
-										.name = option_name,
-										.value = {
-											.user = json_get_val(interaction_data, search).value.object
-										}
-									};
-
-									break;
+										struct InteractionArgument *sc_argument = &(command.arguments[i].value.subcommand.arguments[s]);
+										jsonvalue_t sc_option_value = json_get_val(sc_option_element, "value").value;
+										parse_interaction_base_arguments(sc_argument, interaction_data, sc_option_type, sc_option_name, sc_option_value);
+									}
 								}
+							} else {
+								struct InteractionArgument *argument = &(command.arguments[i]);
+								jsonvalue_t option_value = json_get_val(option_element, "value").value;
+								parse_interaction_base_arguments(argument, interaction_data, option_type, option_name, option_value);
 							}
 						}
 					}
 
 					on_interaction_command(client, command);
+
+					for (unsigned char i = 0; i < options_size; ++i) {
+						struct InteractionArgument argument = command.arguments[i];
+
+						if (argument.type == SUBCOMMAND_ARGUMENT && argument.value.subcommand.argument_size != 0) {
+							free(argument.value.subcommand.arguments);
+						}
+					}
+
 					free(command.arguments);
 				}
 			}
