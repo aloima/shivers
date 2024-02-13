@@ -99,6 +99,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 		case STRING_ARGUMENT:
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.string = value.string
 				}
@@ -109,6 +110,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 		case INTEGER_ARGUMENT:
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.number = value.number
 				}
@@ -119,6 +121,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 		case BOOLEAN_ARGUMENT:
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.boolean = value.boolean
 				}
@@ -132,6 +135,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.user = json_get_val(data, search).value.object
 				}
@@ -146,6 +150,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.channel = json_get_val(data, search).value.object
 				}
@@ -160,6 +165,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
+				.type = type,
 				.value = {
 					.channel = json_get_val(data, search).value.object
 				}
@@ -254,6 +260,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 							if (option_type == SUBCOMMAND_ARGUMENT) {
 								command.arguments[i].name = option_name;
+								command.arguments[i].type = option_type;
 
 								jsonresult_t sc_options_result = json_get_val(option_element, "options");
 								const unsigned char sc_options_size = sc_options_result.value.array->size;
