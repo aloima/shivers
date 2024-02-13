@@ -25,6 +25,7 @@
 		void (*execute)(const struct Client client, const struct InteractionCommand command);
 		const char *name;
 		const char *description;
+		const bool guild_only;
 		const struct CommandArgument *args;
 		const unsigned char arg_size;
 	};

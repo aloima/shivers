@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <shivers.h>
 #include <discord.h>
@@ -162,6 +163,7 @@ const struct Command github = {
 	.execute = execute,
 	.name = "github",
 	.description = "Fetches data from GitHub and sends them",
+	.guild_only = false,
 	.args = args,
 	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

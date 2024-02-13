@@ -50,7 +50,7 @@ void setup_commands(const struct Client client) {
 						bool sc_argument_required = !sc_argument.optional;
 						double sc_argument_type = sc_argument.type;
 						jsonelement_t *sc_argument_body = create_empty_json_element(false);
-						sprintf(sc_argument_key, "[%d]", a);
+						sprintf(sc_argument_key, "[%d]", b);
 
 						json_set_val(sc_argument_body, "name", (char *) sc_argument.name, JSON_STRING);
 						json_set_val(sc_argument_body, "description", (char *) sc_argument.description, JSON_STRING);

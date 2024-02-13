@@ -171,6 +171,7 @@ const struct Command level = {
 	.execute = execute,
 	.name = "level",
 	.description = "Displays your level",
+	.guild_only = true,
 	.args = args,
 	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

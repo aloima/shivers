@@ -243,15 +243,15 @@ static void onmessage(const struct WebsocketFrame frame) {
 						command.guild_id = json_get_val(interaction, "guild_id").value.string;
 						command.user = json_get_val(interaction, "member.user").value.object;
 					} else {
-						command.user = json_get_val(interaction_data, "user.id").value.object;
+						command.user = json_get_val(interaction, "user").value.object;
 					}
 
 					jsonresult_t options_result = json_get_val(interaction_data, "options");
-					const unsigned char options_size = options_result.value.array->size;
+					unsigned char options_size = (options_result.exist ? options_result.value.array->size : 0);
 
-					if (options_result.type == JSON_ARRAY && options_size != 0) {
+					if (options_result.exist && options_result.type == JSON_ARRAY && options_size != 0) {
 						command.arguments = allocate(NULL, -1, options_size, sizeof(struct InteractionArgument));
-						command.argument_size = options_size;
+						command.argument_size = options_result.value.array->size;
 
 						for (unsigned char i = 0; i < options_size; ++i) {
 							jsonelement_t *option_element = ((jsonelement_t **) options_result.element->value)[i];

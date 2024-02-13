@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #if defined(_WIN32)
 	#include <winsock2.h>
@@ -150,5 +151,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 const struct Command about = {
 	.execute = execute,
 	.name = "about",
-	.description = "Sends bot information"
+	.description = "Sends bot information",
+	.guild_only = false
 };

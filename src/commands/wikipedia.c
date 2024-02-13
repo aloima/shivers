@@ -143,6 +143,7 @@ const struct Command wikipedia = {
 	.execute = execute,
 	.name = "wikipedia",
 	.description = "Sends short info from Wikipedia",
+	.guild_only = false,
 	.args = args,
 	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };

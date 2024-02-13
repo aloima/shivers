@@ -156,6 +156,7 @@ const struct Command avatar = {
 	.execute = execute,
 	.name = "avatar",
 	.description = "Sends the avatar of the user",
+	.guild_only = false,
 	.args = args,
 	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };
