@@ -14,23 +14,51 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 			const char *user_id = json_get_val(message, "author.id").value.string;
 			const char *guild_id = guild_id_element.value.string;
 
-			char xp_key[50], level_key[53], factor_key[42];
+			char xp_key[50], level_key[53], factor_key[42], channel_key[43], message_key[43];
 			sprintf(xp_key, "%s.levels.%s.xp", guild_id, user_id);
 			sprintf(level_key, "%s.levels.%s.level", guild_id, user_id);
 			sprintf(factor_key, "%s.settings.level.factor", guild_id);
+			sprintf(channel_key, "%s.settings.level.channel", guild_id);
+			sprintf(message_key, "%s.settings.level.message", guild_id);
 
-			double factor = (database_has(factor_key) ? database_get(factor_key).number : 100.0);
 			double xp = (database_has(xp_key) ? database_get(xp_key).number : 0.0);
 			double level = (database_has(level_key) ? database_get(level_key).number : 1.0);
+
+			const double factor = (database_has(factor_key) ? database_get(factor_key).number : 100.0);
+			const double bound = (level * factor);
 			xp += (rand() % 10);
 
-			if (xp >= (level * factor)) {
-				xp = 0.0;
+			if (xp >= bound) {
+				xp -= bound;
 				level += 1.0;
+
+				database_set(level_key, &level, JSON_NUMBER);
+
+				if (database_has(channel_key) && database_has(message_key)) {
+					char *level_message = database_get(message_key).string;
+					char *channel_id = database_get(channel_key).string;
+
+					struct Message message = {
+						.target_type = TARGET_CHANNEL,
+						.target = {
+							.channel_id = channel_id
+						},
+						.payload = {
+							.content = level_message
+						}
+					};
+
+					unsigned short status = send_message(client, message);
+
+					switch (status) {
+						case 404:
+							database_delete(channel_key);
+							break;
+					}
+				}
 			}
 
 			database_set(xp_key, &xp, JSON_NUMBER);
-			database_set(level_key, &level, JSON_NUMBER);
 		}
 	}
 }

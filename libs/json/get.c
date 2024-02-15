@@ -12,7 +12,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		.exist = true
 	};
 
-	for (unsigned long ki = 0; ki < splitter.size; ++ki) {
+	for (unsigned int ki = 0; ki < splitter.size; ++ki) {
 		if (value->type == JSON_ARRAY) {
 			int index = atoi(splitter.data[ki].data);
 
@@ -23,18 +23,19 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 				break;
 			}
 		} else if (value->type == JSON_OBJECT) {
-			unsigned long size = value->size;
+			unsigned int size = value->size;
 
 			if (size == 0) {
 				result.exist = false;
+				break;
 			} else {
-				for (unsigned long i = 0; i < value->size; ++i) {
+				for (unsigned int i = 0; i < size; ++i) {
 					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
 
 					if (strcmp(data->key, splitter.data[ki].data) == 0) {
 						value = data;
-						i = value->size;
-					} else if ((i + 1) == value->size) {
+						i = size;
+					} else if ((i + 1) == size) {
 						result.exist = false;
 						ki = splitter.size;
 					}
@@ -42,7 +43,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 			}
 		} else {
 			result.exist = false;
-			ki = splitter.size;
+			break;
 		}
 	}
 

@@ -6,7 +6,7 @@
 #include <network.h>
 #include <json.h>
 
-void send_message(const struct Client client, const struct Message message) {
+unsigned short send_message(const struct Client client, const struct Message message) {
 	const struct MessagePayload message_payload = message.payload;
 	jsonelement_t *payload = create_empty_json_element(false);
 
@@ -214,9 +214,13 @@ void send_message(const struct Client client, const struct Message message) {
 		throw("cannot send empty message");
 	}
 
+	unsigned short status = response.status.code;
+
 	response_free(&response);
 	json_free(payload, true);
 	free(body);
+
+	return status;
 }
 
 void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline) {

@@ -41,10 +41,11 @@
 	jsonelement_t *json_parse(const char *text);
 	void json_free(jsonelement_t *element, const bool all);
 
+	jsonelement_t *create_empty_json_element(const bool is_array);
+	jsonelement_t *clone_element(jsonelement_t *element);
 	char *json_stringify(const jsonelement_t *element, const unsigned char fractional_limit);
 
 	jsonresult_t json_get_val(jsonelement_t *element, const char *search);
-
-	jsonelement_t *create_empty_json_element(const bool is_array);
+	void json_del_val(jsonelement_t *element, const char *search);
 	void json_set_val(jsonelement_t *object, const char *key, void *data, const char type);
 #endif

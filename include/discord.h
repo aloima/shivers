@@ -134,7 +134,7 @@
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
 	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
 
-	void send_message(const struct Client client, const struct Message message);
+	unsigned short send_message(const struct Client client, const struct Message message);
 	void free_message_payload(struct MessagePayload message_payload);
 
 	void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline);

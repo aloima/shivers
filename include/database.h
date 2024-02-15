@@ -9,5 +9,6 @@
 
 	void database_set(char *key, void *value, const unsigned char type);
 	bool database_has(const char *key);
+	void database_delete(const char *key);
 	jsonvalue_t database_get(const char *key);
 #endif

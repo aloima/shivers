@@ -12,7 +12,6 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long length, unsigned long *i);
 
 static void parse_v(jsonelement_t *element, const char *text, const unsigned long length, unsigned long *i) {
-	unsigned long value_length = 0;
 	bool escaping = false;
 
 	while (*i < length) {
@@ -142,8 +141,8 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 		} else {
 			if (element->type == JSON_STRING) {
 				if (ch != '"' || escaping) {
-					++value_length;
-					element->value = allocate(element->value, -1, value_length + 1, sizeof(char));
+					++element->size;
+					element->value = allocate(element->value, -1, element->size + 1, sizeof(char));
 					strncat(element->value, &ch, 1);
 
 					if (ch == '\\') {

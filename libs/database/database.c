@@ -59,6 +59,10 @@ bool database_has(const char *key) {
 	return json_get_val(data, key).exist;
 }
 
+void database_delete(const char *key) {
+	json_del_val(data, key);
+}
+
 jsonvalue_t database_get(const char *key) {
 	return json_get_val(data, key).value;
 }

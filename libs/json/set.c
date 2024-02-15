@@ -6,13 +6,6 @@
 #include <utils.h>
 #include <json.h>
 
-jsonelement_t *create_empty_json_element(const bool is_array) {
-	jsonelement_t *element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
-	element->type = (is_array ? JSON_ARRAY : JSON_OBJECT);
-
-	return element;
-}
-
 static void set_value(jsonelement_t *element, void *value, const unsigned char type) {
 	if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {
 		for (unsigned long i = 0; i < element->size; ++i) {
