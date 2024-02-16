@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <stdbool.h>
 
 #include <json.h>
@@ -91,7 +90,12 @@
 			char *string;
 			long number;
 			bool boolean;
-			jsonelement_t *user;
+
+			struct {
+				jsonelement_t *user_data;
+				jsonelement_t *member_data;
+			} user;
+
 			jsonelement_t *role;
 			jsonelement_t *channel;
 			struct InteractionSubcommand subcommand;

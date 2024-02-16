@@ -130,14 +130,20 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 			break;
 
 		case USER_ARGUMENT: {
-			char search[35];
-			sprintf(search, "resolved.users.%s", value.string);
+			char user_search[35], member_search[36];
+			sprintf(user_search, "resolved.users.%s", value.string);
+			sprintf(member_search, "resolved.members.%s", value.string);
+
+			jsonresult_t member_result = json_get_val(data, member_search);
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
 				.type = type,
 				.value = {
-					.user = json_get_val(data, search).value.object
+					.user = {
+						.user_data = json_get_val(data, user_search).value.object,
+						.member_data = member_result.exist ? member_result.value.object : NULL
+					}
 				}
 			};
 

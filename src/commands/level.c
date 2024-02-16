@@ -19,49 +19,36 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char user_id[20], username[33], discriminator[5], hash[33], avatar_url[104];
 
 	if (command.argument_size == 1) {
-		if (strcmp(command.arguments[0].name, "id") == 0) {
-			const char *input = command.arguments[0].value.string;
+		jsonelement_t *user = command.arguments[0].value.user.user_data;
+		const jsonresult_t bot_result = json_get_val(user, "bot");
 
-			if (!check_snowflake(input)) {
-				message.payload.content = INVALID_ARGUMENT;
-				send_message(client, message);
-				return;
-			}
+		const bool is_in_guild = (command.arguments[0].value.user.member_data != NULL);
+		const bool is_bot = (bot_result.exist ? bot_result.value.boolean : false);
 
-			strcpy(user_id, input);
-
-			char path[27] = "/users/";
-			strcat(path, user_id);
-
-			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
-			jsonelement_t *user = json_parse((const char *) response.data);
-
-			strcpy(username, json_get_val(user, "username").value.string);
-			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-
-			jsonresult_t avatar_result = json_get_val(user, "avatar");
-
-			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-				strcpy(hash, avatar_result.value.string);
-			}
-
-			get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
-
-			json_free(user, false);
-			response_free(&response);
-		} else {
-			jsonelement_t *user = command.arguments[0].value.user;
-			strcpy(user_id, json_get_val(user, "id").value.string);
-			strcpy(username, json_get_val(user, "username").value.string);
-			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-			jsonresult_t avatar_result = json_get_val(user, "avatar");
-
-			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-				strcpy(hash, avatar_result.value.string);
-			}
-
-			get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+		if (!is_in_guild) {
+			message.payload.content = "Since this user is not in this server, they cannot have level or experience.";
+			message.payload.ephemeral = true;
+			send_message(client, message);
+			return;
 		}
+
+		if (is_bot) {
+			message.payload.content = "Since this user is bot, it cannot have level or experience.";
+			message.payload.ephemeral = true;
+			send_message(client, message);
+			return;
+		}
+
+		strcpy(user_id, json_get_val(user, "id").value.string);
+		strcpy(username, json_get_val(user, "username").value.string);
+		strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+		jsonresult_t avatar_result = json_get_val(user, "avatar");
+
+		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
+			strcpy(hash, avatar_result.value.string);
+		}
+
+		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
 	} else {
 		strcpy(user_id, json_get_val(command.user, "id").value.string);
 		strcpy(username, json_get_val(command.user, "username").value.string);
@@ -157,12 +144,6 @@ static const struct CommandArgument args[] = {
 		.name = "member",
 		.description = "The mention of a member whose level status that you want to view",
 		.type = USER_ARGUMENT,
-		.optional = true
-	},
-	(const struct CommandArgument) {
-		.name = "id",
-		.description = "The ID of a member whose level status that you want to view",
-		.type = STRING_ARGUMENT,
 		.optional = true
 	}
 };

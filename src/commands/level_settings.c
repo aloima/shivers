@@ -100,6 +100,27 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			message.payload.content = "You must specify an argument to use `/level-settings set` command.";
 			send_message(client, message);
 		}
+	} else if (strcmp(sc_name, "help") == 0) {
+		struct Embed embed = {
+			.color = COLOR,
+			.title = "Level settings"
+		};
+
+		add_field_to_embed(&embed, "factor", "This setting is used to determine XP to level up. "
+		"For example if factor setting is 200 and you are 8 level, you need to reach (8 * 200) = 1600 XP from (level * factor) for next level.", false);
+
+		add_field_to_embed(&embed, "channel", "This setting is used to determine "
+		"channel to send message when a user leveled up.", false);
+
+		add_field_to_embed(&embed, "message", "This setting is used to message will be sent when a user level up. "
+		"This setting has some parameters:\\n"
+		"{name} - Username of user who leveled up\\n"
+		"{user} - Mention of user who leveled up\\n"
+		"{level} - Current level of user who leveled up\\n"
+		"{old} - Old level of user who leveled up", false);
+
+		add_embed_to_message_payload(embed, &(message.payload));
+		send_message(client, message);
 	}
 }
 
@@ -112,7 +133,7 @@ static const struct CommandArgument set_args[] = {
 	},
 	(const struct CommandArgument) {
 		.name = "channel",
-		.description = "Sets channel to send message when a user leveled up.",
+		.description = "Sets channel to send message when a user level up.",
 		.type = CHANNEL_ARGUMENT,
 		.optional = true
 	},
@@ -135,6 +156,11 @@ static const struct CommandArgument args[] = {
 	(const struct CommandArgument) {
 		.name = "list",
 		.description = "Lists level settings of your server",
+		.type = SUBCOMMAND_ARGUMENT
+	},
+	(const struct CommandArgument) {
+		.name = "help",
+		.description = "Describes level settings",
 		.type = SUBCOMMAND_ARGUMENT
 	}
 };

@@ -54,7 +54,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			json_free(user, false);
 			response_free(&response);
 		} else {
-			jsonelement_t *user = command.arguments[0].value.user;
+			jsonelement_t *user = command.arguments[0].value.user.user_data;
 			strcpy(user_id, json_get_val(user, "id").value.string);
 			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
 

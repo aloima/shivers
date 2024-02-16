@@ -36,23 +36,26 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 
 				if (database_has(channel_key) && database_has(message_key)) {
 					char *level_message = database_get(message_key).string;
-					char *channel_id = database_get(channel_key).string;
 
-					struct Message message = {
+					const struct Message message = {
 						.target_type = TARGET_CHANNEL,
 						.target = {
-							.channel_id = channel_id
+							.channel_id = database_get(channel_key).string
 						},
 						.payload = {
 							.content = level_message
 						}
 					};
 
-					unsigned short status = send_message(client, message);
+					const unsigned short status = send_message(client, message);
 
 					switch (status) {
 						case 404:
 							database_delete(channel_key);
+							break;
+
+						case 403:
+							// no permissions
 							break;
 					}
 				}
