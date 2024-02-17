@@ -10,7 +10,9 @@ void json_del_val(jsonelement_t *element, const char *search) {
 	jsonelement_t *value = element;
 	bool exist = true;
 
-	for (unsigned int ki = 0; ki < splitter.size; ++ki) {
+	const unsigned int splitter_size = splitter.size;
+
+	for (unsigned int ki = 0; ki < splitter_size; ++ki) {
 		if (value->type == JSON_ARRAY) {
 			int index = atoi(splitter.data[ki].data);
 
@@ -21,19 +23,21 @@ void json_del_val(jsonelement_t *element, const char *search) {
 				break;
 			}
 		} else if (value->type == JSON_OBJECT) {
-			unsigned long size = value->size;
+			const unsigned int size = value->size;
 
 			if (size == 0) {
 				exist = false;
 				break;
 			} else {
-				for (unsigned int i = 0; i < value->size; ++i) {
+				const unsigned int last_index = (size - 1);
+
+				for (unsigned int i = 0; i < size; ++i) {
 					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
 
 					if (strcmp(data->key, splitter.data[ki].data) == 0) {
 						value = data;
-						i = value->size;
-					} else if ((i + 1) == value->size) {
+						i = size;
+					} else if (i == last_index) {
 						exist = false;
 						ki = splitter.size;
 					}

@@ -13,7 +13,7 @@ void split_free(struct Split value) {
 }
 
 struct Split split(const char *text, const unsigned long length, const char *separator) {
-	const unsigned long separator_length = strlen(separator);
+	const unsigned int separator_length = strlen(separator);
 
 	struct Split result = {
 		.data = allocate(NULL, -1, 1, sizeof(struct SplitData)),
@@ -37,7 +37,7 @@ struct Split split(const char *text, const unsigned long length, const char *sep
 		} else {
 			bool completed = true;
 
-			for (unsigned long _i = 1; _i < separator_length; ++_i) {
+			for (unsigned int _i = 1; _i < separator_length; ++_i) {
 				if (separator[_i] != text[i + _i]) {
 					completed = false;
 					_i = separator_length;

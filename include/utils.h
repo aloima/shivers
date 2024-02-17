@@ -10,7 +10,7 @@
 
 	struct Split {
 		struct SplitData *data;
-		unsigned long size;
+		unsigned int size;
 	};
 
 	struct Join {
@@ -25,7 +25,7 @@
 
 	unsigned long join(const struct Join *value, char *source, unsigned short size, const char *separator);
 	unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator);
-	void create_join_elements_nz(struct Join *joins, const char **list, const unsigned long list_size);
+	void create_join_elements_nz(struct Join *joins, const char **list, const unsigned int list_size);
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);
@@ -40,5 +40,5 @@
 
 	void throw(const char *format, ...);
 
-	void sort(long *data, const unsigned long size);
+	void sort(int *data, const unsigned long size);
 #endif
