@@ -244,7 +244,7 @@ static void check_response(struct Websocket *websocket, const char *response, ch
 
 				free(key);
 
-				if (strsame(result, value)) {
+				if (!strsame(result, value)) {
 					free(result);
 					split_free(line_splitter);
 					split_free(splitter);

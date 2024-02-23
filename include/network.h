@@ -46,7 +46,7 @@
 	};
 
 	struct RequestConfig {
-		char *url, method;
+		char *url, *method;
 		struct Header *headers;
 		unsigned int header_size;
 		struct RequestBody body;

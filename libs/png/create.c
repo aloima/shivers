@@ -26,7 +26,6 @@ void initialize_png(struct PNG *png) {
 struct PNG read_png(unsigned char *input, const unsigned long input_size) {
 	struct PNG png = {0};
 
-	bool taken_headers = false;
 	unsigned char *data = NULL;
 	unsigned long data_size = 0;
 
