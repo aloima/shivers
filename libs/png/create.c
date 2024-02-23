@@ -59,11 +59,6 @@ struct PNG read_png(unsigned char *input, const unsigned long input_size) {
 				const unsigned long sub_data_size = combine_bytes(input + i - 8, 4);
 				data_size += sub_data_size;
 
-				if (taken_headers == false) {
-					png.zlib_headers[0] = input[i];
-					png.zlib_headers[1] = input[i + 1];
-				}
-
 				data = allocate(data, -1, data_size, sizeof(unsigned char));
 				memcpy(data + data_size - sub_data_size, input + i, sub_data_size);
 

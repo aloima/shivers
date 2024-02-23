@@ -191,7 +191,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 		case 0: {
 			last_sequence = json_get_val(data, "s").value.number;
 
-			if (strcmp(event_name, "READY") == 0) {
+			if (strsame(event_name, "READY")) {
 				struct Response response = api_request(token, "/users/@me", "GET", NULL, NULL);
 				client.user = json_parse((const char *) response.data);
 				client.token = token;
@@ -201,7 +201,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				response_free(&response);
 				on_ready(client);
-			} else if (strcmp(event_name, "GUILD_CREATE") == 0) {
+			} else if (strsame(event_name, "GUILD_CREATE")) {
 				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").value.string);
 
 				if (!handled_ready_guilds) {
@@ -214,23 +214,23 @@ static void onmessage(const struct WebsocketFrame frame) {
 				} else {
 					on_guild_create(client);
 				}
-			} else if (strcmp(event_name, "GUILD_DELETE") == 0) {
+			} else if (strsame(event_name, "GUILD_DELETE")) {
 				struct Cache *guilds = get_guilds_cache();
 				const char *guild_id = json_get_val(data, "d.id").value.string;
 				unsigned int i;
 
 				for (i = 0; i < guilds->size; ++i) {
-					if (strcmp(guilds->data[i], guild_id) == 0) {
+					if (strsame(guilds->data[i], guild_id)) {
 						break;
 					}
 				}
 
 				remove_from_cache_index(get_guilds_cache(), i);
 				on_guild_delete(client);
-			} else if (strcmp(event_name, "MESSAGE_CREATE") == 0) {
+			} else if (strsame(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
 				on_message_create(client, message);
-			} else if (strcmp(event_name, "INTERACTION_CREATE") == 0) {
+			} else if (strsame(event_name, "INTERACTION_CREATE")) {
 				jsonelement_t *interaction = json_get_val(data, "d").value.object;
 
 				if (json_get_val(interaction, "type").value.number == 2.0) {

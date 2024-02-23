@@ -1,5 +1,6 @@
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #include <utils.h>
 
@@ -17,6 +18,16 @@ void strtolower(char *source, const char *dest) {
 	}
 
 	source[length] = '\0';
+}
+
+bool strsame(const char *str1, const char *str2) {
+	while ((*str1) != '\0') {
+		if ((*str1++) != (*str2++)) {
+			return false;
+		}
+	}
+
+	return ((*str2) == '\0');
 }
 
 void strtoupper(char *source, const char *dest) {

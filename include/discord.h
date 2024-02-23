@@ -11,7 +11,7 @@
 
 	struct Cache {
 		char **data;
-		unsigned long size;
+		unsigned int size;
 	};
 
 	struct Client {
@@ -21,38 +21,29 @@
 	};
 
 	struct EmbedField {
-		char *name;
-		char *value;
+		char *name, *value;
 		bool is_inline;
 	};
 
 	struct EmbedAuthor {
-		char *name;
-		char *url;
-		char *icon_url;
+		char *name, *url, *icon_url;
 	};
 
 	struct EmbedFooter {
-		char *text;
-		char *icon_url;
+		char *text, *icon_url;
 	};
 
 	struct Embed {
-		char *title;
-		char *description;
+		char *title, *description, *image_url, *thumbnail_url;
 		double color;
-		char *image_url;
-		char *thumbnail_url;
 		struct EmbedAuthor author;
 		struct EmbedFooter footer;
 		struct EmbedField *fields;
-		short field_size;
+		unsigned char field_size;
 	};
 
 	struct File {
-		char *name;
-		char *data;
-		char *type;
+		char *name, *data, *type;
 		unsigned long size;
 	};
 
@@ -70,10 +61,9 @@
 
 	struct MessagePayload {
 		char *content;
+		unsigned char embed_size, file_size;
 		struct Embed *embeds;
-		unsigned char embed_size;
 		struct File *files;
-		unsigned char file_size;
 		bool ephemeral;
 	};
 
@@ -92,24 +82,17 @@
 			bool boolean;
 
 			struct {
-				jsonelement_t *user_data;
-				jsonelement_t *member_data;
+				jsonelement_t *user_data, *member_data;
 			} user;
 
-			jsonelement_t *role;
-			jsonelement_t *channel;
+			jsonelement_t *role, *channel;
 			struct InteractionSubcommand subcommand;
 		} value;
 	};
 
 	struct InteractionCommand {
-		char *id;
-		char *token;
-
-		char *guild_id;
-		char *channel_id;
+		char *id, *token, *guild_id, *channel_id, *name;
 		jsonelement_t *user;
-		char *name;
 		struct InteractionArgument *arguments;
 		unsigned char argument_size;
 	};

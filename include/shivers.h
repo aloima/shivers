@@ -13,18 +13,15 @@
 	};
 
 	struct CommandArgument {
-		const char *name;
-		const char *description;
-		const unsigned char type;
+		const char *name, *description;
+		const unsigned char type, arg_size;
 		const bool optional;
 		const struct CommandArgument *args;
-		const unsigned char arg_size;
 	};
 
 	struct Command {
 		void (*execute)(const struct Client client, const struct InteractionCommand command);
-		const char *name;
-		const char *description;
+		const char *name, *description;
 		const bool guild_only;
 		const struct CommandArgument *args;
 		const unsigned char arg_size;

@@ -15,8 +15,7 @@
 
 	struct Circle {
 		unsigned int radius;
-		unsigned char *color;
-		unsigned char color_size;
+		unsigned char *color, color_size;
 		bool fill;
 	};
 
@@ -34,13 +33,10 @@
 	};
 
 	struct PNG {
-		unsigned int width;
-		unsigned int height;
-		unsigned char color_type;
+		unsigned int width, height;
+		unsigned char color_type, *data;
 		bool is_interlaced;
-		unsigned char *data;
 		unsigned long data_size;
-		unsigned char zlib_headers[2];
 	};
 
 	struct OutputPNG {

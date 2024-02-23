@@ -19,7 +19,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	const char *sc_name = command.arguments[0].name;
 
-	if (strcmp(sc_name, "list") == 0) {
+	if (strsame(sc_name, "list")) {
 		struct Embed embed = {
 			.color = COLOR,
 			.title = "Level Settings"
@@ -60,7 +60,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		free_message_payload(message.payload);
 		free(embed.fields);
-	} else if (strcmp(sc_name, "set") == 0) {
+	} else if (strsame(sc_name, "set")) {
 		unsigned char sc_arguments_size = command.arguments[0].value.subcommand.argument_size;
 		char key[43], response[256] = {0};
 
@@ -81,14 +81,14 @@ static void execute(const struct Client client, const struct InteractionCommand 
 					sprintf(response, "%s, `%s`", response, sc_argument_name);
 				}
 
-				if (strcmp(sc_argument_name, "factor") == 0) {
+				if (strsame(sc_argument_name, "factor")) {
 					double value = sc_argument.value.number;
 					sprintf(key, "%s.settings.level.factor", command.guild_id);
 					database_set(key, &value, JSON_NUMBER);
-				} else if (strcmp(sc_argument_name, "channel") == 0) {
+				} else if (strsame(sc_argument_name, "channel")) {
 					sprintf(key, "%s.settings.level.channel", command.guild_id);
 					database_set(key, json_get_val(sc_argument.value.channel, "id").value.string, JSON_STRING);
-				} else if (strcmp(sc_argument_name, "message") == 0) {
+				} else if (strsame(sc_argument_name, "message")) {
 					sprintf(key, "%s.settings.level.message", command.guild_id);
 					database_set(key, sc_argument.value.string, JSON_STRING);
 				}
@@ -100,7 +100,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			message.payload.content = "You must specify an argument to use `/level-settings set` command.";
 			send_message(client, message);
 		}
-	} else if (strcmp(sc_name, "help") == 0) {
+	} else if (strsame(sc_name, "help")) {
 		struct Embed embed = {
 			.color = COLOR,
 			.title = "Level settings"

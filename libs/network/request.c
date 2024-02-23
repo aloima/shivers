@@ -29,7 +29,7 @@ static void check_config(struct RequestConfig config) {
 	}
 
 	for (unsigned char i = 0; i < allowed_methods_length; ++i) {
-		if (strcmp(config.method, allowed_methods[i]) == 0) {
+		if (strsame(config.method, allowed_methods[i])) {
 			is_allowed_method = true;
 			break;
 		}
@@ -285,7 +285,7 @@ struct Response request(struct RequestConfig config) {
 
 		const char *transfer_encoding_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
-		if (transfer_encoding_value != NULL && strcmp(transfer_encoding_value, "chunked") == 0) {
+		if (transfer_encoding_value != NULL && strsame(transfer_encoding_value, "chunked")) {
 			++i;
 
 			while (i < line_splitter.size) {

@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include <sys/time.h>
 
 #ifndef UTIL_H_
@@ -29,6 +31,7 @@
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);
+	bool strsame(const char *str1, const char *str2);
 	const char *ltrim(const char *src);
 
 	unsigned long ahtoi(const char *data);

@@ -15,29 +15,24 @@
 	#define HTTP_BUFFER_SIZE 16384
 
 	struct URL {
-		char *protocol;
-		char *hostname;
-		char *path;
+		char *protocol, *hostname, *path;
 		unsigned short port;
 	};
 
 	struct Header {
-		char *name;
-		char *value;
+		char *name, *value;
 	};
 
 	struct FormDataField {
-		char *name;
-		char *data;
-		unsigned long data_size;
+		char *name, *data, *filename;
 		struct Header *headers;
-		unsigned long header_size;
-		char *filename;
+		unsigned long data_size;
+		unsigned int header_size;
 	};
 
 	struct FormData {
 		struct FormDataField *fields;
-		unsigned long field_size;
+		unsigned int field_size;
 		char *boundary;
 	};
 
@@ -51,10 +46,9 @@
 	};
 
 	struct RequestConfig {
-		char *url;
-		char *method;
+		char *url, method;
 		struct Header *headers;
-		unsigned long header_size;
+		unsigned int header_size;
 		struct RequestBody body;
 	};
 
@@ -69,7 +63,7 @@
 		unsigned char *data;
 		unsigned long data_size;
 		struct Header *headers;
-		unsigned long header_size;
+		unsigned int header_size;
 	};
 
 	struct Response request(struct RequestConfig config);
@@ -132,12 +126,11 @@
 		SSL *ssl;
 		struct URL url;
 		struct WebsocketMethods methods;
-		bool connected;
-		bool closed;
+		bool connected, closed;
 		char *key;
 
 		struct WebsocketQueueElement *queue;
-		unsigned long queue_size;
+		unsigned int queue_size;
 	};
 
 	struct Websocket create_websocket(const char *url, const struct WebsocketMethods methods);

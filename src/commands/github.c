@@ -77,7 +77,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			char name[128];
 			sprintf(name, "@%s", login_data.value.string);
 
-			if (name_data.type != JSON_NULL && (strcmp(login_data.value.string, name_data.value.string) != 0)) {
+			if (name_data.type != JSON_NULL && !strsame(login_data.value.string, name_data.value.string)) {
 				sprintf(name, "%s (@%s)", name_data.value.string, login_data.value.string);
 			}
 

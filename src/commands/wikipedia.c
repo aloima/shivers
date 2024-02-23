@@ -92,14 +92,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				char image_code[32];
 				image_code[0] = 0;
 
-				struct Join svg_joins[2];
-
-				for (unsigned char i = 0; i < 2; ++i) {
-					svg_joins[i].data = svg_splitter.data[i + 5].data;
-					svg_joins[i].length = svg_splitter.data[i + 5].length;
-				}
-
-				join(svg_joins, image_code, 2, "/");
+				join((const struct Join *) svg_splitter.data + 5, image_code, 2, "/");
 				split_free(svg_splitter);
 
 				sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);

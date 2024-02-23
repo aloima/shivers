@@ -14,8 +14,7 @@
 	#define JSON_NULL 6
 
 	struct JSONElement {
-		char type;
-		char *key;
+		char type, *key;
 		void *value;
 		struct JSONElement *parent;
 		unsigned long size;
@@ -27,8 +26,7 @@
 		char *string;
 		double number;
 		bool boolean;
-		jsonelement_t *object;
-		jsonelement_t *array;
+		jsonelement_t *object, *array;
 	} jsonvalue_t;
 
 	typedef struct {
