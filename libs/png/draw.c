@@ -23,6 +23,10 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 				for (unsigned int i = 0; i < 3; ++i) {
 					png->data[start + i] = ((png->data[start + i] * diff / 255) + (color[i] * alpha / 255));
 				}
+			} else {
+				for (unsigned int i = 0; i < png_color_size; ++i) {
+					png->data[start + i] = fix_color[i];
+				}
 			}
 		} // TODO: other filter methods for png parameter will be added.
 	}
@@ -30,7 +34,6 @@ void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, cons
 
 void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle) {
 	const unsigned char data_color_size = get_byte_size_of_pixel(data.color_type);
-	const unsigned char image_color_size = get_byte_size_of_pixel(image->color_type);
 
 	unsigned char *unfiltered_data, color[data_color_size];
 	get_orig_data(data, &unfiltered_data);
@@ -46,7 +49,7 @@ void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, 
 				if ((aa + ((b - radius) * (b - radius))) <= rr) {
 					get_pixel_from_data(data, unfiltered_data, a, b, color);
 
-					set_pixel(image, x + a, y + b, color, image_color_size);
+					set_pixel(image, x + a, y + b, color, data_color_size);
 				}
 			}
 		}
@@ -55,7 +58,7 @@ void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, 
 			for (unsigned int b = 0; b < data.height; ++b) {
 				get_pixel_from_data(data, unfiltered_data, a, b, color);
 
-				set_pixel(image, x + a, y + b, color, image_color_size);
+				set_pixel(image, x + a, y + b, color, data_color_size);
 			}
 		}
 	}

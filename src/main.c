@@ -9,9 +9,6 @@
 
 #include <sys/stat.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
 #include <discord.h>
 #include <utils.h>
 

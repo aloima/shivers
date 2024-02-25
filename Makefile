@@ -2,7 +2,7 @@ ifeq ($(OS),Windows_NT)
 	CC := gcc
 	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -lws2_32 -lwsock32
 else
-	CC := gcc
+	CC := clang
 	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -I/usr/include/freetype2/
 endif
 

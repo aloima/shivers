@@ -7,6 +7,7 @@
 	#define PNG_H_
 
 	#define PNG_RGB_COLOR 2
+	#define PNG_PALETTE_COLOR 3
 	#define PNG_RGBA_COLOR 6
 
 	#define PNG_TEXT_LEFT 0
@@ -34,8 +35,9 @@
 
 	struct PNG {
 		unsigned int width, height;
-		unsigned char color_type, *data;
+		unsigned char color_type, *data, *palette;
 		bool is_interlaced;
+		unsigned short palette_size;
 		unsigned long data_size;
 	};
 
@@ -59,6 +61,7 @@
 	void draw_rect(struct PNG *png, const struct Rectangle rectangle, const unsigned int x, const unsigned int y);
 	void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size);
 
+	void palette_to_rgb(struct PNG *png);
 	unsigned char paeth_predictor(const unsigned char a, const unsigned char b, const unsigned char c);
 	unsigned char get_byte_size_of_pixel(const unsigned char color_type);
 

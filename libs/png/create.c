@@ -28,58 +28,70 @@ struct PNG read_png(unsigned char *input, const unsigned long input_size) {
 
 	unsigned char *data = NULL;
 	unsigned long data_size = 0;
+	char *current = (char *) input;
 
-	for (unsigned long i = 0; i < input_size; ++i) {
-		const unsigned char ch = input[i];
+	while (true) {
+		if (strncmp(current, "IHDR", 4) == 0) {
+			current += 4;
+			png.width = combine_bytes((unsigned char *) current, 4);
 
-		if (ch == 'I') {
-			i += 1;
-			const char *chunk_name = (const char *) (input + i);
+			current += 4;
+			png.height = combine_bytes((unsigned char *) current, 4);
 
-			if (strncmp(chunk_name, "HDR", 3) == 0) {
-				i += 3;
-				png.width = combine_bytes(input + i, 4);
+			current += 5;
+			png.color_type = *current;
 
-				i += 4;
-				png.height = combine_bytes(input + i, 4);
+			switch (png.color_type) {
+				case PNG_PALETTE_COLOR: {
+					png.data_size = (png.width * png.height);
+					break;
+				}
 
-				i += 5;
-				png.color_type = input[i];
-				png.data_size = (png.width * png.height * get_byte_size_of_pixel(input[i]) + png.height);
-				png.data = allocate(NULL, -1, png.data_size, sizeof(unsigned char)),
-
-				i += 2;
-				png.is_interlaced = input[i];
-
-				i += 4;
-			} else if (strncmp(chunk_name, "DAT", 3) == 0) {
-				i += 3;
-
-				const unsigned long sub_data_size = combine_bytes(input + i - 8, 4);
-				data_size += sub_data_size;
-
-				data = allocate(data, -1, data_size, sizeof(unsigned char));
-				memcpy(data + data_size - sub_data_size, input + i, sub_data_size);
-
-				i += (sub_data_size + 4);
-			} else if (strncmp(chunk_name, "END", 3) == 0) {
-				z_stream infstream = {
-					.zalloc = Z_NULL,
-					.zfree = Z_NULL,
-					.opaque = Z_NULL,
-					.avail_in = data_size,
-					.next_in = (Bytef *) data,
-					.avail_out = png.data_size,
-					.next_out = (Bytef *) png.data
-				};
-
-				inflateInit(&infstream);
-				inflate(&infstream, Z_FINISH);
-				inflateEnd(&infstream);
-				free(data);
-				break;
+				default:
+					png.data_size = (png.width * png.height * get_byte_size_of_pixel(png.color_type) + png.height);
 			}
+
+			png.data = allocate(NULL, -1, png.data_size, sizeof(unsigned char)),
+
+			current += 2;
+			png.is_interlaced = *current;
+
+			current += 4;
+		} else if (strncmp(current, "PLTE", 4) == 0) {
+			png.palette_size = combine_bytes((unsigned char *) current - 4, 4);
+			png.palette = allocate(NULL, -1, png.palette_size, sizeof(unsigned char));
+			current += 4;
+			memcpy(png.palette, current, png.palette_size);
+			current += (png.palette_size + 4);
+		} else if (strncmp(current, "IDAT", 4) == 0) {
+			const unsigned long sub_data_size = combine_bytes((unsigned char *) current - 4, 4);
+			data_size += sub_data_size;
+			current += 4;
+
+			data = allocate(data, -1, data_size, sizeof(unsigned char));
+			memcpy(data + data_size - sub_data_size, current, sub_data_size);
+
+			current += (sub_data_size + 4);
+		} else if (strncmp(current, "IEND", 4) == 0) {
+			z_stream infstream = {
+				.zalloc = Z_NULL,
+				.zfree = Z_NULL,
+				.opaque = Z_NULL,
+				.avail_in = data_size,
+				.next_in = (Bytef *) data,
+				.avail_out = png.data_size,
+				.next_out = (Bytef *) png.data
+			};
+
+			inflateInit(&infstream);
+			inflate(&infstream, Z_FINISH);
+			inflateEnd(&infstream);
+
+			free(data);
+			break;
 		}
+
+		++current;
 	}
 
 	return png;

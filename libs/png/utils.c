@@ -13,6 +13,10 @@ unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
 			pixel_count = 3;
 			break;
 
+		case PNG_PALETTE_COLOR:
+			pixel_count = 3;
+			break;
+
 		case PNG_RGBA_COLOR:
 			pixel_count = 4;
 			break;
@@ -33,6 +37,29 @@ unsigned char paeth_predictor(const unsigned char a, const unsigned char b, cons
 		return b;
 	} else {
 		return c;
+	}
+}
+
+void palette_to_rgb(struct PNG *png) {
+	if (png->color_type == PNG_PALETTE_COLOR) {
+		unsigned char *pixel_values = allocate(NULL, -1, png->data_size, sizeof(unsigned char));
+		memcpy(pixel_values, png->data, png->data_size);
+
+		png->color_type = PNG_RGB_COLOR;
+		png->data_size = ((png->width * png->height * 3) + png->height);
+		png->data = allocate(png->data, -1, png->data_size, sizeof(unsigned char));
+
+		for (unsigned int y = 0; y < png->height; ++y) {
+			const unsigned int row_byte_count = (y + 1 + (y * png->width * 3));
+			png->data[row_byte_count - 1] = 0;
+
+			for (unsigned int x = 0; x < png->width; ++x) {
+				const unsigned int pixels_byte_count = (x * 3);
+				memcpy(png->data + row_byte_count + pixels_byte_count, png->palette + pixel_values[x + (y * png->width)], 3);
+			}
+		}
+
+		free(pixel_values);
 	}
 }
 

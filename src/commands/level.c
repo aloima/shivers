@@ -16,7 +16,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		}
 	};
 
-	char user_id[20], username[33], discriminator[5], hash[33], avatar_url[104];
+	char user_id[20], username[33], discriminator[5], hash[33] = {0}, avatar_url[104];
 
 	if (command.argument_size == 1) {
 		jsonelement_t *user = command.arguments[0].value.user.user_data;
@@ -117,6 +117,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	}, (518 + xp_bar_width), 236);
 
 	struct PNG avatar_image = read_png(response.data, response.data_size);
+	palette_to_rgb(&avatar_image);
 
 	response_free(&response);
 
