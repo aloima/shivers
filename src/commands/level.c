@@ -131,6 +131,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	add_file_to_message_payload(&(message.payload), "level.png", (const char *) opng.data, opng.data_size, "image/png");
 
+	struct OutputPNG xpng = out_png(avatar_image);
+	FILE *x = fopen("test.png", "w");
+	fwrite(xpng.data, 1, xpng.data_size, x);
+	fclose(x);
+
 	send_message(client, message);
 	free_message_payload(message.payload);
 	png_free(avatar_image);

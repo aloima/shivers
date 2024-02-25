@@ -50,12 +50,15 @@ void palette_to_rgb(struct PNG *png) {
 		png->data = allocate(png->data, -1, png->data_size, sizeof(unsigned char));
 
 		for (unsigned int y = 0; y < png->height; ++y) {
-			const unsigned int row_byte_count = (y + 1 + (y * png->width * 3));
+			const unsigned int row_pixel_count_no_filter = (y * png->width);
+			const unsigned int row_byte_count = (y + 1 + (row_pixel_count_no_filter * 3));
 			png->data[row_byte_count - 1] = 0;
 
 			for (unsigned int x = 0; x < png->width; ++x) {
 				const unsigned int pixels_byte_count = (x * 3);
-				memcpy(png->data + row_byte_count + pixels_byte_count, png->palette + pixel_values[x + (y * png->width)], 3);
+				const unsigned int pixel_index = (pixel_values[x + row_pixel_count_no_filter] * 3);
+
+				memcpy(png->data + row_byte_count + pixels_byte_count, png->palette + pixel_index, 3);
 			}
 		}
 
