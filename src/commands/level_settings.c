@@ -121,6 +121,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		add_embed_to_message_payload(embed, &(message.payload));
 		send_message(client, message);
+
+		free_message_payload(message.payload);
+		free(embed.fields);
 	}
 }
 

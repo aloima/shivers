@@ -43,7 +43,7 @@ struct PNG read_png(unsigned char *input, const unsigned long input_size) {
 
 			switch (png.color_type) {
 				case PNG_PALETTE_COLOR: {
-					png.data_size = (png.width * png.height);
+					png.data_size = ((png.width * png.height) + png.height);
 					break;
 				}
 
