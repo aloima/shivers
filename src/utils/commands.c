@@ -28,6 +28,12 @@ void setup_commands(const struct Client client) {
 		json_set_val(command_body, "type", &command_type, JSON_NUMBER);
 		json_set_val(command_body, "description", (char *) command.description, JSON_STRING);
 
+		if (command.permissions != 0) {
+			char permissions[21];
+			sprintf(permissions, "%ld", command.permissions);
+			json_set_val(command_body, "default_member_permissions", permissions, JSON_STRING);
+		}
+
 		if (command.arg_size != 0) {
 			jsonelement_t *arguments_body = create_empty_json_element(true);
 

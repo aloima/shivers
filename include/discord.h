@@ -9,6 +9,17 @@
 	#define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.%s"
 	#define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/%d.png"
 
+	enum Permissions {
+		KickMembers = (1 << 1),
+		BanMembers = (1 << 2),
+		Administrator = (1 << 3),
+		ManageChannels = (1 << 4),
+		ManageGuilds = (1 << 5),
+		ManageMessages = (1 << 13),
+		ManageRoles = (1 << 28),
+		ManageThreads = (1 << 34)
+	};
+
 	struct Cache {
 		char **data;
 		unsigned int size;

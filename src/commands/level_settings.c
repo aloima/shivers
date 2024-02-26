@@ -173,6 +173,7 @@ const struct Command level_settings = {
 	.name = "level-settings",
 	.description = "Base command for level settings of your server",
 	.guild_only = true,
+	.permissions = (ManageMessages | ManageChannels),
 	.args = args,
 	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };
