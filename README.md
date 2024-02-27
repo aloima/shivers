@@ -9,11 +9,14 @@ Shivers is a Discord bot made for hobby.
 + zlib and its headers
 + freetype and its headers
 
-### Windows (experimental)
-+ MinGW
-+ MinGW compiler (gcc is recommended)
-+ OpenSSL and its headers for MinGW
-+ zlib and its headers for MinGW
+### Windows
++ MSYS2
++ MSYS2 compiler (gcc is recommended)
++ OpenSSL and its headers for MSYS2
++ zlib and its headers for MSYS2
++ freetype and its headers for MSYS2
+
+> Tested for MSYS2 UCRT64 environment, so Makefile set for this environment, if your envionment is different, change it.
 
 ## Building
 ```bash

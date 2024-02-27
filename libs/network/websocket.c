@@ -6,7 +6,7 @@
 #if defined(_WIN32)
 	#include <winsock2.h>
 #elif defined(__linux__)
-	#include <sys/epoll.h>
+	#include <sys/select.h>
 	#include <sys/socket.h>
 	#include <unistd.h>
 	#include <arpa/inet.h>
@@ -20,197 +20,114 @@
 #include <network.h>
 #include <utils.h>
 
-#if defined(_WIN32)
-	static void register_events(const struct Websocket websocket, WSAEVENT event, uint32_t event_flags);
-	static void unregister_events(const struct Websocket websocket);
-	static void handle_events(struct Websocket *websocket, WSAEVENT event);
-#elif defined(__linux__)
-	static void create_epoll(struct Websocket *websocket);
-	static void register_events(const struct Websocket websocket, uint32_t event_flags);
-	static void unregister_events(const struct Websocket websocket, uint32_t event_flags);
-	static void handle_events(struct Websocket *websocket, struct epoll_event *events, unsigned long num_events);
-#endif
+static void handle_events(struct Websocket *websocket);
 
 static void switch_protocols(struct Websocket *websocket);
 static void check_response(struct Websocket *websocket, const char *response, char *key);
 
 static void initialize_websocket(struct Websocket *websocket, const char *url);
 
+static void handle_events(struct Websocket *websocket) {
+	if (FD_ISSET(websocket->sockfd, &(websocket->readfds))) {
+		if (websocket->key) {
+			char buffer[4096];
+			unsigned long read_count = s_read(websocket->ssl, websocket->sockfd, buffer, 4095);
+			buffer[read_count] = 0;
 
+			if (strncmp(buffer + 9, "101", 3) == 0) {
+				check_response(websocket, buffer, websocket->key);
+				websocket->key = NULL;
 
-#if defined(__linux__)
-	static void create_epoll(struct Websocket *websocket) {
-		websocket->epollfd = epoll_create1(0);
+				if (websocket->methods.onstart) {
+					websocket->methods.onstart();
+				}
+			} else {
+				throw_network("invalid http status code", !!websocket->ssl);
+			}
+		} else {
+			struct WebsocketFrame frame;
+			unsigned char buffer[9];
 
-		if (websocket->epollfd == -1) {
-				throw_network("epoll_create1()", false);
-		}
-	}
-#endif
+			s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
 
-#if defined(__linux__)
-	static void register_events(const struct Websocket websocket, uint32_t event_flags) {
-		struct epoll_event event;
-		event.data.fd = websocket.sockfd;
-		event.events = event_flags;
+			frame.fin = ((buffer[0] >> 7) & 0x1);
+			frame.rsv[0] = ((buffer[0] >> 6) & 0x1);
+			frame.rsv[1] = ((buffer[0] >> 5) & 0x1);
+			frame.rsv[2] = ((buffer[0] >> 4) & 0x1);
+			frame.opcode = (buffer[0] & 0xF);
 
-		if (epoll_ctl(websocket.epollfd, EPOLL_CTL_ADD, websocket.sockfd, &event) == -1) {
-			throw_network("epoll_ctl()", !!websocket.ssl);
-		}
-	}
-#elif defined(_WIN32)
-	static void register_events(const struct Websocket websocket, WSAEVENT event, uint32_t event_flags) {
-		if (WSAEventSelect(websocket.sockfd, event, event_flags) == SOCKET_ERROR) {
-			throw_network("WSAEventSelect()", !!websocket.ssl);
-		}
-	}
-#endif
+			frame.mask = ((buffer[1] >> 7) & 0x1);
+			frame.payload_length = (buffer[1] & 0x7F);
 
-#if defined(__linux__)
-	static void unregister_events(const struct Websocket websocket, uint32_t event_flags) {
-		struct epoll_event event;
-		event.data.fd = websocket.sockfd;
-		event.events = event_flags;
+			if (frame.payload_length == 126) {
+				s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
+				frame.payload_length = combine_bytes(buffer, 2);
+			} else if (frame.payload_length == 127) {
+				s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 8);
+				frame.payload_length = combine_bytes(buffer, 8);
+			}
 
-		if (epoll_ctl(websocket.epollfd, EPOLL_CTL_DEL, websocket.sockfd, &event) == -1) {
-			throw_network("epoll_ctl()", !!websocket.ssl);
-		}
-	}
-#elif defined(_WIN32)
-	static void unregister_events(const struct Websocket websocket) {
-		WSACloseEvent(event);
-	}
-#endif
+			if (frame.mask == 0x1) {
+				s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 4);
+			}
 
-#if defined(__linux__)
-static void handle_events(struct Websocket *websocket, struct epoll_event *events, unsigned long num_events) {
-	for (int i = 0; i < num_events; ++i) {
-		const unsigned int event = events[i].events;
+			frame.payload = allocate(NULL, -1, frame.payload_length + 1, sizeof(char));
 
-		if (events[i].data.fd == websocket->sockfd) {
-			if (event & EPOLLERR || event & EPOLLHUP) {
-				throw_network("socket error or hang up", false);
-			} else if (event & EPOLLIN) {
-				if ((i + 1) == num_events) {
-#elif defined(_WIN32)
-static void handle_events(struct Websocket *websocket, WSAEVENT event) {
-	{
-		{
-			WSANETWORKEVENTS networkEvents;
+			switch (frame.opcode) {
+				case 0x1: {
+					unsigned long received = 0;
 
-			if (WSAEnumNetworkEvents(websocket->sockfd, event, &networkEvents) == SOCKET_ERROR) {
-				throw_network("socket error or hang up", false);
-			} else if (networkEvents.lNetworkEvents & FD_READ) {
-				{
-#endif
+					while (received != frame.payload_length) {
+						const unsigned long diff = (frame.payload_length - received);
 
-					if (websocket->key) {
-						char buffer[4096];
-						unsigned long read_count = s_read(websocket->ssl, websocket->sockfd, buffer, 4095);
-						buffer[read_count] = 0;
-
-						if (strncmp(buffer + 9, "101", 3) == 0) {
-							check_response(websocket, buffer, websocket->key);
-							websocket->key = NULL;
-
-							if (websocket->methods.onstart) {
-								websocket->methods.onstart();
-							}
+						if (diff > 512) {
+							received += s_read(websocket->ssl, websocket->sockfd, frame.payload + received, 512);
 						} else {
-							throw_network("invalid http status code", !!websocket->ssl);
+							received += s_read(websocket->ssl, websocket->sockfd, frame.payload + received, diff);
 						}
-					} else {
-						struct WebsocketFrame frame;
-						unsigned char buffer[9];
-
-						s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
-
-						frame.fin = ((buffer[0] >> 7) & 0x1);
-						frame.rsv[0] = ((buffer[0] >> 6) & 0x1);
-						frame.rsv[1] = ((buffer[0] >> 5) & 0x1);
-						frame.rsv[2] = ((buffer[0] >> 4) & 0x1);
-						frame.opcode = (buffer[0] & 0xF);
-
-						frame.mask = ((buffer[1] >> 7) & 0x1);
-						frame.payload_length = (buffer[1] & 0x7F);
-
-						if (frame.payload_length == 126) {
-							s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 2);
-							frame.payload_length = combine_bytes(buffer, 2);
-						} else if (frame.payload_length == 127) {
-							s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 8);
-							frame.payload_length = combine_bytes(buffer, 8);
-						}
-
-						if (frame.mask == 0x1) {
-							s_read(websocket->ssl, websocket->sockfd, (char *) buffer, 4);
-						}
-
-						frame.payload = allocate(NULL, -1, frame.payload_length + 1, sizeof(char));
-
-						switch (frame.opcode) {
-							case 0x1: {
-								unsigned long received = 0;
-
-								while (received != frame.payload_length) {
-									const unsigned long diff = (frame.payload_length - received);
-
-									if (diff > 512) {
-										received += s_read(websocket->ssl, websocket->sockfd, frame.payload + received, 512);
-									} else {
-										received += s_read(websocket->ssl, websocket->sockfd, frame.payload + received, diff);
-									}
-								}
-
-								if (websocket->methods.onmessage) {
-									websocket->methods.onmessage(frame);
-								}
-
-								break;
-							}
-
-							case 0x8: {
-								s_read(websocket->ssl, websocket->sockfd, frame.payload, frame.payload_length);
-
-								const short code = combine_bytes((unsigned char *) frame.payload, 2);
-								const char *reason = (frame.payload + 2);
-								close_websocket(websocket, code, (reason[0] == 0) ? NULL : reason);
-								break;
-							}
-						}
-
-						free(frame.payload);
 					}
+
+					if (websocket->methods.onmessage) {
+						websocket->methods.onmessage(frame);
+					}
+
+					break;
 				}
 
-#if defined(__linux__)
-			} else if (event & EPOLLOUT) {
-#elif defined(_WIN32)
-			} else if (networkEvents.lNetworkEvents & FD_WRITE) {
-#endif
-				if (!websocket->connected && !websocket->closed) {
-					switch_protocols(websocket);
-				} else if (websocket->queue_size != 0) {
-					const struct WebsocketQueueElement element = websocket->queue[0];
+				case 0x8: {
+					s_read(websocket->ssl, websocket->sockfd, frame.payload, frame.payload_length);
 
-					s_write(websocket->ssl, websocket->sockfd, element.data, element.size);
-
-					for (unsigned long i = 0; i < websocket->queue_size; ++i) {
-						if ((i + 1) != websocket->queue_size) {
-							const struct WebsocketQueueElement new_element = websocket->queue[i + 1];
-							websocket->queue[i].data = allocate(websocket->queue[i].data, -1, new_element.size + 1, sizeof(char));
-							websocket->queue[i].size = new_element.size;
-							strncpy(websocket->queue[i].data, new_element.data, new_element.size);
-						}
-					}
-
-					--websocket->queue_size;
-					free(websocket->queue[websocket->queue_size].data);
-
-					if (websocket->queue_size != 0) {
-						websocket->queue = allocate(websocket->queue, -1, websocket->queue_size, sizeof(struct WebsocketQueueElement));
-					}
+					const short code = combine_bytes((unsigned char *) frame.payload, 2);
+					const char *reason = (frame.payload + 2);
+					close_websocket(websocket, code, (reason[0] == 0) ? NULL : reason);
+					break;
 				}
+			}
+
+			free(frame.payload);
+		}
+	} else if (FD_ISSET(websocket->sockfd, &(websocket->writefds))) {
+		if (!websocket->connected && !websocket->closed) {
+			switch_protocols(websocket);
+		} else if (websocket->queue_size != 0) {
+			const struct WebsocketQueueElement element = websocket->queue[0];
+
+			s_write(websocket->ssl, websocket->sockfd, element.data, element.size);
+
+			for (unsigned long i = 0; i < websocket->queue_size; ++i) {
+				if ((i + 1) != websocket->queue_size) {
+					const struct WebsocketQueueElement new_element = websocket->queue[i + 1];
+					websocket->queue[i].data = allocate(websocket->queue[i].data, -1, new_element.size + 1, sizeof(char));
+					websocket->queue[i].size = new_element.size;
+					strncpy(websocket->queue[i].data, new_element.data, new_element.size);
+				}
+			}
+
+			--websocket->queue_size;
+			free(websocket->queue[websocket->queue_size].data);
+
+			if (websocket->queue_size != 0) {
+				websocket->queue = allocate(websocket->queue, -1, websocket->queue_size, sizeof(struct WebsocketQueueElement));
 			}
 		}
 	}
@@ -344,10 +261,6 @@ struct Websocket create_websocket(const char *url, const struct WebsocketMethods
 
 	initialize_websocket(&websocket, url);
 
-	#if defined(__linux__)
-		create_epoll(&websocket);
-	#endif
-
 	return websocket;
 }
 
@@ -397,32 +310,31 @@ void connect_websocket(struct Websocket *websocket) {
 			SSL_connect(websocket->ssl);
 		}
 
-		#if defined(__linux__)
-			struct epoll_event events[16];
-			register_events(*websocket, EPOLLIN | EPOLLOUT);
-		#elif defined(_WIN32)
-			WSAEVENT event = WSACreateEvent();
-			register_events(*websocket, event, FD_READ | FD_WRITE);
-		#endif
-
 		do {
-			#if defined(_WIN32)
-				// const int result = WSAWaitForMultipleEvents(1, &event, FALSE, WSA_INFINITE, FALSE);
-				const int result = WaitForSingleObject(event, INFINITE);
+			FD_ZERO(&(websocket->readfds));
+			FD_ZERO(&(websocket->writefds));
+			FD_CLR(websocket->sockfd, &(websocket->readfds));
+			FD_CLR(websocket->sockfd, &(websocket->writefds));
+			FD_SET(websocket->sockfd, &(websocket->readfds));
+			FD_SET(websocket->sockfd, &(websocket->writefds));
 
-				if (result == WAIT_OBJECT_O) {
-					handle_events(websocket, event);
-				}
+			websocket->tv.tv_sec = 3;
+			websocket->tv.tv_usec = 0;
 
-				Sleep(3);
-			#elif defined(__linux__)
-				const int num_events = epoll_wait(websocket->epollfd, events, 16, -1);
+			#if defined(__linux__)
+				int result = select(websocket->sockfd + 1, &(websocket->readfds), &(websocket->writefds), NULL, &(websocket->tv));
+			#elif defined(_WIN32)
+				int result = select(0, &(websocket->readfds), &(websocket->writefds), NULL, &(websocket->tv));
+			#endif
 
-				if (num_events != 0) {
-					handle_events(websocket, events, num_events);
-				}
+			if (result != -1) {
+				handle_events(websocket);
+			}
 
+			#if defined(__linux__)
 				usleep(3000);
+			#elif defined(_WIN32)
+				Sleep(3);
 			#endif
 		} while (websocket->connected && !websocket->closed);
 	} else {
@@ -432,18 +344,13 @@ void connect_websocket(struct Websocket *websocket) {
 
 void close_websocket(struct Websocket *websocket, const short code, const char *reason) {
 	if (websocket->connected && !websocket->closed) {
-		#if defined(_WIN32)
-			unregister_events(*websocket);
-		#elif defined(__linux__)
-			unregister_events(*websocket, EPOLLIN | EPOLLOUT);
-		#endif
+		FD_ZERO(&(websocket->readfds));
+		FD_ZERO(&(websocket->writefds));
+		FD_CLR(websocket->sockfd, &(websocket->readfds));
+		FD_CLR(websocket->sockfd, &(websocket->writefds));
 
 		websocket->connected = false;
 		websocket->closed = true;
-
-		#if defined(__linux__)
-			close(websocket->epollfd);
-		#endif
 
 		close_socket(websocket->sockfd, websocket->ssl);
 	}

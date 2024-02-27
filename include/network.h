@@ -3,6 +3,9 @@
 #if defined(_WIN32)
 	#include <winsock2.h>
 	#include <windows.h>
+#elif defined(__linux__)
+	#include <sys/select.h>
+	#include <sys/time.h>
 #endif
 
 #include <openssl/ssl.h>
@@ -122,7 +125,8 @@
 			int sockfd;
 		#endif
 
-		int epollfd;
+		fd_set readfds, writefds;
+		struct timeval tv;
 		SSL *ssl;
 		struct URL url;
 		struct WebsocketMethods methods;
