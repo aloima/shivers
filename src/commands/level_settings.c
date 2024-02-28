@@ -72,13 +72,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				char *sc_argument_name = sc_argument.name;
 
 				if (sc_arguments_size == 1) {
-					sprintf(response, "`%s` setting is set.", sc_argument_name);
+					sprintf(response, "`%.8s` setting is set.", sc_argument_name);
 				} else if (i == last_index) {
-					sprintf(response, "%s and `%s` settings are set.", response, sc_argument_name);
+					sprintf(response, "%.64s and `%.8s` settings are set.", response, sc_argument_name);
 				} else if (i == 0) {
-					sprintf(response, "`%s`", sc_argument_name);
+					sprintf(response, "`%.8s`", sc_argument_name);
 				} else {
-					sprintf(response, "%s, `%s`", response, sc_argument_name);
+					sprintf(response, "%.64s, `%.8s`", response, sc_argument_name);
 				}
 
 				if (strsame(sc_argument_name, "factor")) {

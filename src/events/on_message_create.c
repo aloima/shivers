@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <shivers.h>
 #include <database.h>
 #include <utils.h>
@@ -36,6 +38,18 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 
 				if (database_has(channel_key) && database_has(message_key)) {
 					char *level_message = database_get(message_key).string;
+					char *level_message_dup = allocate(NULL, -1, strlen(level_message) + 1, sizeof(char));
+					strcpy(level_message_dup, level_message);
+
+					char *username = json_get_val(message, "author.username").value.string;
+					char mention[23], old_level[4], new_level[4];
+					sprintf(mention, "<@%s>", user_id);
+					sprintf(old_level, "%.0f", level - 1.0);
+					sprintf(new_level, "%.0f", level);
+					strreplace(&level_message_dup, "{name}", username);
+					strreplace(&level_message_dup, "{user}", mention);
+					strreplace(&level_message_dup, "{old}", old_level);
+					strreplace(&level_message_dup, "{level}", new_level);
 
 					const struct Message message = {
 						.target_type = TARGET_CHANNEL,
@@ -43,11 +57,12 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 							.channel_id = database_get(channel_key).string
 						},
 						.payload = {
-							.content = level_message
+							.content = level_message_dup
 						}
 					};
 
 					const unsigned short status = send_message(client, message);
+					free(level_message_dup);
 
 					switch (status) {
 						case 404:
