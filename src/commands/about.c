@@ -94,11 +94,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char memory_usage[11];
 
 	#if defined(_WIN32)
-		HINSTANCE hProcHandle = GetModuleHandle(NULL);
-		PPROCESS_MEMORY_COUNTERS memory = {0};
-		GetProcessMemoryInfo(hProcHandle, memory, sizeof(memory));
+		PROCESS_MEMORY_COUNTERS memory = {0};
+		GetProcessMemoryInfo(GetCurrentProcess(), &memory, sizeof(memory));
 
-		sprintf(memory_usage, "%.2f MB", memory->WorkingSetSize / 1024.0 / 1024.0);
+		sprintf(memory_usage, "%.2f MB", memory.WorkingSetSize / 1024.0 / 1024.0);
 	#elif defined(__linux__)
 		FILE *statm = fopen("/proc/self/statm", "r");
 		unsigned long rss, vram;

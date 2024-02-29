@@ -1,6 +1,6 @@
 ifeq ($(OS),Windows_NT)
 	CC := gcc
-	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -lws2_32 -lwsock32 -I/ucrt64/include/freetype2/
+	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -lws2_32 -lwsock32 -lpsapi -I/ucrt64/include/freetype2/
 else
 	CC := clang
 	LIBRARIES := -lm -lssl -lcrypto -lpthread -lz -lfreetype -I/usr/include/freetype2/
