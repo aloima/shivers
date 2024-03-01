@@ -8,7 +8,7 @@
 
 	struct Cooldown {
 		char *user_id;
-		unsigned long timestamp;
+		unsigned long long timestamp;
 	};
 
 	struct CommandArgument {

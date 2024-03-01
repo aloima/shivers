@@ -22,7 +22,7 @@
 #define SECONDS_IN_MINUTE (60)
 
 static void set_uptime_text(const struct Client client, char uptime_text[]) {
-	long seconds = ((get_timestamp(NULL) - client.ready_at) / 1000);
+	unsigned long long seconds = ((get_timestamp() - client.ready_at) / 1000);
 	const char years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
 	seconds -= (years * SECONDS_IN_YEAR);
 	const char months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
@@ -70,7 +70,7 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	if (seconds != 0) {
 		++uptime_element_count;
 		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%ld secs", seconds);
+		sprintf(uptime[uptime_element_count - 1], "%llu secs", seconds);
 	}
 
 	struct Join uptime_joins[uptime_element_count];

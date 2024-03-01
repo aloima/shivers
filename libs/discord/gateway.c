@@ -24,9 +24,9 @@ static bool handled_ready_guilds = false;
 
 static struct Client client = {0};
 
-static unsigned long previous_heartbeat_sent_at = 0;
-static unsigned long heartbeat_sent_at = 0;
-static unsigned long heartbeat_received_at = 0;
+static unsigned long long previous_heartbeat_sent_at = 0;
+static unsigned long long heartbeat_sent_at = 0;
+static unsigned long long heartbeat_received_at = 0;
 
 static void handle_exit(int sig) {
 	close_websocket(&websocket, -1, NULL);
@@ -55,7 +55,7 @@ static void send_heartbeat() {
 		"}", last_sequence);
 	}
 
-	heartbeat_sent_at = get_timestamp(NULL);
+	heartbeat_sent_at = get_timestamp();
 	send_websocket_message(&websocket, heartbeat_message);
 }
 
@@ -195,7 +195,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				struct Response response = api_request(token, "/users/@me", "GET", NULL, NULL);
 				client.user = json_parse((const char *) response.data);
 				client.token = token;
-				client.ready_at = get_timestamp(NULL);
+				client.ready_at = get_timestamp();
 
 				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
@@ -322,7 +322,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 		case 11: {
 			previous_heartbeat_sent_at = heartbeat_sent_at;
-			heartbeat_received_at = get_timestamp(NULL);
+			heartbeat_received_at = get_timestamp();
 			break;
 		}
 	}

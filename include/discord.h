@@ -25,7 +25,7 @@
 
 	struct Client {
 		jsonelement_t *user;
-		unsigned long ready_at;
+		unsigned long long ready_at;
 		char *token;
 	};
 

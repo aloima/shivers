@@ -40,7 +40,7 @@
 
 	long char_at(const char *data, const char ch);
 
-	unsigned long get_timestamp(const struct timeval *val);
+	unsigned long long get_timestamp();
 
 	void throw(const char *format, ...);
 

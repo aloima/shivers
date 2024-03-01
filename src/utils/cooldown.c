@@ -17,8 +17,8 @@ void free_cooldowns() {
 }
 
 void run_with_cooldown(const char *user_id, void (*execute)(const struct Client client, const struct InteractionCommand command), const struct Client client, const struct InteractionCommand command) {
-	const unsigned long target = (get_cooldown(user_id).timestamp + 3000);
-	const unsigned long current = get_timestamp(NULL);
+	const unsigned long long target = (get_cooldown(user_id).timestamp + 3000);
+	const unsigned long long current = get_timestamp();
 
 	if (target > current) {
 		char warning[51];
@@ -51,7 +51,7 @@ void add_cooldown(const char *user_id) {
 	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 
 	const struct Cooldown cooldown = {
-		.timestamp = get_timestamp(NULL),
+		.timestamp = get_timestamp(),
 		.user_id = allocate(NULL, -1, strlen(user_id) + 1, sizeof(char))
 	};
 
