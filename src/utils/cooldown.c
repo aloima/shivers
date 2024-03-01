@@ -22,7 +22,7 @@ void run_with_cooldown(const char *user_id, void (*execute)(const struct Client 
 
 	if (target > current) {
 		char warning[51];
-		sprintf(warning, "You need to wait `%.2Lf seconds` to use a command.", ((long double) target - (long double) current) / 1000.0);
+		sprintf(warning, "You need to wait `%.2f seconds` to use a command.", (target - current) / 1000.0);
 
 		struct Message message = {
 			.target_type = TARGET_INTERACTION_COMMAND,
