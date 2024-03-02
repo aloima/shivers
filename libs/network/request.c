@@ -256,7 +256,7 @@ struct Response request(struct RequestConfig config) {
 
 		const unsigned long status_message_length = calculate_join((struct Join *) status_splitter.data + 2, status_splitter.size - 2, " ");
 
-		response.status.code = atoi(status_splitter.data[1].data);
+		response.status.code = atoi_s(status_splitter.data[1].data, status_splitter.data[1].length);
 		response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
 		join((struct Join *) status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 
@@ -309,7 +309,7 @@ struct Response request(struct RequestConfig config) {
 
 			response.data[response.data_size] = 0;
 		} else if (response.status.code != 204) {
-			response.data_size = atoi(get_header(response.headers, response.header_size, "content-length").value);
+			response.data_size = atoi_s(get_header(response.headers, response.header_size, "content-length").value, -1);
 			response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
 
 			join((struct Join *) line_splitter.data + i + 1, (char *) response.data, line_splitter.size - i - 1, "\r\n");

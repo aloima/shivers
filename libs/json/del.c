@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -14,7 +13,7 @@ void json_del_val(jsonelement_t *element, const char *search) {
 
 	for (unsigned int ki = 0; ki < splitter_size; ++ki) {
 		if (value->type == JSON_ARRAY) {
-			int index = atoi(splitter.data[ki].data);
+			int index = atoi_s(splitter.data[ki].data, splitter.data[ki].length);
 
 			if (value->size > index) {
 				value = ((jsonelement_t **) value->value)[index];

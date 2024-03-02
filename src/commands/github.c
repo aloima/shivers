@@ -72,7 +72,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			memcpy(month_string, joined_at_string + 5, 2);
 			month_string[2] = 0;
 
-			sprintf(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi(month_string) - 1], joined_at_string);
+			sprintf(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi_s(month_string, -1) - 1], joined_at_string);
 
 			char name[128];
 			sprintf(name, "@%s", login_data.value.string);

@@ -16,6 +16,7 @@
 #include <openssl/err.h>
 
 #include <network.h>
+#include <utils.h>
 
 struct URL parse_url(const char *data) {
 	struct URL url = {0};
@@ -35,7 +36,7 @@ struct URL parse_url(const char *data) {
 	strcpy(url.hostname, hostname_splitter.data[0].data);
 
 	if (hostname_splitter.size == 2) {
-		url.port = atoi(hostname_splitter.data[1].data);
+		url.port = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
 	} else {
 		if (strsame(url.protocol, "https") || strsame(url.protocol, "wss")) {
 			url.port = 443;

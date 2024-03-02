@@ -5,6 +5,7 @@
 
 #include <discord.h>
 #include <network.h>
+#include <utils.h>
 #include <json.h>
 
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
@@ -82,9 +83,9 @@ void get_avatar_url(char *url, const char *token, const char *user_id, const cha
 		unsigned char index;
 
 		if (discriminator && discriminator[1] != 0) {
-			index = (atoi(discriminator) % 5);
+			index = (atoi_s(discriminator, 4) % 5);
 		} else {
-			index = ((atoi(user_id) >> 22) % 6);
+			index = ((atoi_s(user_id, -1) >> 22) % 6);
 		}
 
 		sprintf(url, DEFAULT_AVATAR_URL "?size=%d", index, size);

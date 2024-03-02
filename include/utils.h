@@ -36,6 +36,7 @@
 	const char *ltrim(const char *src);
 
 	unsigned long ahtoi(const char *data);
+	int atoi_s(const char *str, long long length);
 	char *base64_encode(const char *data, const unsigned long data_length);
 
 	long char_at(const char *data, const char ch);
