@@ -116,7 +116,7 @@
 		unsigned char target_type;
 	};
 
-	void connect_gateway(const char *token);
+	void connect_gateway(const char *bot_token, const unsigned int bot_intents);
 	int get_latency();
 	void set_presence(const char *name, const char type, const char *status);
 
@@ -126,7 +126,6 @@
 
 	struct Cache *get_guilds_cache();
 
-	unsigned int get_all_intents();
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
 	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
 

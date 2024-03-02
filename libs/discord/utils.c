@@ -7,16 +7,6 @@
 #include <network.h>
 #include <json.h>
 
-unsigned int get_all_intents() {
-	unsigned int result = 0;
-
-	for (unsigned char i = 0; i <= 21; ++i) {
-		result |= (1 << i);
-	}
-
-	return result;
-}
-
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
 	char url[1024];
 	sprintf(url, "https://discord.com/api/v10%s", path);

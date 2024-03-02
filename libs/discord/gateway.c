@@ -20,6 +20,7 @@ static bool heartbeat_waiting = false;
 
 static char token[96];
 static unsigned long ready_guild_size = 0;
+static unsigned int intents;
 static bool handled_ready_guilds = false;
 
 static struct Client client = {0};
@@ -85,7 +86,7 @@ static void send_identify() {
 				"\"device\":\"shivers\""
 			"}"
 		"}"
-	"}", token, get_all_intents());
+	"}", token, intents);
 
 	send_websocket_message(&websocket, identify_message);
 }
@@ -343,8 +344,9 @@ static void onclose(const short code, const char *reason) {
 	clear_cache(get_guilds_cache());
 }
 
-void connect_gateway(const char *bot_token) {
+void connect_gateway(const char *bot_token, const unsigned int bot_intents) {
 	strcpy(token, bot_token);
+	intents = bot_intents;
 
 	websocket = create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (struct WebsocketMethods) {
 		.onstart = onstart,
