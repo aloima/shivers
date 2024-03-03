@@ -49,17 +49,10 @@ struct URL parse_url(const char *data) {
 		url.path = allocate(NULL, 0, 2, sizeof(char));
 		url.path[0] = '/';
 	} else {
-		struct Join path_joins[splitter.size - 3];
-
-		for (unsigned long i = 3; i < splitter.size; ++i) {
-			path_joins[i - 3].data = splitter.data[i].data;
-			path_joins[i - 3].length = splitter.data[i].length;
-		}
-
-		const unsigned long join_length = calculate_join(path_joins, splitter.size - 3, "/");
+		const unsigned long join_length = calculate_join((struct Join *) (splitter.data + 3), splitter.size - 3, "/");
 		url.path = allocate(NULL, 0, join_length + 2, sizeof(char));
 		url.path[0] = '/';
-		join(path_joins, url.path + 1, splitter.size - 3, "/");
+		join((struct Join *) (splitter.data + 3), url.path + 1, splitter.size - 3, "/");
 	}
 
 	split_free(splitter);

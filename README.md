@@ -16,7 +16,7 @@ Shivers is a Discord bot made for hobby.
 + zlib and its headers for MSYS2
 + freetype and its headers for MSYS2
 
-> Tested for MSYS2 UCRT64 environment, so Makefile set for this environment, if your envionment is different, change it.
+> Tested for MSYS2 UCRT64 environment, so Makefile is set for this environment, if your envionment is different, change it.
 
 ## Building
 ```bash

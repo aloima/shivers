@@ -116,15 +116,9 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					set_value(element, value, type);
 				} else {
 					char new_key[key_length - skey_length + 1];
-					struct Join new_key_joins[splitter.size - 1];
-
-					for (unsigned long n = 1; n < splitter.size; ++n) {
-						new_key_joins[n - 1].data = splitter.data[n].data;
-						new_key_joins[n - 1].length = splitter.data[n].length;
-					}
 
 					element = ((jsonelement_t **) element->value)[iskey];
-					join(new_key_joins, new_key, splitter.size - 1, ".");
+					join((struct Join *) (splitter.data + 1), new_key, splitter.size - 1, ".");
 
 					json_set_val(element, new_key, value, type);
 				}
@@ -167,14 +161,8 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					set_value(element, value, type);
 				} else {
 					char new_key[key_length - skey_length + 1];
-					struct Join new_key_joins[splitter.size - 1];
 
-					for (unsigned long n = 1; n < splitter.size; ++n) {
-						new_key_joins[n - 1].data = splitter.data[n].data;
-						new_key_joins[n - 1].length = splitter.data[n].length;
-					}
-
-					join(new_key_joins, new_key, splitter.size - 1, ".");
+					join((struct Join *) (splitter.data + 1), new_key, splitter.size - 1, ".");
 					json_set_val(element, new_key, value, type);
 					i = splitter.size;
 				}
