@@ -60,7 +60,7 @@ void json_del_val(jsonelement_t *element, const char *search) {
 				for (unsigned int j = i; j < replacingBound; ++j) {
 					jsonelement_t *current = ((jsonelement_t **) parent->value)[j];
 					json_free(current, false);
-					((jsonelement_t **) parent->value)[j] = clone_element(((jsonelement_t **) parent->value)[j + 1]);
+					((jsonelement_t **) parent->value)[j] = clone_json_element(((jsonelement_t **) parent->value)[j + 1]);
 				}
 
 				json_free(((jsonelement_t **) parent->value)[parent->size], false);

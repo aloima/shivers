@@ -12,7 +12,7 @@ jsonelement_t *create_empty_json_element(bool is_array) {
 	return element;
 }
 
-jsonelement_t *clone_element(jsonelement_t *element) {
+jsonelement_t *clone_json_element(jsonelement_t *element) {
 	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 	result->type = element->type;
 
@@ -26,7 +26,7 @@ jsonelement_t *clone_element(jsonelement_t *element) {
 		result->value = allocate(NULL, -1, element->size, sizeof(jsonelement_t));
 
 		for (unsigned int i = 0; i < size; ++i) {
-			((jsonelement_t **) result->value)[i] = clone_element(((jsonelement_t **) element->value)[i]);
+			((jsonelement_t **) result->value)[i] = clone_json_element(((jsonelement_t **) element->value)[i]);
 		}
 	} else {
 		switch (result->type) {
