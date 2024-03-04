@@ -25,9 +25,7 @@ static bool handled_ready_guilds = false;
 
 static struct Client client = {0};
 
-static unsigned long long previous_heartbeat_sent_at = 0;
-static unsigned long long heartbeat_sent_at = 0;
-static unsigned long long heartbeat_received_at = 0;
+static unsigned long long previous_heartbeat_sent_at = 0, heartbeat_sent_at = 0, heartbeat_received_at = 0;
 
 static void handle_exit(int sig) {
 	close_websocket(&websocket, -1, NULL);
@@ -193,14 +191,12 @@ static void onmessage(const struct WebsocketFrame frame) {
 			last_sequence = json_get_val(data, "s").value.number;
 
 			if (strsame(event_name, "READY")) {
-				struct Response response = api_request(token, "/users/@me", "GET", NULL, NULL);
-				client.user = json_parse((const char *) response.data);
+				client.user = clone_json_element(json_get_val(data, "d.user").element);
 				client.token = token;
 				client.ready_at = get_timestamp();
 
 				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
-				response_free(&response);
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
 				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").value.string);
