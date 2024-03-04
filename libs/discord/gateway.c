@@ -4,7 +4,12 @@
 #include <signal.h>
 
 #include <pthread.h>
-#include <unistd.h>
+
+#if defined(_WIN32)
+	#include <windows.h>
+#elif defined(__linux__)
+	#include <unistd.h>
+#endif
 
 #include <shivers.h>
 #include <discord.h>
@@ -61,7 +66,13 @@ static void send_heartbeat() {
 static void *start_heartbeat_thread() {
 	do {
 		heartbeat_waiting = true;
-		usleep(heartbeat_interval * 1000);
+
+		#if defined(__linux__)
+			usleep(heartbeat_interval * 1000);
+		#elif defined(_WIN32)
+			Sleep(heartbeat_interval);
+		#endif
+
 		send_heartbeat();
 		heartbeat_waiting = false;
 	} while (websocket.connected && !websocket.closed);

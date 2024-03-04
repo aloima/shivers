@@ -126,7 +126,7 @@ struct Header get_header(struct Header *headers, const unsigned long header_size
 
 #if defined(_WIN32)
 unsigned long s_read(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size) {
-#elif defined(__linux)
+#elif defined(__linux__)
 unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
 #endif
 
