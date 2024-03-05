@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 #if defined(_WIN32)
+	#include <winsock2.h>
 	#include <windows.h>
 #elif defined(__linux__)
 	#include <unistd.h>
@@ -42,7 +43,13 @@ static void handle_exit(int sig) {
 	}
 
 	pthread_cancel(heartbeat_thread);
-	usleep(250000);
+
+	#if defined(__linux__)
+		usleep(250000);
+	#elif defined(_WIN32)
+		Sleep(250);
+	#endif
+
 	exit(EXIT_SUCCESS);
 }
 
