@@ -33,7 +33,7 @@ int main(void) {
 
 		fgets(token, 96, token_file);
 		fclose(token_file);
-		connect_gateway(token, ((1 << 0) | (1 << 1) | (1 << 9)));
+		connect_gateway(token, "wss://gateway.discord.gg", ((1 << 0) | (1 << 1) | (1 << 9)));
 
 		#if defined(_WIN32)
 			WSACleanup();

@@ -13,8 +13,9 @@
 
 #include <shivers.h>
 #include <discord.h>
-#include <json.h>
 #include <network.h>
+#include <database.h>
+#include <json.h>
 
 static struct Websocket websocket = {0};
 
@@ -23,9 +24,10 @@ static pthread_t heartbeat_thread;
 static int last_sequence = -1;
 static bool heartbeat_waiting = false;
 
+static char session_id[48], resume_gateway_url[48];
+
 static char token[96];
-static unsigned long ready_guild_size = 0;
-static unsigned int intents;
+static unsigned long long ready_guild_size = 0, intents;
 static bool handled_ready_guilds = false;
 
 static struct Client client = {0};
@@ -88,7 +90,7 @@ static void send_identify() {
 		"\"op\":2,"
 		"\"d\":{"
 			"\"token\":\"%s\","
-			"\"intents\":%d,"
+			"\"intents\":%lld,"
 			"\"properties\":{"
 				"\"os\":\"linux\","
 				"\"browser\":\"shivers\","
@@ -98,6 +100,21 @@ static void send_identify() {
 	"}", token, intents);
 
 	send_websocket_message(&websocket, identify_message);
+}
+
+static void send_resume() {
+	char resume_message[512];
+
+	sprintf(resume_message, "{"
+		"\"op\":6,"
+		"\"d\":{"
+			"\"token\":\"%s\","
+			"\"session_id\":%s,"
+			"\"seq\":%d"
+		"}"
+	"}", token, session_id, last_sequence);
+
+	send_websocket_message(&websocket, resume_message);
 }
 
 static void onstart() {
@@ -205,6 +222,9 @@ static void onmessage(const struct WebsocketFrame frame) {
 				client.user = clone_json_element(json_get_val(data, "d.user").element);
 				client.token = token;
 				client.ready_at = get_timestamp();
+
+				strcpy(resume_gateway_url, json_get_val(data, "d.resume_gateway_url").value.string);
+				strcpy(session_id, json_get_val(data, "d.session_id").value.string);
 
 				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
@@ -318,6 +338,18 @@ static void onmessage(const struct WebsocketFrame frame) {
 			break;
 		}
 
+		case 7: {
+			free_cooldowns();
+			database_save();
+			close_websocket(&websocket, -2, NULL);
+			websocket.connected = true;
+			websocket.closed = false;
+			connect_gateway(token, resume_gateway_url, intents);
+			send_resume();
+			puts("Received and handled RESUME opcode.");
+			break;
+		}
+
 		case 10: {
 			heartbeat_interval = json_get_val(data, "d.heartbeat_interval").value.number;
 			send_identify();
@@ -347,15 +379,20 @@ static void onclose(const short code, const char *reason) {
 		}
 	}
 
-	on_force_close();
-	clear_cache(get_guilds_cache());
+	if (code != -2) {
+		on_force_close();
+		clear_cache(get_guilds_cache());
+	}
 }
 
-void connect_gateway(const char *bot_token, const unsigned int bot_intents) {
+void connect_gateway(const char *bot_token, const char *url, const unsigned int bot_intents) {
 	strcpy(token, bot_token);
 	intents = bot_intents;
 
-	websocket = create_websocket("wss://gateway.discord.gg/?v=10&encoding=json", (struct WebsocketMethods) {
+	char connection_url[72];
+	sprintf(connection_url, "%s/?v=10&encoding=json", url);
+
+	websocket = create_websocket(connection_url, (struct WebsocketMethods) {
 		.onstart = onstart,
 		.onmessage = onmessage,
 		.onclose = onclose

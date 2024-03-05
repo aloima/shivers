@@ -116,7 +116,7 @@
 		unsigned char target_type;
 	};
 
-	void connect_gateway(const char *bot_token, const unsigned int bot_intents);
+	void connect_gateway(const char *bot_token, const char *url, const unsigned int bot_intents);
 	int get_latency();
 	void set_presence(const char *name, const char type, const char *status);
 
