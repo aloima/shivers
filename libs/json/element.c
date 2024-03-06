@@ -17,13 +17,14 @@ jsonelement_t *clone_json_element(jsonelement_t *element) {
 	result->type = element->type;
 
 	if (element->key != NULL) {
-		result->key = allocate(NULL, -1, strlen(element->key) + 1, sizeof(char));
-		strcpy(result->key, element->key);
+		const unsigned long long key_size = (strlen(element->key) + 1);
+		result->key = allocate(NULL, -1, key_size, sizeof(char));
+		memcpy(result->key, element->key, key_size);
 	}
 
 	if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {
 		const unsigned int size = result->size = element->size;
-		result->value = allocate(NULL, -1, element->size, sizeof(jsonelement_t));
+		result->value = allocate(NULL, -1, size, sizeof(jsonelement_t));
 
 		for (unsigned int i = 0; i < size; ++i) {
 			((jsonelement_t **) result->value)[i] = clone_json_element(((jsonelement_t **) element->value)[i]);
@@ -38,7 +39,7 @@ jsonelement_t *clone_json_element(jsonelement_t *element) {
 			case JSON_STRING:
 				result->size = element->size;
 				result->value = allocate(NULL, -1, result->size + 1, sizeof(char));
-				strcpy(result->value, element->value);
+				memcpy(result->value, element->value, result->size + 1);
 				break;
 
 			case JSON_BOOLEAN:

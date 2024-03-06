@@ -16,10 +16,10 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 	element->type = type;
 
 	if (type == JSON_STRING) {
-		const unsigned long value_length = strlen(value);
+		const unsigned long value_size = (strlen(value) + 1);
 
-		element->value = allocate(element->value, -1, value_length + 1, sizeof(char));
-		strcpy(element->value, value);
+		element->value = allocate(element->value, -1, value_size, sizeof(char));
+		memcpy(element->value, value, value_size);
 	} else if (type == JSON_BOOLEAN) {
 		element->value = allocate(element->value, -1, 1, sizeof(char));
 		((bool *) element->value)[0] = *((bool *) value);
@@ -82,6 +82,8 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 		const unsigned long key_length = strlen(key);
 		struct Split splitter = split(key, key_length, ".");
 
+		const unsigned long loop_index_bound = (splitter.size - 1);
+
 		for (unsigned long i = 0; i < splitter.size; ++i) {
 			const char *skey = splitter.data[i].data;
 			const unsigned long skey_length = splitter.data[i].length;
@@ -92,7 +94,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 			strncpy(bwp, skey + 1, bwp_length);
 			const int iskey = atoi_s(bwp, bwp_length);
 
-			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || strcmp(bwp, "0") == 0)) {
+			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || strsame(bwp, "0"))) {
 				if (element->type != JSON_ARRAY) {
 					if (element->type == JSON_OBJECT) {
 						for (unsigned long n = 0; n < element->size; ++n) {
@@ -111,7 +113,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					((jsonelement_t **) element->value)[iskey]->parent = element;
 				}
 
-				if (i == (splitter.size - 1)) {
+				if (i == loop_index_bound) {
 					element = ((jsonelement_t **) element->value)[iskey];
 					set_value(element, value, type);
 				} else {
@@ -157,7 +159,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 					element = ((jsonelement_t **) element->value)[at];
 				}
 
-				if (i == (splitter.size - 1)) {
+				if (i == loop_index_bound) {
 					set_value(element, value, type);
 				} else {
 					char new_key[key_length - skey_length + 1];

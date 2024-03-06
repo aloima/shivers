@@ -56,16 +56,26 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 		result.type = value->type;
 		result.element = value;
 
-		if (value->type == JSON_NUMBER) {
-			result.value.number = *((double *) value->value);
-		} else if (value->type == JSON_STRING) {
-			result.value.string = value->value;
-		} else if (value->type == JSON_BOOLEAN) {
-			result.value.boolean = *((bool *) value->value);
-		} else if (value->type == JSON_OBJECT) {
-			result.value.object = value;
-		} else if (value->type == JSON_ARRAY) {
-			result.value.array = value;
+		switch (value->type) {
+			case JSON_NUMBER:
+				result.value.number = *((double *) value->value);
+				break;
+
+			case JSON_STRING:
+				result.value.string = value->value;
+				break;
+
+			case JSON_BOOLEAN:
+				result.value.boolean = *((bool *) value->value);
+				break;
+
+			case JSON_OBJECT:
+				result.value.object = value;
+				break;
+
+			case JSON_ARRAY:
+				result.value.array = value;
+				break;
 		}
 	} else {
 		result = (jsonresult_t) {0};

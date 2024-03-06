@@ -8,19 +8,19 @@
 #include <json.h>
 #include <utils.h>
 
-static void parse_v(jsonelement_t *element, const char *text, const unsigned long length, unsigned long *i);
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long length, unsigned long *i);
+static void parse_v(jsonelement_t *element, const char *text, const unsigned long long length, unsigned long long *i);
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long long length, unsigned long long *i);
 
-static void parse_v(jsonelement_t *element, const char *text, const unsigned long length, unsigned long *i) {
+static void parse_v(jsonelement_t *element, const char *text, const unsigned long long length, unsigned long long *i) {
 	bool escaping = false;
 
 	while (*i < length) {
 		char ch = text[*i];
 
 		if (element->type == JSON_UNSPECIFIED) {
-			bool is_true = (strncmp(text + *i, "true", 4) == 0);
-			bool is_false = (strncmp(text + *i, "false", 5) == 0);
-			bool is_null = (strncmp(text + *i, "null", 4) == 0);
+			bool is_true = (memcmp(text + *i, "true", 4) == 0);
+			bool is_false = (memcmp(text + *i, "false", 5) == 0);
+			bool is_null = (memcmp(text + *i, "null", 4) == 0);
 
 			if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);
@@ -186,7 +186,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 	}
 }
 
-static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long length, unsigned long *i) {
+static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned long long length, unsigned long long *i) {
 	unsigned long key_length = 0;
 	bool parsing_key = false;
 	bool parsing_value = false;
@@ -244,8 +244,8 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 
 jsonelement_t *json_parse(const char *text) {
 	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
-	const unsigned long length = strlen(text);
-	unsigned long i = 0;
+	const unsigned long long length = strlen(text);
+	unsigned long long i = 0;
 
 	parse_v(result, text, length, &i);
 
