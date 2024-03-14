@@ -82,8 +82,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			struct Response image_response = request(config);
 			jsonelement_t *image_data = json_parse((const char *) image_response.data);
 			jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
-			const char *final_image_url = json_get_val(image_info, "imageinfo.0.url").value.string;
-			const unsigned long final_image_url_length = strlen(final_image_url);
+
+			jsonresult_t final_image = json_get_val(image_info, "imageinfo.0.url");
+			char *final_image_url = final_image.value.string;
+			const unsigned short final_image_url_length = final_image.element->size;
 
 			if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
 				char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
@@ -98,7 +100,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
 				embed.image_url = png_url;
 			} else {
-				embed.image_url = (char *) final_image_url;
+				embed.image_url = final_image_url;
 			}
 
 			add_embed_to_message_payload(embed, &(message.payload));
@@ -116,6 +118,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		free(encoded_page_url);
 	} else {
 		message.payload.content = "Not found.";
+		message.payload.ephemeral = true;
 		send_message(client, message);
 	}
 

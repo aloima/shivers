@@ -19,27 +19,6 @@
 #include <network.h>
 #include <utils.h>
 
-static void check_config(struct RequestConfig config) {
-	const char *allowed_methods[] = { "GET", "POST", "PUT", "DELETE", "PATCH" };
-	const unsigned long allowed_methods_length = (sizeof(allowed_methods) / sizeof(char *));
-	bool is_allowed_method = false;
-
-	if (config.method == NULL || config.url == NULL) {
-		throw("request(): url and method members are necessary");
-	}
-
-	for (unsigned char i = 0; i < allowed_methods_length; ++i) {
-		if (strsame(config.method, allowed_methods[i])) {
-			is_allowed_method = true;
-			break;
-		}
-	}
-
-	if (!is_allowed_method) {
-		throw("request(): %s is invalid method", config.method);
-	}
-}
-
 void response_free(struct Response *response) {
 	for (unsigned char i = 0; i < response->header_size; ++i) {
 		free(response->headers[i].name);
@@ -65,7 +44,9 @@ struct Response request(struct RequestConfig config) {
 	SSL *ssl = NULL;
 	SSL_CTX *ssl_ctx = NULL;
 
-	check_config(config);
+	if (config.url == NULL || config.method == NULL) {
+		throw("request(): url and method members are required");
+	}
 
 	char *encoded_url = percent_encode(config.url);
 	struct URL url = parse_url(encoded_url);
@@ -237,8 +218,8 @@ struct Response request(struct RequestConfig config) {
 
 		free(request_message);
 
-		unsigned long read_size = 0;
-		unsigned long response_message_length = 0;
+		unsigned short read_size = 0;
+		unsigned long long response_message_length = 0;
 
 		while ((read_size = s_read(ssl, sockfd, buffer, HTTP_BUFFER_SIZE)) > 0) {
 			if (errno != 0) {
@@ -289,7 +270,7 @@ struct Response request(struct RequestConfig config) {
 			++i;
 
 			while (i < line_splitter.size) {
-				unsigned long hex_length = ahtoi(line_splitter.data[i].data);
+				const unsigned long hex_length = ahtoi(line_splitter.data[i].data);
 				const unsigned long line_length = line_splitter.data[i + 1].length;
 
 				if (line_length != 0) {

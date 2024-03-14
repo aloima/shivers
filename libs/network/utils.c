@@ -209,46 +209,51 @@ char *percent_encode(const char *data) {
 	return result;
 }
 
-void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const unsigned long data_size, const char *filename) {
+void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const unsigned long long data_size, const char *filename) {
 	++formdata->field_size;
 	formdata->fields = allocate(formdata->fields, -1, formdata->field_size, sizeof(struct FormDataField));
 
-	char *field_name = allocate(NULL, -1, strlen(name) + 1, sizeof(char));
-	strcpy(field_name, name);
+	const unsigned int field_name_size = (strlen(name) + 1);
+	char *field_name = allocate(NULL, -1, field_name_size, sizeof(char));
+	memcpy(field_name, name, field_name_size);
 
-	char *field_data = allocate(NULL, -1, data_size + 1, sizeof(char));
-	memcpy(field_data, data, data_size);
+	const unsigned long long field_data_size = ((data_size == -1) ? (strlen(data) + 1) : data_size);
+	char *field_data = allocate(NULL, -1, field_data_size, sizeof(char));
+	memcpy(field_data, data, field_data_size);
 
 	char *field_filename = NULL;
 
 	if (filename) {
-		field_filename = allocate(NULL, -1, strlen(filename) + 1, sizeof(char));
-		strcpy(field_filename, filename);
+		const unsigned int filename_size = (strlen(filename) + 1);
+		field_filename = allocate(NULL, -1, filename_size, sizeof(char));
+		memcpy(field_filename, filename, filename_size);
 	}
 
 	formdata->fields[formdata->field_size - 1] = (struct FormDataField) {
 		.name = field_name,
 		.data = field_data,
-		.data_size = (data_size == -1 ? strlen(data) : data_size),
+		.data_size = field_data_size,
 		.filename = field_filename
 	};
 }
 
 void add_header_to_formdata_field(struct FormData *formdata, const char *field_name, const char *header_name, const char *header_value) {
-	unsigned long field_size = formdata->field_size;
+	const unsigned int field_size = formdata->field_size;
 
-	for (unsigned long i = 0; i < field_size; ++i) {
+	for (unsigned int i = 0; i < field_size; ++i) {
 		struct FormDataField *field = &(formdata->fields[i]);
 
 		if (strsame(field->name, field_name)) {
 			++field->header_size;
 			field->headers = allocate(field->headers, -1, field->header_size, sizeof(struct Header));
 
-			char *name = allocate(NULL, -1, strlen(header_name) + 1, sizeof(char));
-			strcpy(name, header_name);
+			const unsigned int header_name_size = (strlen(header_name) + 1);
+			char *name = allocate(NULL, -1, header_name_size, sizeof(char));
+			memcpy(name, header_name, header_name_size);
 
-			char *value = allocate(NULL, -1, strlen(header_value) + 1, sizeof(char));
-			strcpy(value, header_value);
+			const unsigned int header_value_size = (strlen(header_value) + 1);
+			char *value = allocate(NULL, -1, header_value_size, sizeof(char));
+			memcpy(value, header_value, header_value_size);
 
 			field->headers[field->header_size - 1] = (struct Header) {
 				.name = name,

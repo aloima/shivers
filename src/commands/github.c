@@ -31,7 +31,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	};
 
 	char url[256];
-	struct Response response = {0};
+	struct Response response;
 
 	const char *query = command.arguments[0].value.string;
 
@@ -43,6 +43,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		if (response.status.code == 404) {
 			message.payload.content = "Not found.";
+			message.payload.ephemeral = true;
 			send_message(client, message);
 		} else {
 			jsonelement_t *user = json_parse((const char *) response.data);
@@ -51,16 +52,16 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			const jsonresult_t bio = json_get_val(user, "bio");
 
 			char following[8];
-			sprintf(following, "%ld", (unsigned long) json_get_val(user, "following").value.number);
+			sprintf(following, "%u", (unsigned int) json_get_val(user, "following").value.number);
 
 			char followers[8];
-			sprintf(followers, "%ld", (unsigned long) json_get_val(user, "followers").value.number);
+			sprintf(followers, "%u", (unsigned int) json_get_val(user, "followers").value.number);
 
 			char repositories[6];
-			sprintf(repositories, "%ld", (unsigned long) json_get_val(user, "public_repos").value.number);
+			sprintf(repositories, "%u", (unsigned int) json_get_val(user, "public_repos").value.number);
 
 			char gists[6];
-			sprintf(gists, "%ld", (unsigned long) json_get_val(user, "public_gists").value.number);
+			sprintf(gists, "%u", (unsigned int) json_get_val(user, "public_gists").value.number);
 
 			char joined_at[18];
 			const char *joined_at_string = json_get_val(user, "created_at").value.string;
@@ -109,6 +110,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		if (response.status.code == 404) {
 			message.payload.content = "Not found.";
+			message.payload.ephemeral = true;
 			send_message(client, message);
 		} else {
 			jsonelement_t *repository = json_parse((const char *) response.data);

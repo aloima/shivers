@@ -39,7 +39,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			return;
 		}
 
-		strcpy(user_id, json_get_val(user, "id").value.string);
+		jsonresult_t user_id_result = json_get_val(user, "id");
+		memcpy(user_id, user_id_result.value.string, user_id_result.element->size);
+
 		strcpy(username, json_get_val(user, "username").value.string);
 		strcpy(discriminator, json_get_val(user, "discriminator").value.string);
 		jsonresult_t avatar_result = json_get_val(user, "avatar");

@@ -152,7 +152,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
 		json_set_val(payload, "attachments", attachments, JSON_ARRAY);
 
 		body = json_stringify(payload, 5);
-		const unsigned long body_length = strlen(body);
+		const unsigned long long body_length = strlen(body);
 
 		if (message.target_type == TARGET_INTERACTION_COMMAND) {
 			body = allocate(body, -1, body_length + 19, sizeof(char));
@@ -214,7 +214,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
 		throw("cannot send empty message");
 	}
 
-	unsigned short status = response.status.code;
+	const unsigned short status = response.status.code;
 
 	response_free(&response);
 	json_free(payload, true);
