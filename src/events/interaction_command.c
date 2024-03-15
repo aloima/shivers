@@ -1,4 +1,3 @@
-#include <string.h>
 #include <stdbool.h>
 
 #include <shivers.h>
@@ -24,7 +23,7 @@ void on_interaction_command(struct Client client, const struct InteractionComman
 	for (unsigned short i = 0; i < command_size; ++i) {
 		const struct Command command = commands[i];
 
-		if (strcmp(interaction_command.name, command.name) == 0) {
+		if (strsame(interaction_command.name, command.name)) {
 			if (!interaction_command.guild_id && command.guild_only) {
 				send_message(client, message);
 				break;

@@ -118,7 +118,7 @@
 
 	void connect_gateway(const char *bot_token, const char *url, const unsigned int bot_intents);
 	int get_latency();
-	void set_presence(const char *name, const char type, const char *status);
+	void set_presence(const char *name, const char *state, const char *details, const char type, const char *status);
 
 	void clear_cache(struct Cache *cache);
 	void add_to_cache(struct Cache *cache, const char *data);

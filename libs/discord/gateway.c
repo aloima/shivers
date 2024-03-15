@@ -416,22 +416,41 @@ int get_latency() {
 	}
 }
 
-void set_presence(const char *name, const char type, const char *status) {
+void set_presence(const char *name, const char *state, const char *details, const char type, const char *status) {
+	char activity[128];
+
+	if (state == NULL && details == NULL) {
+		sprintf(activity, "{"
+			"\"name\":\"%s\","
+			"\"type\":%d"
+		"}", name, type);
+	} else if (state && details == NULL) {
+		sprintf(activity, "{"
+			"\"name\":\"%s\","
+			"\"state\":\"%s\","
+			"\"type\":%d"
+		"}", name, state, type);
+	} else {
+		sprintf(activity, "{"
+			"\"name\":\"%s\","
+			"\"state\":\"%s\","
+			"\"details\":\"%s\","
+			"\"type\":%d"
+		"}", name, state, details, type);
+	}
+
 	char presence[256];
 	sprintf(presence, "{"
 		"\"op\":3,"
 		"\"d\":{"
 			"\"since\":null,"
 			"\"activities\":["
-				"{"
-					"\"name\":\"%s\","
-					"\"type\":%d"
-				"}"
+				"%s"
 			"],"
 			"\"status\":\"%s\","
 			"\"afk\":false"
 		"}"
-	"}", name, type, status);
+	"}", activity, status);
 
 	send_websocket_message(&websocket, presence);
 }
