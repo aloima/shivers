@@ -92,7 +92,7 @@ void setup_commands(const struct Client client) {
 	sprintf(path, "/applications/%s/commands", json_get_val(client.user, "id").value.string);
 	struct Response response = api_request(client.token, path, "PUT", body, NULL);
 
-	response_free(&response);
+	response_free(response);
 	free(body);
 }
 

@@ -19,15 +19,15 @@
 #include <network.h>
 #include <utils.h>
 
-void response_free(struct Response *response) {
-	for (unsigned char i = 0; i < response->header_size; ++i) {
-		free(response->headers[i].name);
-		free(response->headers[i].value);
+void response_free(struct Response response) {
+	for (unsigned char i = 0; i < response.header_size; ++i) {
+		free(response.headers[i].name);
+		free(response.headers[i].value);
 	}
 
-	free(response->headers);
-	free(response->data);
-	free(response->status.message);
+	free(response.headers);
+	free(response.data);
+	free(response.status.message);
 }
 
 struct Response request(struct RequestConfig config) {

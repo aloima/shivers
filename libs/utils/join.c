@@ -42,10 +42,3 @@ unsigned long join(const struct Join *value, char *source, unsigned short size, 
 
 	return source_length;
 }
-
-void create_join_elements_nz(struct Join *joins, const char **list, const unsigned int list_size) {
-	for (unsigned long i = 0; i < list_size; ++i) {
-		joins[i].data = (char *) list[i];
-		joins[i].length = ((list[i] == NULL) ? 0 : strlen(list[i]));
-	}
-}

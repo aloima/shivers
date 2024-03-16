@@ -34,51 +34,61 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	const char minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
 	seconds -= (minutes * SECONDS_IN_MINUTE);
 
-	char *uptime[6] = {0};
+	struct Join uptime[6];
 	unsigned char uptime_element_count = 0;
 
 	if (years != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, -1, 7, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%hi yrs", years);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[index].length = sprintf(uptime[index].data, "%hi yrs", years);
 	}
 
 	if (months != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%hi mths", months);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[index].length = sprintf(uptime[index].data, "%hi mths", months);
 	}
 
 	if (days != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%hi days", days);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[index].length = sprintf(uptime[index].data, "%hi days", days);
 	}
 
 	if (hours != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, -1, 7, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%hi hrs", hours);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[index].length = sprintf(uptime[index].data, "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, -1, 8, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%hi mins", minutes);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[index].length = sprintf(uptime[index].data, "%hi mins", minutes);
 	}
 
 	if (seconds != 0) {
 		++uptime_element_count;
-		uptime[uptime_element_count - 1] = allocate(NULL, 0, 8, sizeof(char));
-		sprintf(uptime[uptime_element_count - 1], "%llu secs", seconds);
+
+		const unsigned char index = (uptime_element_count - 1);
+		uptime[index].data = allocate(NULL, 0, 8, sizeof(char));
+		uptime[index].length =uptime[index].length =  sprintf(uptime[index].data, "%llu secs", seconds);
 	}
 
-	struct Join uptime_joins[uptime_element_count];
-	create_join_elements_nz(uptime_joins, (const char **) uptime, uptime_element_count);
-	join(uptime_joins, uptime_text, uptime_element_count, " ");
+	join(uptime, uptime_text, uptime_element_count, " ");
 
 	for (unsigned char i = 0; i < uptime_element_count; ++i) {
-		free(uptime[i]);
+		free(uptime[i].data);
 	}
 }
 

@@ -70,7 +70,7 @@
 	};
 
 	struct Response request(struct RequestConfig config);
-	void response_free(struct Response *response);
+	void response_free(struct Response response);
 
 	void throw_network(const char *value, bool tls);
 

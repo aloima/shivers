@@ -216,7 +216,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
 
 	const unsigned short status = response.status.code;
 
-	response_free(&response);
+	response_free(response);
 	json_free(payload, true);
 	free(body);
 

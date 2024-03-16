@@ -38,7 +38,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		jsonresult_t page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
 
 		if (!page_description.exist) {
-			response_free(&info_response);
+			response_free(info_response);
 
 			const char *page_id = page_info->key;
 			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
@@ -47,7 +47,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			struct Response redirect_response = request(config);
 			jsonelement_t *redirect_result = json_parse((const char *) redirect_response.data);
-			response_free(&redirect_response);
+			response_free(redirect_response);
 
 			page_name = json_get_val(redirect_result, "query.redirects.[0].to");
 			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
@@ -105,14 +105,14 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(client, message);
-			response_free(&image_response);
+			response_free(image_response);
 			json_free(image_data, false);
 		} else {
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(client, message);
 		}
 
-		response_free(&info_response);
+		response_free(info_response);
 		free_message_payload(message.payload);
 		json_free(info_data, false);
 		free(encoded_page_url);
@@ -122,7 +122,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		send_message(client, message);
 	}
 
-	response_free(&search_response);
+	response_free(search_response);
 	json_free(search_result, false);
 }
 

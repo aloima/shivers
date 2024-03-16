@@ -27,7 +27,6 @@
 
 	unsigned long join(const struct Join *value, char *source, unsigned short size, const char *separator);
 	unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator);
-	void create_join_elements_nz(struct Join *joins, const char **list, const unsigned int list_size);
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);

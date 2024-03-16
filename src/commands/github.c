@@ -149,7 +149,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		}
 	}
 
-	response_free(&response);
+	response_free(response);
 }
 
 static const struct CommandArgument args[] = {

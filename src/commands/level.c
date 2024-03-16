@@ -121,7 +121,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 	palette_to_rgb(&avatar_image);
 
-	response_free(&response);
+	response_free(response);
 
 	unsigned char *orig_data_of_avatar;
 	get_orig_data(avatar_image, &orig_data_of_avatar);

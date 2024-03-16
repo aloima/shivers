@@ -52,7 +52,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
 
 			json_free(user, false);
-			response_free(&response);
+			response_free(response);
 		} else {
 			jsonelement_t *user = command.arguments[0].value.user.user_data;
 			strcpy(user_id, json_get_val(user, "id").value.string);
