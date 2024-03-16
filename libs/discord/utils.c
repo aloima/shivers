@@ -57,7 +57,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 }
 
 bool check_snowflake(const char *snowflake) {
-	const unsigned long length = strlen(snowflake);
+	const unsigned char length = strlen(snowflake);
 
 	if (length != 18 && length != 19) {
 		return false;
@@ -75,7 +75,7 @@ bool check_snowflake(const char *snowflake) {
 	}
 }
 
-void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {
+void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {
 	if (hash && hash[0] != 0) {
 		const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
 		sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);

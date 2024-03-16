@@ -50,7 +50,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			strcpy(hash, avatar_result.value.string);
 		}
 
-		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+		get_avatar_url(avatar_url, user_id, discriminator, hash, true, 256);
 	} else {
 		strcpy(user_id, json_get_val(command.user, "id").value.string);
 		strcpy(username, json_get_val(command.user, "username").value.string);
@@ -61,7 +61,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			strcpy(hash, avatar_result.value.string);
 		}
 
-		get_avatar_url(avatar_url, client.token, user_id, discriminator, hash, true, 256);
+		get_avatar_url(avatar_url, user_id, discriminator, hash, true, 256);
 	}
 
 	char xp_key[50], level_key[53], factor_key[42];

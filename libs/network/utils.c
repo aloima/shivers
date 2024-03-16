@@ -29,11 +29,12 @@ struct URL parse_url(const char *data) {
 	struct Split hostname_splitter = split(splitter.data[2].data, splitter.data[2].length, ":");
 
 	const unsigned long protocol_length = splitter.data[0].length;
-	url.protocol = allocate(NULL, -1, protocol_length, sizeof(char));
-	strncpy(url.protocol, splitter.data[0].data, protocol_length - 1);
+	url.protocol = allocate(NULL, 0, protocol_length, sizeof(char));
+	memcpy(url.protocol, splitter.data[0].data, protocol_length - 1);
 
-	url.hostname = allocate(NULL, -1, hostname_splitter.data[0].length + 1, sizeof(char));
-	strcpy(url.hostname, hostname_splitter.data[0].data);
+	const unsigned int hostname_size = (hostname_splitter.data[0].length + 1);
+	url.hostname = allocate(NULL, -1, hostname_size, sizeof(char));
+	memcpy(url.hostname, hostname_splitter.data[0].data, hostname_size);
 
 	if (hostname_splitter.size == 2) {
 		url.port = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);

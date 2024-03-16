@@ -48,8 +48,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				strcpy(hash, avatar_result.value.string);
 			}
 
-			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
-			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
+			get_avatar_url(png_avatar_url, user_id, discriminator, hash, true, 1024);
+			get_avatar_url(gif_avatar_url, user_id, discriminator, hash, false, 1024);
 
 			json_free(user, false);
 			response_free(response);
@@ -64,8 +64,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				strcpy(hash, avatar_result.value.string);
 			}
 
-			get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
-			get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
+			get_avatar_url(png_avatar_url, user_id, discriminator, hash, true, 1024);
+			get_avatar_url(gif_avatar_url, user_id, discriminator, hash, false, 1024);
 		}
 	} else if (command.argument_size == 2) {
 		message.payload.content = "You cannot specify two arguments, please specify `id` or `member`.";
@@ -81,8 +81,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			strcpy(hash, avatar_result.value.string);
 		}
 
-		get_avatar_url(gif_avatar_url, client.token, user_id, discriminator, hash, false, 1024);
-		get_avatar_url(png_avatar_url, client.token, user_id, discriminator, hash, true, 1024);
+		get_avatar_url(gif_avatar_url, user_id, discriminator, hash, false, 1024);
+		get_avatar_url(png_avatar_url, user_id, discriminator, hash, true, 1024);
 	}
 
 	if (strstr(gif_avatar_url, ".gif") != NULL) {
@@ -95,8 +95,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				strcpy(png_avatar_urls[i], png_avatar_url);
 			} else {
 				const unsigned long size = pow(2, (8 + i));
-				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
-				get_avatar_url(gif_avatar_urls[i], client.token, user_id, discriminator, hash, false, size);
+				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
+				get_avatar_url(gif_avatar_urls[i], user_id, discriminator, hash, false, size);
 			}
 		}
 
@@ -117,7 +117,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		for (unsigned char i = 0; i < 5; ++i) {
 			if (i != 2) {
 				const unsigned long size = pow(2, (8 + i));
-				get_avatar_url(png_avatar_urls[i], client.token, user_id, discriminator, hash, true, size);
+				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
 			}
 		}
 

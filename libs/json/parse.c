@@ -18,9 +18,9 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 		char ch = text[*i];
 
 		if (element->type == JSON_UNSPECIFIED) {
-			bool is_true = (memcmp(text + *i, "true", 4) == 0);
-			bool is_false = (memcmp(text + *i, "false", 5) == 0);
-			bool is_null = (memcmp(text + *i, "null", 4) == 0);
+			const bool is_true = (memcmp(text + *i, "true", 4) == 0);
+			const bool is_false = (memcmp(text + *i, "false", 5) == 0);
+			const bool is_null = (memcmp(text + *i, "null", 4) == 0);
 
 			if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);

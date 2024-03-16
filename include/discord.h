@@ -127,7 +127,7 @@
 	struct Cache *get_guilds_cache();
 
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
-	void get_avatar_url(char *url, const char *token, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
+	void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
 
 	unsigned short send_message(const struct Client client, const struct Message message);
 	void free_message_payload(struct MessagePayload message_payload);
