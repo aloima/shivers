@@ -30,7 +30,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		.header_size = 1
 	};
 
-	char url[256];
+	char url[184];
 	struct Response response;
 
 	const char *query = command.arguments[0].value.string;
@@ -42,8 +42,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		response = request(config);
 
 		if (response.status.code == 404) {
-			message.payload.content = "Not found.";
-			message.payload.ephemeral = true;
+			message.payload = (struct MessagePayload) {
+				.content = "Not found.",
+				.ephemeral = true
+			};
+
 			send_message(client, message);
 		} else {
 			jsonelement_t *user = json_parse((const char *) response.data);
@@ -98,9 +101,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(client, message);
+
 			free_message_payload(message.payload);
-			free(embed.fields);
 			json_free(user, false);
+			free(embed.fields);
 		}
 	} else {
 		sprintf(url, "https://api.github.com/repos/%s", query);
@@ -109,8 +113,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		response = request(config);
 
 		if (response.status.code == 404) {
-			message.payload.content = "Not found.";
-			message.payload.ephemeral = true;
+			message.payload = (struct MessagePayload) {
+				.content = "Not found.",
+				.ephemeral = true
+			};
+
 			send_message(client, message);
 		} else {
 			jsonelement_t *repository = json_parse((const char *) response.data);
@@ -119,13 +126,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			jsonresult_t license = json_get_val(repository, "license");
 
 			char stars[8];
-			sprintf(stars, "%ld", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
+			sprintf(stars, "%lu", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
 
 			char watchers[8];
-			sprintf(watchers, "%ld", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
+			sprintf(watchers, "%lu", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
 
 			char forks[8];
-			sprintf(forks, "%ld", (unsigned long) json_get_val(repository, "forks_count").value.number);
+			sprintf(forks, "%lu", (unsigned long) json_get_val(repository, "forks_count").value.number);
 
 			add_field_to_embed(&embed, "Stars", stars, true);
 			add_field_to_embed(&embed, "Watchers", watchers, true);
@@ -143,9 +150,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(client, message);
+
 			free_message_payload(message.payload);
-			free(embed.fields);
 			json_free(repository, false);
+			free(embed.fields);
 		}
 	}
 

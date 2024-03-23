@@ -1,5 +1,5 @@
 # shivers
-Shivers is a Discord bot made for hobby.
+Shivers is a Discord bot made for hobby and educational purposes.
 
 ## Requirements
 

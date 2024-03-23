@@ -26,39 +26,55 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const bool is_bot = (bot_result.exist ? bot_result.value.boolean : false);
 
 		if (!is_in_guild) {
-			message.payload.content = "Since this user is not in this server, they cannot have level or experience.";
-			message.payload.ephemeral = true;
+			message.payload = (struct MessagePayload) {
+				.content = "Since the user is not in the server, they cannot have level or experience.",
+				.ephemeral = true
+			};
+
 			send_message(client, message);
 			return;
 		}
 
 		if (is_bot) {
-			message.payload.content = "Since this user is bot, it cannot have level or experience.";
-			message.payload.ephemeral = true;
+			message.payload = (struct MessagePayload) {
+				.content = "Since the user is a bot, it cannot have level or experience.",
+				.ephemeral = true
+			};
+
 			send_message(client, message);
 			return;
 		}
 
-		jsonresult_t user_id_result = json_get_val(user, "id");
-		memcpy(user_id, user_id_result.value.string, user_id_result.element->size);
+		jsonresult_t json_id = json_get_val(user, "id");
+		memcpy(user_id, json_id.value.string, (json_id.element->size + 1));
 
-		strcpy(username, json_get_val(user, "username").value.string);
-		strcpy(discriminator, json_get_val(user, "discriminator").value.string);
-		jsonresult_t avatar_result = json_get_val(user, "avatar");
+		const jsonresult_t json_username = json_get_val(user, "username");
+		memcpy(username, json_username.value.string, (json_username.element->size + 1));
 
-		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-			strcpy(hash, avatar_result.value.string);
+		const jsonresult_t json_discriminator = json_get_val(user, "discriminator");
+		memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
+
+		jsonresult_t json_avatar = json_get_val(user, "avatar");
+
+		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 
 		get_avatar_url(avatar_url, user_id, discriminator, hash, true, 256);
 	} else {
-		strcpy(user_id, json_get_val(command.user, "id").value.string);
-		strcpy(username, json_get_val(command.user, "username").value.string);
-		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
-		jsonresult_t avatar_result = json_get_val(command.user, "avatar");
+		const jsonresult_t json_user_id = json_get_val(command.user, "id");
+		memcpy(user_id, json_user_id.value.string, (json_user_id.element->size + 1));
 
-		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-			strcpy(hash, avatar_result.value.string);
+		const jsonresult_t json_username = json_get_val(command.user, "username");
+		memcpy(username, json_username.value.string, (json_username.element->size + 1));
+
+		const jsonresult_t json_discriminator = json_get_val(command.user, "discriminator");
+		memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
+
+		jsonresult_t json_avatar = json_get_val(command.user, "avatar");
+
+		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 
 		get_avatar_url(avatar_url, user_id, discriminator, hash, true, 256);
@@ -125,21 +141,21 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	unsigned char *orig_data_of_avatar;
 	get_orig_data(avatar_image, &orig_data_of_avatar);
+	png_free(avatar_image);
 
 	struct PNG avatar_image_scaled = scale(avatar_image, orig_data_of_avatar, 384, 384);
 	draw_image(&background_image, avatar_image_scaled, 64, 64, true);
+	png_free(avatar_image_scaled);
+	free(orig_data_of_avatar);
 
 	struct OutputPNG opng = out_png(background_image);
+	png_free(background_image);
 
 	add_file_to_message_payload(&(message.payload), "level.png", (const char *) opng.data, opng.data_size, "image/png");
+	opng_free(opng);
 
 	send_message(client, message);
 	free_message_payload(message.payload);
-	png_free(avatar_image);
-	free(orig_data_of_avatar);
-	png_free(avatar_image_scaled);
-	png_free(background_image);
-	opng_free(opng);
 }
 
 static const struct CommandArgument args[] = {

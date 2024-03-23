@@ -117,8 +117,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		json_free(info_data, false);
 		free(encoded_page_url);
 	} else {
-		message.payload.content = "Not found.";
-		message.payload.ephemeral = true;
+		message.payload = (struct MessagePayload) {
+			.content = "Not found.",
+			.ephemeral = true
+		};
+
 		send_message(client, message);
 	}
 

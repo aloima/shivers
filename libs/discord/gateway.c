@@ -408,7 +408,7 @@ void connect_gateway(const char *bot_token, const char *url, const unsigned int 
 	connect_websocket(&websocket);
 }
 
-int get_latency() {
+unsigned int get_latency() {
 	if (heartbeat_sent_at > heartbeat_received_at) {
 		return (heartbeat_received_at - previous_heartbeat_sent_at);
 	} else {

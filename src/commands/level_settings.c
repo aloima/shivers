@@ -112,7 +112,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		add_field_to_embed(&embed, "channel", "This setting is used to determine "
 		"channel to send message when a user leveled up.", false);
 
-		add_field_to_embed(&embed, "message", "This setting is used to message will be sent when a user level up. "
+		add_field_to_embed(&embed, "message", "This setting is used to determine message will be sent when a user level up. "
 		"This setting has some parameters:\\n"
 		"{name} - Username of user who leveled up\\n"
 		"{user} - Mention of user who leveled up\\n"
@@ -120,10 +120,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		"{old} - Old level of user who leveled up", false);
 
 		add_embed_to_message_payload(embed, &(message.payload));
-		send_message(client, message);
-
-		free_message_payload(message.payload);
 		free(embed.fields);
+
+		send_message(client, message);
+		free_message_payload(message.payload);
 	}
 }
 

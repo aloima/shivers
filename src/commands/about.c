@@ -124,7 +124,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	sprintf(guilds, "%u", get_guilds_cache()->size);
 
 	char latency[7];
-	sprintf(latency, "%dms", get_latency());
+	sprintf(latency, "%ums", get_latency());
 
 	char add[112];
 	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
@@ -132,7 +132,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	embed.color = COLOR;
 	embed.description = add;
 
-	add_field_to_embed(&embed, "Developer", "<@840217542400409630>", true);
+	add_field_to_embed(&embed, "Maintainer", "<@840217542400409630>", true);
 	add_field_to_embed(&embed, "Memory", memory_usage, true);
 	add_field_to_embed(&embed, "Servers", guilds, true);
 	add_field_to_embed(&embed, "Latency", latency, true);
@@ -140,13 +140,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	add_field_to_embed(&embed, "Github", "[aloima/shivers](https://github.com/aloima/shivers)", true);
 
 	#if defined(__clang__)
-		char footer[32];
-		sprintf(footer, "Compiled with clang %d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
+		char footer[33];
+		sprintf(footer, "Compiled using clang %d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
 
 		set_embed_footer(&embed, footer, NULL);
 	#elif defined(__GNUC__)
-		char footer[30];
-		sprintf(footer, "Compiled with gcc %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+		char footer[31];
+		sprintf(footer, "Compiled using gcc %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 
 		set_embed_footer(&embed, footer, NULL);
 	#endif
@@ -160,6 +160,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 const struct Command about = {
 	.execute = execute,
 	.name = "about",
-	.description = "Sends bot information",
+	.description = "Gives information about the bot",
 	.guild_only = false
 };

@@ -27,7 +27,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			const char *input = command.arguments[0].value.string;
 
 			if (!check_snowflake(input)) {
-				message.payload.content = INVALID_ARGUMENT;
+				message.payload = (struct MessagePayload) {
+					.content = INVALID_ARGUMENT,
+					.ephemeral = true
+				};
+
 				send_message(client, message);
 				return;
 			}
@@ -40,12 +44,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
 			jsonelement_t *user = json_parse((const char *) response.data);
 
-			jsonresult_t avatar_result = json_get_val(user, "avatar");
+			jsonresult_t json_discriminator = json_get_val(user, "discriminator");
+			memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
 
-			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
+			jsonresult_t json_avatar = json_get_val(user, "avatar");
 
-			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-				strcpy(hash, avatar_result.value.string);
+			if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 			}
 
 			get_avatar_url(png_avatar_url, user_id, discriminator, hash, true, 1024);
@@ -55,30 +60,41 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			response_free(response);
 		} else {
 			jsonelement_t *user = command.arguments[0].value.user.user_data;
-			strcpy(user_id, json_get_val(user, "id").value.string);
-			strcpy(discriminator, json_get_val(user, "discriminator").value.string);
 
-			jsonresult_t avatar_result = json_get_val(user, "avatar");
+			jsonresult_t json_id = json_get_val(user, "id");
+			memcpy(user_id, json_id.value.string, (json_id.element->size + 1));
 
-			if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-				strcpy(hash, avatar_result.value.string);
+			jsonresult_t json_discriminator = json_get_val(user, "discriminator");
+			memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
+
+			jsonresult_t json_avatar = json_get_val(user, "avatar");
+
+			if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 			}
 
 			get_avatar_url(png_avatar_url, user_id, discriminator, hash, true, 1024);
 			get_avatar_url(gif_avatar_url, user_id, discriminator, hash, false, 1024);
 		}
 	} else if (command.argument_size == 2) {
-		message.payload.content = "You cannot specify two arguments, please specify `id` or `member`.";
+		message.payload = (struct MessagePayload) {
+			.content = "You cannot specify two arguments, please specify `id` or `member`.",
+			.ephemeral = true
+		};
+
 		send_message(client, message);
 		return;
 	} else {
-		strcpy(user_id, json_get_val(command.user, "id").value.string);
-		strcpy(discriminator, json_get_val(command.user, "discriminator").value.string);
+		jsonresult_t json_id = json_get_val(command.user, "id");
+		memcpy(user_id, json_id.value.string, (json_id.element->size + 1));
 
-		jsonresult_t avatar_result = json_get_val(command.user, "avatar");
+		jsonresult_t json_discriminator = json_get_val(command.user, "discriminator");
+		memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
 
-		if (avatar_result.exist && avatar_result.type == JSON_STRING) {
-			strcpy(hash, avatar_result.value.string);
+		jsonresult_t json_avatar = json_get_val(command.user, "avatar");
+
+		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 
 		get_avatar_url(gif_avatar_url, user_id, discriminator, hash, false, 1024);
@@ -94,7 +110,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			if (i == 2) {
 				strcpy(png_avatar_urls[i], png_avatar_url);
 			} else {
-				const unsigned long size = pow(2, (8 + i));
+				const unsigned short size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
 				get_avatar_url(gif_avatar_urls[i], user_id, discriminator, hash, false, size);
 			}
@@ -116,7 +132,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		for (unsigned char i = 0; i < 5; ++i) {
 			if (i != 2) {
-				const unsigned long size = pow(2, (8 + i));
+				const unsigned short size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
 			}
 		}

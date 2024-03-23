@@ -261,6 +261,14 @@ void free_message_payload(struct MessagePayload message_payload) {
 	}
 
 	if (message_payload.file_size != 0) {
+		for (unsigned char i = 0; i < message_payload.file_size; ++i) {
+			struct File file = message_payload.files[i];
+
+			free(file.name);
+			free(file.data);
+			free(file.type);
+		}
+
 		free(message_payload.files);
 	}
 }
@@ -268,10 +276,20 @@ void free_message_payload(struct MessagePayload message_payload) {
 void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const unsigned long size, const char *type) {
 	++message_payload->file_size;
 	message_payload->files = allocate(message_payload->files, -1, message_payload->file_size, sizeof(struct File));
-	message_payload->files[message_payload->file_size - 1] = (struct File) {
-		.name = (char *) name,
-		.data = (char *) data,
-		.type = (char *) type,
+
+	const unsigned int name_size = (strlen(name) + 1);
+	const unsigned int type_size = (strlen(type) + 1);
+
+	struct File *file_in_payload = &(message_payload->files[message_payload->file_size - 1]);
+
+	memcpy(file_in_payload, &((struct File) {
+		.name = allocate(NULL, -1, name_size, sizeof(char)),
+		.data = allocate(NULL, -1, size, sizeof(char)),
+		.type = allocate(NULL, -1, type_size, sizeof(char)),
 		.size = size
-	};
+	}), sizeof(struct File));
+
+	memcpy(file_in_payload->name, name, name_size);
+	memcpy(file_in_payload->data, data, size);
+	memcpy(file_in_payload->type, type, type_size);
 }

@@ -117,12 +117,12 @@
 	};
 
 	void connect_gateway(const char *bot_token, const char *url, const unsigned int bot_intents);
-	int get_latency();
+	unsigned int get_latency();
 	void set_presence(const char *name, const char *state, const char *details, const char type, const char *status);
 
 	void clear_cache(struct Cache *cache);
 	void add_to_cache(struct Cache *cache, const char *data);
-	void remove_from_cache_index(struct Cache *cache, const unsigned long index);
+	void remove_from_cache_index(struct Cache *cache, const unsigned int index);
 
 	struct Cache *get_guilds_cache();
 
