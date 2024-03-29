@@ -230,8 +230,11 @@ static void onmessage(const struct WebsocketFrame frame) {
 				client.token = token;
 				client.ready_at = get_timestamp();
 
-				strcpy(resume_gateway_url, json_get_val(data, "d.resume_gateway_url").value.string);
-				strcpy(session_id, json_get_val(data, "d.session_id").value.string);
+				jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
+				jsonresult_t json_session_id= json_get_val(data, "d.session_id");
+
+				memcpy(resume_gateway_url, json_resume_gateway_url.value.string, json_resume_gateway_url.element->size + 1);
+				memcpy(session_id, json_session_id.value.string, json_session_id.element->size + 1);
 
 				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
 
@@ -260,7 +263,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 					}
 				}
 
-				remove_from_cache_index(get_guilds_cache(), i);
+				remove_from_cache(get_guilds_cache(), i);
 				on_guild_delete(client);
 			} else if (strsame(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
@@ -269,7 +272,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				jsonelement_t *interaction = json_get_val(data, "d").value.object;
 
 				if (json_get_val(interaction, "type").value.number == 2.0) {
-					jsonelement_t *interaction_data = json_get_val(data, "d.data").value.object;
+					jsonelement_t *interaction_data = json_get_val(interaction, "data").value.object;
 
 					struct InteractionCommand command = {
 						.id = json_get_val(interaction, "id").value.string,
@@ -278,10 +281,10 @@ static void onmessage(const struct WebsocketFrame frame) {
 						.channel_id = json_get_val(interaction, "channel_id").value.string
 					};
 
-					jsonresult_t guild_result = json_get_val(interaction, "guild_id");
+					jsonresult_t guild_id = json_get_val(interaction, "guild_id");
 
-					if (guild_result.exist && guild_result.type != JSON_NULL) {
-						command.guild_id = json_get_val(interaction, "guild_id").value.string;
+					if (guild_id.exist && guild_id.type != JSON_NULL) {
+						command.guild_id = guild_id.value.string;
 						command.user = json_get_val(interaction, "member.user").value.object;
 					} else {
 						command.user = json_get_val(interaction, "user").value.object;
@@ -307,17 +310,18 @@ static void onmessage(const struct WebsocketFrame frame) {
 								const unsigned char sc_options_size = sc_options_result.value.array->size;
 
 								if (sc_options_result.type == JSON_ARRAY && sc_options_size != 0) {
-									command.arguments[i].value.subcommand.arguments = allocate(NULL, -1, sc_options_size, sizeof(struct InteractionArgument));
-									command.arguments[i].value.subcommand.argument_size = sc_options_size;
+									struct InteractionSubcommand *subcommand = &(command.arguments[i].value.subcommand);
+									subcommand->arguments = allocate(NULL, -1, sc_options_size, sizeof(struct InteractionArgument));
+									subcommand->argument_size = sc_options_size;
 
 									for (unsigned char s = 0; s < sc_options_size; ++s) {
-										jsonelement_t *sc_option_element = ((jsonelement_t **) sc_options_result.element->value)[s];
-										const unsigned int sc_option_type = json_get_val(sc_option_element, "type").value.number;
-										char *sc_option_name = json_get_val(sc_option_element, "name").value.string;
+										jsonelement_t *option_element = ((jsonelement_t **) sc_options_result.element->value)[s];
+										const unsigned int option_type = json_get_val(option_element, "type").value.number;
+										char *option_name = json_get_val(option_element, "name").value.string;
 
-										struct InteractionArgument *sc_argument = &(command.arguments[i].value.subcommand.arguments[s]);
-										jsonvalue_t sc_option_value = json_get_val(sc_option_element, "value").value;
-										parse_interaction_base_arguments(sc_argument, interaction_data, sc_option_type, sc_option_name, sc_option_value);
+										struct InteractionArgument *subcommand_argument = &(subcommand->arguments[s]);
+										jsonvalue_t option_value = json_get_val(option_element, "value").value;
+										parse_interaction_base_arguments(subcommand_argument, interaction_data, option_type, option_name, option_value);
 									}
 								}
 							} else {

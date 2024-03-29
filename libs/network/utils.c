@@ -28,7 +28,7 @@ struct URL parse_url(const char *data) {
 
 	struct Split hostname_splitter = split(splitter.data[2].data, splitter.data[2].length, ":");
 
-	const unsigned long protocol_length = splitter.data[0].length;
+	const unsigned char protocol_length = splitter.data[0].length;
 	url.protocol = allocate(NULL, 0, protocol_length, sizeof(char));
 	memcpy(url.protocol, splitter.data[0].data, protocol_length - 1);
 

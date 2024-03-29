@@ -122,7 +122,7 @@
 
 	void clear_cache(struct Cache *cache);
 	void add_to_cache(struct Cache *cache, const char *data);
-	void remove_from_cache_index(struct Cache *cache, const unsigned int index);
+	void remove_from_cache(struct Cache *cache, const unsigned int index);
 
 	struct Cache *get_guilds_cache();
 

@@ -27,7 +27,7 @@ void database_initialize(const char *filename) {
 	} else {
 		FILE *file = fopen(filename, "r");
 		fseek(file, 0, SEEK_END);
-		const unsigned long long size = ftell(file);
+		const unsigned int size = ftell(file);
 		rewind(file);
 
 		char content[size + 1];

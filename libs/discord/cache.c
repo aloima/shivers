@@ -26,7 +26,7 @@ void add_to_cache(struct Cache *cache, const char *data) {
 	memcpy(cache->data[cache->size - 1], data, data_size);
 }
 
-void remove_from_cache_index(struct Cache *cache, const unsigned int index) {
+void remove_from_cache(struct Cache *cache, const unsigned int index) {
 	for (unsigned int i = (index + 1); i < cache->size; ++i) {
 		const unsigned int size = (strlen(cache->data[i]) + 1);
 		cache->data[i - 1] = allocate(cache->data[i - 1], -1, size, sizeof(char));
