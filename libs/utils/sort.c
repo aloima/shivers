@@ -1,17 +1,17 @@
 #include <utils.h>
 
-static void compare_elements(int *a, int *b) {
-	if (*b > *a) {
-		long temp = *a;
-		*a = *b;
-		*b = temp;
-	}
-}
+void sort(struct Sort *data, const unsigned int size) {
+	const unsigned int fbound = (size - 1);
 
-void sort(int *data, const unsigned long size) {
-	for (unsigned long a = 0; a < size - 1; ++a) {
-		for (unsigned long i = 0; i < size - a - 1; ++i) {
-			compare_elements(&data[i], &data[i + 1]);
+	for (unsigned int a = 0; a < fbound; ++a) {
+		const unsigned int sbound = (fbound - a);
+
+		for (unsigned int i = 0; i < sbound; ++i) {
+			if (data[i + 1].number > data[i].number) {
+				struct Sort temp = data[i];
+				data[i] = data[i + 1];
+				data[i + 1] = temp;
+			}
 		}
 	}
 }

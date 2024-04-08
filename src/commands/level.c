@@ -80,18 +80,45 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		get_avatar_url(avatar_url, user_id, discriminator, hash, true, 256);
 	}
 
-	char xp_key[50], level_key[53], factor_key[42];
+	char xp_key[50], level_key[53], factor_key[42], levels_key[27];
 	sprintf(xp_key, "%s.levels.%s.xp", command.guild_id, user_id);
 	sprintf(level_key, "%s.levels.%s.level", command.guild_id, user_id);
 	sprintf(factor_key, "%s.settings.level.factor", command.guild_id);
+	sprintf(levels_key, "%s.levels", command.guild_id);
+
+	const unsigned short factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
+
+	jsonvalue_t levels = database_get(levels_key);
+	const unsigned int sorted_length = (database_has(levels_key) ? levels.object->size : 0);
+	struct Sort sorted[sorted_length];
+
+	for (unsigned int i = 0; i < sorted_length; ++i) {
+		sorted[i].value = ((jsonelement_t **) levels.object->value)[i];
+
+		jsonelement_t *value = sorted[i].value;
+		const jsonresult_t json_level = json_get_val(value, "level");
+
+		const unsigned int level = (json_level.exist ? json_level.value.number : 0);
+		sorted[i].number = (json_get_val(value, "xp").value.number + (level * (level + 1) * factor / 2.0));
+	}
+
+	sort(sorted, sorted_length);
 
 	const unsigned int xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
 	const unsigned int level = (database_has(level_key) ? database_get(level_key).number : 1);
-	const unsigned short factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
 
-	char xp_text[16], level_text[16];
+	char xp_text[24], level_text[16], rank[6];
 	sprintf(level_text, "Level %d", level);
 	sprintf(xp_text, "XP %d / %d", xp, (level * factor));
+
+	rank[0] = 0;
+
+	for (unsigned int i = 0; i < sorted_length; ++i) {
+		if (strsame(user_id, ((jsonelement_t *) sorted[i].value)->key)) {
+			sprintf(rank, "#%u", (i + 1));
+			break;
+		}
+	}
 
 	struct Response response = request((struct RequestConfig) {
 		.url = avatar_url,
@@ -111,6 +138,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18, PNG_TEXT_LEFT);
 	write_text(&background_image, 518, 364, level_text, get_fonts().arial, font_color, 16, PNG_TEXT_LEFT);
 	write_text(&background_image, 1486, 364, xp_text, get_fonts().arial, font_color, 16, PNG_TEXT_RIGHT);
+
+	if (rank[0] != 0) {
+		write_text(&background_image, 1486, 184, rank, get_fonts().arial, font_color, 16, PNG_TEXT_RIGHT);
+	}
 
 	unsigned char xp_bar_color[4] = {0, 221, 255, 255};
 	const unsigned short xp_bar_width = (968 * ((double) xp / (factor * level)));

@@ -91,7 +91,7 @@
 	#endif
 
 	unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count);
-	struct Header get_header(struct Header *headers, const unsigned long header_size, const char *name);
+	struct Header get_header(struct Header *headers, const unsigned int header_size, const char *name);
 	struct hostent *resolve_hostname(char *hostname);
 	void add_field_to_formdata(struct FormData *formdata, const char *name, const char *data, const unsigned long long data_size, const char *filename);
 	void add_header_to_formdata_field(struct FormData *formdata, const char *field_name, const char *header_name, const char *header_value);

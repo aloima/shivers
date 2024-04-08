@@ -10,6 +10,11 @@
 		unsigned long length;
 	};
 
+	struct Sort {
+		void *value;
+		int number;
+	};
+
 	struct Split {
 		struct SplitData *data;
 		unsigned int size;
@@ -44,5 +49,5 @@
 
 	void throw(const char *format, ...);
 
-	void sort(int *data, const unsigned long size);
+	void sort(struct Sort *data, const unsigned int size);
 #endif

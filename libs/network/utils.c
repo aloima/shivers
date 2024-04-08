@@ -19,7 +19,7 @@
 #include <utils.h>
 
 struct URL parse_url(const char *data) {
-	struct URL url = {0};
+	struct URL url;
 	struct Split splitter = split(data, strlen(data), "/");
 
 	if (splitter.size < 3) {
@@ -43,6 +43,8 @@ struct URL parse_url(const char *data) {
 			url.port = 443;
 		} else if (strsame(url.protocol, "http") || strsame(url.protocol, "ws")) {
 			url.port = 80;
+		} else {
+			url.port = 0;
 		}
 	}
 
@@ -50,7 +52,7 @@ struct URL parse_url(const char *data) {
 		url.path = allocate(NULL, 0, 2, sizeof(char));
 		url.path[0] = '/';
 	} else {
-		const unsigned long join_length = calculate_join((struct Join *) (splitter.data + 3), splitter.size - 3, "/");
+		const unsigned int join_length = calculate_join((struct Join *) (splitter.data + 3), splitter.size - 3, "/");
 		url.path = allocate(NULL, 0, join_length + 2, sizeof(char));
 		url.path[0] = '/';
 		join((struct Join *) (splitter.data + 3), url.path + 1, splitter.size - 3, "/");
@@ -106,13 +108,13 @@ unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count) {
 	return result;
 }
 
-struct Header get_header(struct Header *headers, const unsigned long header_size, const char *name) {
+struct Header get_header(struct Header *headers, const unsigned int header_size, const char *name) {
 	struct Header header = {0};
 
 	char header_name[1024];
 	strtolower(header_name, name);
 
-	for (unsigned long i = 0; i < header_size; ++i) {
+	for (unsigned int i = 0; i < header_size; ++i) {
 		char current_name[1024];
 		strtolower(current_name, headers[i].name);
 
@@ -267,11 +269,11 @@ void add_header_to_formdata_field(struct FormData *formdata, const char *field_n
 }
 
 void free_formdata(struct FormData formdata) {
-	for (unsigned long i = 0; i < formdata.field_size; ++i) {
+	for (unsigned int i = 0; i < formdata.field_size; ++i) {
 		struct FormDataField field = formdata.fields[i];
 
 		if (field.header_size != 0) {
-			for (unsigned long h = 0; h < field.header_size; ++h) {
+			for (unsigned int h = 0; h < field.header_size; ++h) {
 				struct Header header = field.headers[h];
 				free(header.name);
 				free(header.value);
