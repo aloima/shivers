@@ -1,15 +1,15 @@
 #include <string.h>
 
-long char_at(const char *data, const char ch) {
-	const unsigned long size = strlen(data);
-	long result = -1;
+long char_at(const char *data, const char ch, unsigned long length) {
+	if (length == 0) {
+		length = strlen(data);
+	}
 
-	for (unsigned long i = 0; i < size; ++i) {
+	for (unsigned long i = 0; i < length; ++i) {
 		if (data[i] == ch) {
-			result = i;
-			break;
+			return i;
 		}
 	}
 
-	return result;
+	return -1;
 }

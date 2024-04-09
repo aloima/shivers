@@ -70,7 +70,7 @@ unsigned long ahtoi(const char *data) {
 
 	for (int i = 0; i < size; ++i) {
 		unsigned long base = pow(16, (size - i - 1));
-		result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
+		result |= (char_at(hex_alphabet, toupper(data[i]), 16) * ((base == 0) ? 1 : base));
 	}
 
 	return result;
