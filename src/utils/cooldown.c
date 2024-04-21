@@ -50,12 +50,14 @@ void add_cooldown(const char *user_id) {
 	++cooldown_size;
 	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 
+	const unsigned char size_of_user_id = (strlen(user_id) + 1);
+
 	const struct Cooldown cooldown = {
 		.timestamp = get_timestamp(),
-		.user_id = allocate(NULL, -1, strlen(user_id) + 1, sizeof(char))
+		.user_id = allocate(NULL, -1, size_of_user_id, sizeof(char))
 	};
 
-	strcpy(cooldown.user_id, user_id);
+	memcpy(cooldown.user_id, user_id, size_of_user_id);
 	memcpy(cooldowns + cooldown_size - 1, &cooldown, sizeof(struct Cooldown));
 }
 
@@ -63,7 +65,7 @@ void remove_cooldown(const char *user_id) {
 	unsigned short at = 0;
 
 	for (unsigned short i = 0; i < cooldown_size; ++i) {
-		if (strcmp(cooldowns[i].user_id, user_id) == 0) {
+		if (strsame(cooldowns[i].user_id, user_id)) {
 			at = i;
 			break;
 		}
@@ -102,7 +104,7 @@ struct Cooldown get_cooldown(const char *user_id) {
 	for (unsigned short i = 0; i < cooldown_size; ++i) {
 		const struct Cooldown data = cooldowns[i];
 
-		if (strcmp(data.user_id, user_id) == 0) {
+		if (strsame(data.user_id, user_id)) {
 			cooldown = data;
 			break;
 		}

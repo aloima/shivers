@@ -28,6 +28,15 @@ void setup_commands(const struct Client client) {
 		json_set_val(command_body, "type", &command_type, JSON_NUMBER);
 		json_set_val(command_body, "description", (char *) command.description, JSON_STRING);
 
+		if (command.guild_only) {
+			jsonelement_t *contexts = create_empty_json_element(true);
+			double guild_only = 0.0;
+			json_set_val(contexts, "[0]", &guild_only, JSON_NUMBER);
+
+			json_set_val(command_body, "contexts", contexts, JSON_ARRAY);
+			json_free(contexts, false);
+		}
+
 		if (command.permissions != 0) {
 			char permissions[21];
 			sprintf(permissions, "%ld", command.permissions);
