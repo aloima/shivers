@@ -89,7 +89,7 @@ bool has_cooldown(const char *user_id) {
 	bool result = false;
 
 	for (unsigned short i = 0; i < cooldown_size; ++i) {
-		if (strcmp(cooldowns[i].user_id, user_id) == 0) {
+		if (strsame(cooldowns[i].user_id, user_id)) {
 			result = true;
 			break;
 		}

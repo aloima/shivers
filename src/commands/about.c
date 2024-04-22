@@ -82,7 +82,7 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 
 		const unsigned char index = (uptime_element_count - 1);
 		uptime[index].data = allocate(NULL, 0, 8, sizeof(char));
-		uptime[index].length =uptime[index].length =  sprintf(uptime[index].data, "%llu secs", seconds);
+		uptime[index].length =  sprintf(uptime[index].data, "%llu secs", seconds);
 	}
 
 	join(uptime, uptime_text, uptime_element_count, " ");
