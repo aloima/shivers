@@ -76,14 +76,14 @@ unsigned long ahtoi(const char *data) {
 	return result;
 }
 
-int atoi_s(const char *str, long long length) {
+int atoi_s(const char *str, short length) {
 	if (length == -1) {
 		length = strlen(str);
 	}
 
 	int result = 0;
 
-	for (long long i = 0; i < length; ++i) {
+	for (short i = 0; i < length; ++i) {
 		const char ch = str[i];
 
 		if (isdigit(ch)) {

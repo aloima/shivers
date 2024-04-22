@@ -19,6 +19,7 @@ CFLAGS := --warn-all --std=gnu99
 
 compile: $(patsubst %.c,%.o,$(wildcard **/**/*.c **/*.c))
 	@$(CC) $(CFLAGS) $(addprefix build/,$?) --include-directory=include --output=shivers $(LIBRARIES)
+	@echo Compiled shivers.
 
 check:
 ifeq (,$(CC))

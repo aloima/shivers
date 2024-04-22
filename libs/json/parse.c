@@ -22,7 +22,24 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 			const bool is_false = (memcmp(text + *i, "false", 5) == 0);
 			const bool is_null = (memcmp(text + *i, "null", 4) == 0);
 
-			if (ch == ' ' || ch == '\t' || ch == '\n') {
+			if (is_true || is_false) {
+				element->type = JSON_BOOLEAN;
+				element->value = allocate(element->value, -1, 1, sizeof(bool));
+
+				if (is_true) {
+					*i += 4;
+					((bool *) element->value)[0] = true;
+				} else if (is_false) {
+					*i += 5;
+					((bool *) element->value)[0] = false;
+				}
+
+				break;
+			} else if (is_null) {
+				*i += 4;
+				element->type = JSON_NULL;
+				break;
+			} else if (ch == ' ' || ch == '\t' || ch == '\n') {
 				++(*i);
 				continue;
 			} else if (ch == '"') {
@@ -116,24 +133,6 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned lon
 				element->size = 1;
 				element->value = allocate(element->value, -1, 1, sizeof(double));
 				((double *) element->value)[0] = (ch - 48);
-			} else if (is_true || is_false) {
-				element->type = JSON_BOOLEAN;
-
-				if (is_true) {
-					*i += 4;
-					element->value = allocate(element->value, -1, 1, sizeof(bool));
-					((bool *) element->value)[0] = true;
-					break;
-				} else if (is_false) {
-					*i += 5;
-					element->value = allocate(element->value, -1, 1, sizeof(bool));
-					((bool *) element->value)[0] = false;
-					break;
-				}
-			} else if (is_null) {
-				*i += 4;
-				element->type = JSON_NULL;
-				break;
 			} else {
 				json_free(element, true);
 				throw("json_parse(): expected element, but received '%c'", ch);

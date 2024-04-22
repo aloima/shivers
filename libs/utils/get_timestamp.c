@@ -6,6 +6,8 @@
 	#include <sys/timeb.h>
 #endif
 
+#include <utils.h>
+
 unsigned long long get_timestamp() {
 	#if defined(__linux__)
 		struct timeval timestamp;

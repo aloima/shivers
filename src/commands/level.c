@@ -107,7 +107,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	const unsigned int xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
 	const unsigned int level = (database_has(level_key) ? database_get(level_key).number : 1);
 
-	char xp_text[24], level_text[16], rank[6];
+	char xp_text[24], level_text[16], rank[12];
 	sprintf(level_text, "Level %d", level);
 	sprintf(xp_text, "XP %d / %d", xp, (level * factor));
 

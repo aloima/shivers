@@ -1,6 +1,8 @@
 #include <string.h>
 
-long char_at(const char *data, const char ch, unsigned long length) {
+#include <utils.h>
+
+int char_at(const char *data, const char ch, int length) {
 	if (length == 0) {
 		length = strlen(data);
 	}

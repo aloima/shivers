@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <utils.h>
+
 void throw(const char *format, ...) {
 	char message[256];
 	va_list args;
