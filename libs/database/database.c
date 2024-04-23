@@ -4,8 +4,9 @@
 
 #include <sys/stat.h>
 
-#include <json.h>
+#include <database.h>
 #include <utils.h>
+#include <json.h>
 
 static jsonelement_t *data = NULL;
 static char *_filename = NULL;
@@ -53,6 +54,22 @@ void database_destroy() {
 
 void database_set(char *key, void *value, const unsigned char type) {
 	json_set_val(data, key, value, type);
+}
+
+void database_push(char *key, void *value, const unsigned char type) {
+	jsonresult_t array = json_get_val(data, key);
+
+	if (array.exist) {
+		char json_key[(array.element->size / 10) + 4];
+		sprintf(json_key, "[%ld]", array.element->size);
+
+		json_set_val(array.element, json_key, value, type);
+	} else {
+		char json_key[5 + strlen(key)];
+		sprintf(json_key, "%s.[0]", key);
+
+		json_set_val(data, json_key, value, type);
+	}
 }
 
 bool database_has(const char *key) {
