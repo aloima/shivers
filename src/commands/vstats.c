@@ -99,6 +99,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		struct Response response = api_request(client.token, url, "POST", request_payload, NULL);
 		jsonelement_t *response_data = json_parse((char *) response.data);
+		response_free(response);
 
 		jsonelement_t *database_data = create_empty_json_element(false);
 		json_set_val(database_data, "id", json_get_val(response_data, "id").value.string, JSON_STRING);
