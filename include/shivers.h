@@ -63,5 +63,6 @@
 	extern const struct Command help;
 	extern const struct Command level;
 	extern const struct Command level_settings;
+	extern const struct Command vstats;
 	extern const struct Command wikipedia;
 #endif

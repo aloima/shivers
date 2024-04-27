@@ -9,7 +9,7 @@ static struct Command *commands = NULL;
 static unsigned short command_size = 0;
 
 void setup_commands(const struct Client client) {
-	const struct Command command_array[] = {about, avatar, github, level, level_settings, wikipedia};
+	const struct Command command_array[] = {about, avatar, github, level, level_settings, vstats, wikipedia};
 	command_size = sizeof(command_array) / sizeof(struct Command);
 
 	commands = allocate(NULL, -1, command_size, sizeof(struct Command));
