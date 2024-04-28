@@ -34,7 +34,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			"You can use some arguments in voice stats channels' name:\\n"
 			"{members} - Displays total members in the server\\n"
 			"{online} - Displays total online members in the server\\n"
-			"{bots} - Displays total bots in the server"
+			"{bots} - Displays total bots in the server\\n"
+			"{atVoice} - Displays members at a voice channel"
 		);
 
 		add_embed_to_message_payload(embed, &(message.payload));
@@ -81,16 +82,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const char *name = command.arguments[0].value.subcommand.arguments[0].value.string;
 		const unsigned int name_length = strlen(name);
 
-		char *channel_name = allocate(NULL, -1, (name_length + 1), sizeof(char));
+		char *channel_name = allocate(NULL, -1, name_length + 1, sizeof(char));
 		memcpy(channel_name, name, name_length + 1);
 
-		char members[2] = "0";
-		char online[2] = "1";
-		char bots[2] = "2";
-
-		strreplace(&channel_name, "{members}", members);
-		strreplace(&channel_name, "{online}", online);
-		strreplace(&channel_name, "{bots}", bots);
+		prepare_voice_stats_channel_name(&channel_name, command.guild_id);
 
 		char request_payload[4096];
 		sprintf(request_payload, (

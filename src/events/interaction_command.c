@@ -12,7 +12,7 @@ void on_interaction_command(struct Client client, const struct InteractionComman
 
 		if (strsame(interaction_command.name, command.name)) {
 			run_with_cooldown(user_id, command.execute, client, interaction_command);
-			break;
+			return;
 		}
 	}
 }

@@ -240,7 +240,17 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
-				add_to_cache(get_guilds_cache(), json_get_val(data, "d.id").value.string);
+				jsonresult_t json_id = json_get_val(data, "d.id");
+
+				struct Guild guild = {
+					.id = allocate(NULL, -1, json_id.element->size + 1, sizeof(char)),
+					.member_count = json_get_val(data, "d.member_count").value.number,
+					.bot_count = 0,
+					.member_at_voice_count = json_get_val(data, "d.voice_states").value.array->size
+				};
+
+				memcpy(guild.id, json_id.value.string, json_id.element->size + 1);
+				add_guild_to_cache(guild);
 
 				if (!handled_ready_guilds) {
 					--ready_guild_size;
@@ -253,18 +263,20 @@ static void onmessage(const struct WebsocketFrame frame) {
 					on_guild_create(client);
 				}
 			} else if (strsame(event_name, "GUILD_DELETE")) {
-				struct Cache *guilds = get_guilds_cache();
-				const char *guild_id = json_get_val(data, "d.id").value.string;
-				unsigned int i;
+				const char *id = json_get_val(data, "d.id").value.string;
+				remove_guild_from_cache(id);
 
-				for (i = 0; i < guilds->size; ++i) {
-					if (strsame(guilds->data[i], guild_id)) {
-						break;
-					}
-				}
-
-				remove_from_cache(get_guilds_cache(), i);
 				on_guild_delete(client);
+			} else if (strsame(event_name, "GUILD_MEMBER_ADD")) {
+				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
+				++guild->member_count;
+
+				on_guild_member_add(client, guild);
+			} else if (strsame(event_name, "GUILD_MEMBER_REMOVE")) {
+				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
+				--guild->member_count;
+
+				on_guild_member_remove(client, guild);
 			} else if (strsame(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
 				on_message_create(client, message);
@@ -392,7 +404,7 @@ static void onclose(const short code, const char *reason) {
 
 	if (code != -2) {
 		on_force_close();
-		clear_cache(get_guilds_cache());
+		clear_guilds();
 	}
 }
 

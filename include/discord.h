@@ -18,15 +18,20 @@
 	#define ManageRoles (1 << 28)
 	#define ManageThreads (1 << 34)
 
-	struct Cache {
-		char **data;
-		unsigned int size;
-	};
-
 	struct Client {
 		jsonelement_t *user;
 		unsigned long long ready_at;
 		char *token;
+	};
+
+	struct Guild {
+		char *id;
+		unsigned long long member_count;
+		unsigned long long online_count;
+		unsigned long long bot_count;
+		unsigned long long ban_count;
+		unsigned short channel_count;
+		unsigned long long member_at_voice_count;
 	};
 
 	struct EmbedField {
@@ -120,11 +125,11 @@
 	unsigned int get_latency();
 	void set_presence(const char *name, const char *state, const char *details, const char type, const char *status);
 
-	void clear_cache(struct Cache *cache);
-	void add_to_cache(struct Cache *cache, const char *data);
-	void remove_from_cache(struct Cache *cache, const unsigned int index);
-
-	struct Cache *get_guilds_cache();
+	void clear_guilds();
+	unsigned int get_guild_count();
+	void add_guild_to_cache(struct Guild guild);
+	struct Guild *get_guild_from_cache(const char *id);
+	void remove_guild_from_cache(const char *id);
 
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
 	void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);

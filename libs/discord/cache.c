@@ -4,40 +4,53 @@
 #include <discord.h>
 #include <utils.h>
 
-static struct Cache guilds = {0};
+static struct Guild *guilds = NULL;
+static unsigned int guild_count = 0;
 
-void clear_cache(struct Cache *cache) {
-	if (cache != NULL) {
-		for (unsigned int i = 0; i < cache->size; ++i) {
-			free(cache->data[i]);
+void clear_guilds() {
+	for (unsigned int i = 0; i < guild_count; ++i) {
+		free(guilds[i].id);
+	}
+
+	free(guilds);
+	guilds = NULL;
+	guild_count = 0;
+}
+
+unsigned int get_guild_count() {
+	return guild_count;
+}
+
+void add_guild_to_cache(struct Guild guild) {
+	++guild_count;
+	guilds = allocate(guilds, -1, guild_count, sizeof(struct Guild));
+	memcpy(guilds + guild_count - 1, &guild, sizeof(struct Guild));
+}
+
+struct Guild *get_guild_from_cache(const char *id) {
+	for (unsigned int i = 0; i < guild_count; ++i) {
+		struct Guild *guild = &(guilds[i]);
+
+		if (strsame(guild->id, id)) {
+			return guild;
 		}
-
-		free(cache->data);
-		cache->size = 0;
-	}
-}
-
-void add_to_cache(struct Cache *cache, const char *data) {
-	const unsigned long data_size = (strlen(data) + 1);
-
-	++cache->size;
-	cache->data = allocate(cache->data, -1, cache->size, sizeof(char *));
-	cache->data[cache->size - 1] = allocate(NULL, -1, data_size, sizeof(char));
-	memcpy(cache->data[cache->size - 1], data, data_size);
-}
-
-void remove_from_cache(struct Cache *cache, const unsigned int index) {
-	for (unsigned int i = (index + 1); i < cache->size; ++i) {
-		const unsigned int size = (strlen(cache->data[i]) + 1);
-		cache->data[i - 1] = allocate(cache->data[i - 1], -1, size, sizeof(char));
-		memcpy(cache->data[i - 1], cache->data[i], size);
 	}
 
-	free(cache->data[cache->size - 1]);
-	--cache->size;
-	cache->data = allocate(cache->data, -1, cache->size, sizeof(char *));
+	return NULL;
 }
 
-struct Cache *get_guilds_cache() {
-	return &guilds;
+void remove_guild_from_cache(const char *id) {
+	for (unsigned int i = 0; i < guild_count; ++i) {
+		if (strsame(guilds[i].id, id)) {
+			free(guilds[i].id);
+
+			for (unsigned int m = (i + 1); m < guild_count; ++m) {
+				memcpy(guilds + m - 1, guilds + m, sizeof(struct Guild));
+			}
+
+			--guild_count;
+			guilds = allocate(guilds, -1, guild_count, sizeof(struct Guild));
+			return;
+		}
+	}
 }
