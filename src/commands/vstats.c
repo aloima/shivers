@@ -67,6 +67,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			add_embed_to_message_payload(embed, &(message.payload));
 		} else {
 			strcpy(description, "There is no channel. Use `/vstats help` to learn how to add.");
+			embed.description = description;
+
+			add_embed_to_message_payload(embed, &(message.payload));
 		}
 	} else if (strsame(main_argument, "add")) {
 		char url[37];
