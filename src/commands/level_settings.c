@@ -66,6 +66,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		if (sc_arguments_size != 0) {
 			const unsigned char last_index = (sc_arguments_size - 1);
+			char temp[34];
 
 			for (unsigned char i = 0; i < sc_arguments_size; ++i) {
 				struct InteractionArgument sc_argument = command.arguments[0].value.subcommand.arguments[i];
@@ -74,11 +75,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				if (sc_arguments_size == 1) {
 					sprintf(response, "`%.8s` setting is set.", sc_argument_name);
 				} else if (i == last_index) {
-					sprintf(response, "%.64s and `%.8s` settings are set.", response, sc_argument_name);
+					sprintf(temp, " and `%.8s` settings are set.", sc_argument_name);
+					strcat(response, temp);
 				} else if (i == 0) {
 					sprintf(response, "`%.8s`", sc_argument_name);
 				} else {
-					sprintf(response, "%.64s, `%.8s`", response, sc_argument_name);
+					sprintf(temp, ", `%.8s`", sc_argument_name);
+					strcat(response, temp);
 				}
 
 				if (strsame(sc_argument_name, "factor")) {
