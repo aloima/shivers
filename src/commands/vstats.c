@@ -23,9 +23,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		}
 	};
 
-	const char *main_argument = command.arguments[0].name;
+	const char *operation = command.arguments[0].name;
 
-	if (strsame(main_argument, "help")) {
+	if (strsame(operation, "help")) {
 		embed.title = "Voice Stats Help Page";
 		embed.description = (
 			"To add a voice channel using voice stats system, use `/vstats add {name}`.\\n"
@@ -39,7 +39,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		);
 
 		add_embed_to_message_payload(embed, &(message.payload));
-	} else if (strsame(main_argument, "list")) {
+	} else if (strsame(operation, "list")) {
 		char description[4096];
 		description[0] = 0;
 
@@ -55,8 +55,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				sprintf(id_key, "%d.id", i);
 				sprintf(name_key, "%d.name", i);
 
-				char *id = json_get_val(data, id_key).value.string;
-				char *name = json_get_val(data, name_key).value.string;
+				const char *id = json_get_val(data, id_key).value.string;
+				const char *name = json_get_val(data, name_key).value.string;
 
 				sprintf(line, "%s | <#%s> | %s\\n", id, id, name);
 				strcat(description, line);
@@ -67,14 +67,14 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			add_embed_to_message_payload(embed, &(message.payload));
 		} else {
-			strcpy(description, "There is no channel. Use `/vstats help` to learn how to add.");
+			memcpy(description, "There is no channel. Use `/vstats help` to learn how to add.", 61);
 			embed.description = description;
 
 			add_embed_to_message_payload(embed, &(message.payload));
 		}
-	} else if (strsame(main_argument, "add")) {
-		char url[37];
-		sprintf(url, "/guilds/%s/channels", command.guild_id);
+	} else if (strsame(operation, "add")) {
+		char path[37];
+		sprintf(path, "/guilds/%s/channels", command.guild_id);
 
 		char database_key[27];
 		sprintf(database_key, "%s.vstats", command.guild_id);
@@ -94,8 +94,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				"\"type\":2"
 			"}"
 		), channel_name);
+		free(channel_name);
 
-		struct Response response = api_request(client.token, url, "POST", request_payload, NULL);
+		struct Response response = api_request(client.token, path, "POST", request_payload, NULL);
 		jsonelement_t *response_data = json_parse((char *) response.data);
 		response_free(response);
 
@@ -108,6 +109,40 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		json_free(database_data, false);
 
 		message.payload.content = "Channel is created.";
+	} else if (strsame(operation, "delete")) {
+		char database_key[27];
+		sprintf(database_key, "%s.vstats", command.guild_id);
+
+		const char *input = command.arguments[0].value.subcommand.arguments[0].value.string;
+		bool deleted = false;
+
+		if (database_has(database_key)) {
+			jsonelement_t *data = database_get(database_key).array;
+
+			for (unsigned int i = 0; i < data->size; ++i) {
+				char id_key[6];
+				sprintf(id_key, "%d.id", i);
+
+				const char *id = json_get_val(data, id_key).value.string;
+
+				if (strsame(id, input)) {
+					char database_deletion_key[30], path[30];
+					sprintf(database_deletion_key, "%s.vstats.%d", command.guild_id, i);
+					sprintf(path, "/channels/%s", id);
+
+					database_delete(database_deletion_key);
+					response_free(api_request(client.token, path, "DELETE", NULL, NULL));
+					deleted = true;
+
+					message.payload.content = "Channel is deleted.";
+					break;
+				}
+			}
+
+			if (!deleted) {
+				message.payload.content = "There is no channel that has this ID.";
+			}
+		}
 	}
 
 	send_message(client, message);
