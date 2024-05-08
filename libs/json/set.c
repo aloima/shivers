@@ -16,10 +16,11 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 	element->type = type;
 
 	if (type == JSON_STRING) {
-		const unsigned long value_size = (strlen(value) + 1);
+		const unsigned long value_length = strlen(value);
 
-		element->value = allocate(element->value, -1, value_size, sizeof(char));
-		memcpy(element->value, value, value_size);
+		element->size = value_length;
+		element->value = allocate(element->value, -1, value_length + 1, sizeof(char));
+		memcpy(element->value, value, value_length + 1);
 	} else if (type == JSON_BOOLEAN) {
 		element->value = allocate(element->value, -1, 1, sizeof(char));
 		((bool *) element->value)[0] = *((bool *) value);
@@ -139,7 +140,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const cha
 				long at = -1;
 
 				for (unsigned long n = 0; n < element->size; ++n) {
-					if (strcmp(((jsonelement_t **) element->value)[n]->key, skey) == 0) {
+					if (strsame(((jsonelement_t **) element->value)[n]->key, skey)) {
 						at = n;
 						n = element->size;
 					}
