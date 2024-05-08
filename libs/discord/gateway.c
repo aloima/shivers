@@ -241,13 +241,32 @@ static void onmessage(const struct WebsocketFrame frame) {
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
 				jsonresult_t json_id = json_get_val(data, "d.id");
+				jsonresult_t json_members = json_get_val(data, "d.members");
+				jsonresult_t json_presences = json_get_val(data, "d.presences");
 
 				struct Guild guild = {
 					.id = allocate(NULL, -1, json_id.element->size + 1, sizeof(char)),
 					.member_count = json_get_val(data, "d.member_count").value.number,
 					.bot_count = 0,
+					.online_count = 0,
 					.member_at_voice_count = json_get_val(data, "d.voice_states").value.array->size
 				};
+
+				for (unsigned long long i = 0; i < json_members.value.array->size; ++i) {
+					const bool is_bot = json_get_val(((jsonelement_t **) json_members.value.array->value)[i], "user.bot").value.boolean;
+
+					if (is_bot) {
+						++guild.bot_count;
+					}
+				}
+
+				for (unsigned long long i = 0; i < json_presences.value.array->size; ++i) {
+					const char *status = json_get_val(((jsonelement_t **) json_presences.value.array->value)[i], "status").value.string;
+
+					if (!strsame(status, "offline")) {
+						++guild.online_count;
+					}
+				}
 
 				memcpy(guild.id, json_id.value.string, json_id.element->size + 1);
 				add_guild_to_cache(guild);
