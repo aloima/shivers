@@ -33,7 +33,7 @@ void json_del_val(jsonelement_t *element, const char *search) {
 				for (unsigned int i = 0; i < size; ++i) {
 					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
 
-					if (strcmp(data->key, splitter.data[ki].data) == 0) {
+					if (strsame(data->key, splitter.data[ki].data)) {
 						value = data;
 						i = size;
 					} else if (i == last_index) {
@@ -53,22 +53,40 @@ void json_del_val(jsonelement_t *element, const char *search) {
 		const unsigned long size = parent->size;
 		const unsigned long replacingBound = (size - 1);
 
-		for (unsigned int i = 0; i < size; ++i) {
-			jsonelement_t *check = ((jsonelement_t **) parent->value)[i];
+		switch (parent->type) {
+			case JSON_OBJECT:
+				for (unsigned int i = 0; i < size; ++i) {
+					jsonelement_t *check = ((jsonelement_t **) parent->value)[i];
 
-			if (strcmp(check->key, value->key) == 0) {
-				for (unsigned int j = i; j < replacingBound; ++j) {
-					jsonelement_t *current = ((jsonelement_t **) parent->value)[j];
-					json_free(current, false);
-					((jsonelement_t **) parent->value)[j] = clone_json_element(((jsonelement_t **) parent->value)[j + 1]);
+					if (strsame(check->key, value->key)) {
+						for (unsigned int j = i; j < replacingBound; ++j) {
+							jsonelement_t *current = ((jsonelement_t **) parent->value)[j];
+							json_free(current, false);
+							((jsonelement_t **) parent->value)[j] = clone_json_element(((jsonelement_t **) parent->value)[j + 1]);
+						}
+
+						break;
+					}
 				}
 
-				json_free(((jsonelement_t **) parent->value)[parent->size], false);
-				--parent->size;
+				break;
+
+			case JSON_ARRAY: {
+				const unsigned int at = atoi_s(splitter.data[splitter.size - 1].data, -1);
+
+				for (unsigned int i = at; i < replacingBound; ++i) {
+					jsonelement_t *current = ((jsonelement_t **) parent->value)[i];
+					json_free(current, false);
+					((jsonelement_t **) parent->value)[i] = clone_json_element(((jsonelement_t **) parent->value)[i + 1]);
+				}
 
 				break;
 			}
 		}
+
+		--parent->size;
+		json_free(((jsonelement_t **) parent->value)[parent->size], false);
+		parent->value = allocate(parent->value, -1, parent->size, sizeof(jsonelement_t *));
 	}
 
 	split_free(splitter);
