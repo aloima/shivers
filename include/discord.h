@@ -28,6 +28,7 @@
 		char *id;
 		unsigned long long member_count;
 		unsigned long long online_count;
+		char **online_members;
 		unsigned long long bot_count;
 		unsigned long long ban_count;
 		unsigned short channel_count;

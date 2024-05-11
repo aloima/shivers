@@ -249,6 +249,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 					.member_count = json_get_val(data, "d.member_count").value.number,
 					.bot_count = 0,
 					.online_count = 0,
+					.online_members = NULL,
 					.member_at_voice_count = json_get_val(data, "d.voice_states").value.array->size
 				};
 
@@ -261,10 +262,26 @@ static void onmessage(const struct WebsocketFrame frame) {
 				}
 
 				for (unsigned long long i = 0; i < json_presences.value.array->size; ++i) {
-					const char *status = json_get_val(((jsonelement_t **) json_presences.value.array->value)[i], "status").value.string;
+					jsonelement_t *presence = ((jsonelement_t **) json_presences.value.array->value)[i];
+					const char *status = json_get_val(presence, "status").value.string;
 
 					if (!strsame(status, "offline")) {
 						++guild.online_count;
+					}
+				}
+
+				guild.online_members = allocate(NULL, -1, guild.online_count, sizeof(char *));
+
+				for (unsigned long long i = 0, s = 0; i < json_presences.value.array->size; ++i) {
+					jsonelement_t *presence = ((jsonelement_t **) json_presences.value.array->value)[i];
+					const char *status = json_get_val(presence, "status").value.string;
+					jsonresult_t json_user_id = json_get_val(presence, "user.id");
+					const char *user_id = json_user_id.value.string;
+
+					if (!strsame(status, "offline")) {
+						guild.online_members[s] = allocate(guild.online_members[s], -1, 20, sizeof(char));
+						memcpy(guild.online_members[s], user_id, json_user_id.element->size + 1);
+						++s;
 					}
 				}
 
