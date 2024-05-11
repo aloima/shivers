@@ -12,32 +12,34 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 	char database_key[27];
 	sprintf(database_key, "%s.vstats", guild_id);
 
-	jsonelement_t *array = database_get(database_key).array;
+	if (database_has(database_key)) {
+		jsonelement_t *array = database_get(database_key).array;
 
-	for (unsigned short i = 0; i < array->size; ++i) {
-		jsonelement_t *object = ((jsonelement_t **) array->value)[i];
+		for (unsigned short i = 0; i < array->size; ++i) {
+			jsonelement_t *object = ((jsonelement_t **) array->value)[i];
 
-		jsonresult_t json_name = json_get_val(object, "name");
+			jsonresult_t json_name = json_get_val(object, "name");
 
-		char *id = json_get_val(object, "id").value.string;
-		char *name = allocate(NULL, -1, json_name.element->size + 1, sizeof(char));
+			char *id = json_get_val(object, "id").value.string;
+			char *name = allocate(NULL, -1, json_name.element->size + 1, sizeof(char));
 
-		memcpy(name, json_name.value.string, json_name.element->size + 1);
-		prepare_voice_stats_channel_name(&name, guild_id);
+			memcpy(name, json_name.value.string, json_name.element->size + 1);
+			prepare_voice_stats_channel_name(&name, guild_id);
 
-		char path[30];
-		sprintf(path, "/channels/%s", id);
+			char path[30];
+			sprintf(path, "/channels/%s", id);
 
-		char body[1024];
-		sprintf(body, (
-			"{"
-				"\"name\":\"%s\""
-			"}"
-		), name);
-		free(name);
+			char body[1024];
+			sprintf(body, (
+				"{"
+					"\"name\":\"%s\""
+				"}"
+			), name);
+			free(name);
 
-		struct Response response = api_request(client.token, path, "PATCH", body, NULL);
-		response_free(response);
+			struct Response response = api_request(client.token, path, "PATCH", body, NULL);
+			response_free(response);
+		}
 	}
 }
 
