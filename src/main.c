@@ -28,12 +28,12 @@ int main(void) {
 	} else {
 		srand(time(NULL));
 
-		FILE *token_file = fopen("token", "r");
-		char token[96];
+		FILE *bot_token_file = fopen("token", "r");
+		char bot_token[96];
 
-		fgets(token, 96, token_file);
-		fclose(token_file);
-		connect_gateway(token, "wss://gateway.discord.gg", ((1 << 0) | (1 << 1) | (1 << 8) | (1 << 9)));
+		fgets(bot_token, 96, bot_token_file);
+		fclose(bot_token_file);
+		connect_gateway(bot_token, "wss://gateway.discord.gg", ((1 << 0) | (1 << 1) | (1 << 8) | (1 << 9)));
 
 		#if defined(_WIN32)
 			WSACleanup();
