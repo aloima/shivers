@@ -392,6 +392,46 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 					free(command.arguments);
 				}
+			} else if (strsame(event_name, "PRESENCE_UPDATE")) {
+				const jsonresult_t json_user_id = json_get_val(data, "d.user.id");
+				const char *status = json_get_val(data, "d.status").value.string;
+				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
+
+				if (strsame(status, "offline")) {
+					for (unsigned long long i = 0; i < guild->online_count; ++i) {
+						if (strsame(guild->online_members[i], json_user_id.value.string)) {
+							--guild->online_count;
+
+							for (unsigned long long s = i; s < guild->online_count; ++s) {
+								memcpy(guild->online_members[s], guild->online_members[s + 1], strlen(guild->online_members[s + 1]) + 1);
+							}
+
+							free(guild->online_members[guild->online_count]);
+							guild->online_members = allocate(guild->online_members, -1, guild->online_count, sizeof(char *));
+							i = guild->online_count;
+						}
+					}
+				} else {
+					bool found = false;
+
+					for (unsigned long long i = 0; i < guild->online_count; ++i) {
+						if (strsame(guild->online_members[i], json_user_id.value.string)) {
+							found = true;
+							i = guild->online_count;
+						}
+					}
+
+					if (!found) {
+						++guild->online_count;
+
+						const unsigned long long last_index = (guild->online_count - 1);
+						guild->online_members = allocate(guild->online_members, -1, guild->online_count, sizeof(char *));
+						guild->online_members[last_index] = allocate(NULL, -1, 20, sizeof(char));
+						memcpy(guild->online_members[last_index], json_user_id.value.string, json_user_id.element->size + 1);
+					}
+				}
+
+				on_presence_update(client, guild);
 			}
 
 			break;

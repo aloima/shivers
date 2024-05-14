@@ -62,6 +62,7 @@
 	void on_handle_guilds(struct Client client);
 	void on_interaction_command(struct Client client, struct InteractionCommand command);
 	void on_message_create(struct Client client, jsonelement_t *message);
+	void on_presence_update(struct Client client, struct Guild *guild);
 	void on_ready(struct Client client);
 
 	extern const struct Command about;
