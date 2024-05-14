@@ -52,6 +52,8 @@
 	#define MISSING_ARGUMENT "Missing argument, please use `help` command."
 	#define ADDITIONAL_ARGUMENT "Additional argument, please use `help` command."
 
+	#define MISSING_MANAGE_CHANNELS "Could not open a new channel, because I do not have required permissions."
+
 	void on_force_close();
 	void on_guild_create(struct Client client);
 	void on_guild_delete(struct Client client);

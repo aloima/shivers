@@ -76,9 +76,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char path[37];
 		sprintf(path, "/guilds/%s/channels", command.guild_id);
 
-		char database_key[27];
-		sprintf(database_key, "%s.vstats", command.guild_id);
-
 		const char *name = command.arguments[0].value.subcommand.arguments[0].value.string;
 		const unsigned int name_length = strlen(name);
 
@@ -100,10 +97,21 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		jsonelement_t *response_data = json_parse((char *) response.data);
 		response_free(response);
 
+		if (json_get_val(response_data, "code").value.number == 50013) {
+			json_free(response_data, false);
+
+			message.payload.content = MISSING_MANAGE_CHANNELS;
+			send_message(client, message);
+			return;
+		}
+
 		jsonelement_t *database_data = create_empty_json_element(false);
 		json_set_val(database_data, "id", json_get_val(response_data, "id").value.string, JSON_STRING);
 		json_set_val(database_data, "name", (char *) name, JSON_STRING);
 		json_free(response_data, false);
+
+		char database_key[27];
+		sprintf(database_key, "%s.vstats", command.guild_id);
 
 		database_push(database_key, database_data, JSON_OBJECT);
 		json_free(database_data, false);
