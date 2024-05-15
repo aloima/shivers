@@ -27,6 +27,10 @@ unsigned int get_guild_count() {
 	return guild_count;
 }
 
+struct Guild *get_guilds() {
+	return guilds;
+}
+
 void add_guild_to_cache(struct Guild guild) {
 	++guild_count;
 	guilds = allocate(guilds, -1, guild_count, sizeof(struct Guild));

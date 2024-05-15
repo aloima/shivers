@@ -17,10 +17,9 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 
 		for (unsigned short i = 0; i < array->size; ++i) {
 			jsonelement_t *object = ((jsonelement_t **) array->value)[i];
+			const jsonresult_t json_name = json_get_val(object, "name");
 
-			jsonresult_t json_name = json_get_val(object, "name");
-
-			char *id = json_get_val(object, "id").value.string;
+			const char *id = json_get_val(object, "id").value.string;
 			char *name = allocate(NULL, -1, json_name.element->size + 1, sizeof(char));
 
 			memcpy(name, json_name.value.string, json_name.element->size + 1);
@@ -29,16 +28,16 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 			char path[30];
 			sprintf(path, "/channels/%s", id);
 
-			char body[1024];
+			char body[256];
 			sprintf(body, (
 				"{"
 					"\"name\":\"%s\""
 				"}"
 			), name);
+
 			free(name);
 
-			struct Response response = api_request(client.token, path, "PATCH", body, NULL);
-			response_free(response);
+			response_free(api_request(client.token, path, "PATCH", body, NULL));
 		}
 	}
 }

@@ -127,6 +127,7 @@
 	void set_presence(const char *name, const char *state, const char *details, const char type, const char *status);
 
 	void clear_guilds();
+	struct Guild *get_guilds();
 	unsigned int get_guild_count();
 	void add_guild_to_cache(struct Guild guild);
 	struct Guild *get_guild_from_cache(const char *id);

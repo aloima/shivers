@@ -79,12 +79,18 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const char *name = command.arguments[0].value.subcommand.arguments[0].value.string;
 		const unsigned int name_length = strlen(name);
 
+		if (name_length > 64) {
+			message.payload.content = "The length of a voice stats channel name must be `lower than or equal to 64`.";
+			send_message(client, message);
+			return;
+		}
+
 		char *channel_name = allocate(NULL, -1, name_length + 1, sizeof(char));
 		memcpy(channel_name, name, name_length + 1);
 
 		prepare_voice_stats_channel_name(&channel_name, command.guild_id);
 
-		char request_payload[4096];
+		char request_payload[256];
 		sprintf(request_payload, (
 			"{"
 				"\"name\":\"%s\","
