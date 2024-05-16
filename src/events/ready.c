@@ -12,15 +12,6 @@ void on_ready(struct Client client) {
 	setup_commands(client);
 	puts("Set up all commands.");
 
-	const unsigned int guild_count = get_guild_count();
-	struct Guild *guilds = get_guilds();
-
-	for (unsigned int i = 0; i < guild_count; ++i) {
-		update_voice_stats(client, guilds[i].id);
-	}
-
-	puts("Updated voice stats of all servers.");
-
 	database_initialize("database.json");
 	puts("Database is initialized.");
 
