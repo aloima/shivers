@@ -33,7 +33,13 @@ int main(void) {
 
 		fgets(bot_token, 96, bot_token_file);
 		fclose(bot_token_file);
-		connect_gateway(bot_token, "wss://gateway.discord.gg", ((1 << 0) | (1 << 1) | (1 << 8) | (1 << 9)));
+		connect_gateway(bot_token, "wss://gateway.discord.gg", (
+			(1 << 0) | // GUILDS
+			(1 << 1) | // GUILD_MEMBERS
+			(1 << 7) | // GUILD_VOCE_STATES
+			(1 << 8) | // GUILD_PRESENCES
+			(1 << 9)   // GUILD_MESSAGES
+		));
 
 		#if defined(_WIN32)
 			WSACleanup();

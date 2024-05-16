@@ -11,11 +11,16 @@ void clear_guilds() {
 	for (unsigned int i = 0; i < guild_count; ++i) {
 		free(guilds[i].id);
 
-		for (unsigned long long o = 0; o < guilds[i].online_count; ++o) {
-			free(guilds[i].online_members[o]);
+		for (unsigned long long s = 0; s < guilds[i].online_count; ++s) {
+			free(guilds[i].online_members[s]);
+		}
+
+		for (unsigned long long s = 0; s < guilds[i].member_at_voice_count; ++s) {
+			free(guilds[i].members_at_voice[s]);
 		}
 
 		free(guilds[i].online_members);
+		free(guilds[i].members_at_voice);
 	}
 
 	free(guilds);
@@ -54,11 +59,16 @@ void remove_guild_from_cache(const char *id) {
 		if (strsame(guilds[i].id, id)) {
 			free(guilds[i].id);
 
-			for (unsigned long long o = 0; o < guilds[i].online_count; ++o) {
-				free(guilds[i].online_members[o]);
+			for (unsigned long long s = 0; s < guilds[i].online_count; ++s) {
+				free(guilds[i].online_members[s]);
+			}
+
+			for (unsigned long long s = 0; s < guilds[i].member_at_voice_count; ++s) {
+				free(guilds[i].members_at_voice[s]);
 			}
 
 			free(guilds[i].online_members);
+			free(guilds[i].members_at_voice);
 
 			for (unsigned int m = (i + 1); m < guild_count; ++m) {
 				memcpy(guilds + m - 1, guilds + m, sizeof(struct Guild));

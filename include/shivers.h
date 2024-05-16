@@ -64,6 +64,7 @@
 	void on_message_create(struct Client client, jsonelement_t *message);
 	void on_presence_update(struct Client client, struct Guild *guild);
 	void on_ready(struct Client client);
+	void on_voice_state_update(struct Client client, struct Guild *guild);
 
 	extern const struct Command about;
 	extern const struct Command avatar;

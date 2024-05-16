@@ -33,6 +33,7 @@
 		unsigned long long ban_count;
 		unsigned short channel_count;
 		unsigned long long member_at_voice_count;
+		char **members_at_voice;
 	};
 
 	struct EmbedField {
