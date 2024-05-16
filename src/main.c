@@ -14,14 +14,13 @@
 
 int main(void) {
 	struct stat token_entry;
-	const char token_stat = stat("token", &token_entry);
 
 	#if defined(_WIN32)
 		WSADATA wsa;
 		WSAStartup(MAKEWORD(2, 2), &wsa);
 	#endif
 
-	if (token_stat == -1) {
+	if (stat("token", &token_entry) == -1) {
 		throw("startup: missing token file");
 	} else if (!S_ISREG(token_entry.st_mode)) {
 		throw("startup: invalid token entry");
@@ -29,9 +28,9 @@ int main(void) {
 		srand(time(NULL));
 
 		FILE *bot_token_file = fopen("token", "r");
-		char bot_token[96];
+		char bot_token[84];
 
-		fgets(bot_token, 96, bot_token_file);
+		fgets(bot_token, 84, bot_token_file);
 		fclose(bot_token_file);
 		connect_gateway(bot_token, "wss://gateway.discord.gg", (
 			(1 << 0) | // GUILDS

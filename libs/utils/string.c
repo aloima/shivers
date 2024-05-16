@@ -95,12 +95,7 @@ void strtoupper(char *source, const char *dest) {
 	source[length] = '\0';
 }
 
-const char *ltrim(const char *src) {
-	unsigned long i = 0;
-
-	while (isblank(src[i])) {
-		++i;
-	}
-
-	return (src + i);
+char *ltrim(const char *src) {
+	while (isblank(*src)) ++src;
+	return (char *) src;
 }
