@@ -79,8 +79,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const char *name = command.arguments[0].value.subcommand.arguments[0].value.string;
 		const unsigned int name_length = strlen(name);
 
-		if (name_length > 64) {
-			message.payload.content = "The length of a voice stats channel name must be `lower than or equal to 64`.";
+		if (name_length > 96) {
+			message.payload.content = "The length of a voice stats channel name must be `lower than or equal to 96`.";
 			send_message(client, message);
 			return;
 		}
