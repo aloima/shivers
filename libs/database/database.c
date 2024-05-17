@@ -83,3 +83,7 @@ void database_delete(const char *key) {
 jsonvalue_t database_get(const char *key) {
 	return json_get_val(data, key).value;
 }
+
+jsonresult_t database_get_pure(const char *key) {
+	return json_get_val(data, key);
+}

@@ -12,4 +12,5 @@
 	bool database_has(const char *key);
 	void database_delete(const char *key);
 	jsonvalue_t database_get(const char *key);
+	jsonresult_t database_get_pure(const char *key);
 #endif

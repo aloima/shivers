@@ -12,8 +12,10 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 	char database_key[27];
 	sprintf(database_key, "%s.vstats", guild_id);
 
-	if (database_has(database_key)) {
-		jsonelement_t *array = database_get(database_key).array;
+	jsonresult_t data = database_get_pure(database_key);
+
+	if (data.exist) {
+		jsonelement_t *array = data.value.array;
 
 		for (unsigned short i = 0; i < array->size; ++i) {
 			jsonelement_t *object = ((jsonelement_t **) array->value)[i];
