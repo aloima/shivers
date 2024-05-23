@@ -6,10 +6,10 @@
 #include <utils.h>
 
 static struct Cooldown *cooldowns = NULL;
-static unsigned short cooldown_size = 0;
+static unsigned int cooldown_size = 0;
 
 void free_cooldowns() {
-	for (unsigned short i = 0; i < cooldown_size; ++i) {
+	for (unsigned int i = 0; i < cooldown_size; ++i) {
 		free(cooldowns[i].user_id);
 	}
 
@@ -50,7 +50,7 @@ void add_cooldown(const char *user_id) {
 	++cooldown_size;
 	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
 
-	const unsigned char size_of_user_id = (strlen(user_id) + 1);
+	const unsigned int size_of_user_id = (strlen(user_id) + 1);
 
 	const struct Cooldown cooldown = {
 		.timestamp = get_timestamp(),
@@ -62,16 +62,16 @@ void add_cooldown(const char *user_id) {
 }
 
 void remove_cooldown(const char *user_id) {
-	unsigned short at = 0;
+	unsigned int at = 0;
 
-	for (unsigned short i = 0; i < cooldown_size; ++i) {
+	for (unsigned int i = 0; i < cooldown_size; ++i) {
 		if (strsame(cooldowns[i].user_id, user_id)) {
 			at = i;
 			break;
 		}
 	}
 
-	for (unsigned short i = at + 1; i < cooldown_size; ++i) {
+	for (unsigned int i = (at + 1); i < cooldown_size; ++i) {
 		cooldowns[i - 1].user_id = allocate(cooldowns[i - 1].user_id, -1, strlen(cooldowns[i].user_id) + 1, sizeof(char));
 		memcpy(cooldowns + i - 1, cooldowns + i, sizeof(struct Cooldown));
 	}
@@ -86,29 +86,23 @@ void remove_cooldown(const char *user_id) {
 }
 
 bool has_cooldown(const char *user_id) {
-	bool result = false;
-
-	for (unsigned short i = 0; i < cooldown_size; ++i) {
+	for (unsigned int i = 0; i < cooldown_size; ++i) {
 		if (strsame(cooldowns[i].user_id, user_id)) {
-			result = true;
-			break;
+			return true;
 		}
 	}
 
-	return result;
+	return false;
 }
 
 struct Cooldown get_cooldown(const char *user_id) {
-	struct Cooldown cooldown = {0};
-
-	for (unsigned short i = 0; i < cooldown_size; ++i) {
+	for (unsigned int i = 0; i < cooldown_size; ++i) {
 		const struct Cooldown data = cooldowns[i];
 
 		if (strsame(data.user_id, user_id)) {
-			cooldown = data;
-			break;
+			return data;
 		}
 	}
 
-	return cooldown;
+	return (struct Cooldown) {0};
 }

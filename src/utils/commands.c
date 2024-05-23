@@ -6,7 +6,7 @@
 #include <json.h>
 
 static struct Command *commands = NULL;
-static unsigned short command_size = 0;
+static unsigned int command_size = 0;
 
 void setup_commands(const struct Client client) {
 	const struct Command command_array[] = {about, avatar, github, level, level_settings, vstats, wikipedia};
@@ -19,7 +19,7 @@ void setup_commands(const struct Client client) {
 	double command_type = 1.0;
 	char key[32], argument_key[32], sc_argument_key[32];
 
-	for (unsigned char i = 0; i < command_size; ++i) {
+	for (unsigned int i = 0; i < command_size; ++i) {
 		const struct Command command = command_array[i];
 		jsonelement_t *command_body = create_empty_json_element(false);
 		sprintf(key, "[%d]", i);
@@ -46,7 +46,7 @@ void setup_commands(const struct Client client) {
 		if (command.arg_size != 0) {
 			jsonelement_t *arguments_body = create_empty_json_element(true);
 
-			for (unsigned char a = 0; a < command.arg_size; ++a) {
+			for (unsigned int a = 0; a < command.arg_size; ++a) {
 				const struct CommandArgument argument = command.args[a];
 				bool argument_required = !argument.optional;
 				double argument_type = argument.type;
@@ -60,7 +60,7 @@ void setup_commands(const struct Client client) {
 				if (argument_type == SUBCOMMAND_ARGUMENT) {
 					jsonelement_t *sc_arguments_body = create_empty_json_element(true);
 
-					for (unsigned char b = 0; b < argument.arg_size; ++b) {
+					for (unsigned int b = 0; b < argument.arg_size; ++b) {
 						const struct CommandArgument sc_argument = argument.args[b];
 						bool sc_argument_required = !sc_argument.optional;
 						double sc_argument_type = sc_argument.type;

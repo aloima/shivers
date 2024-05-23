@@ -27,16 +27,11 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 			memcpy(name, json_name.value.string, json_name.element->size + 1);
 			prepare_voice_stats_channel_name(&name, guild_id);
 
-			char path[30];
-			sprintf(path, "/channels/%s", id);
+			char path[30] = "/channels/";
+			strcat(path, id);
 
 			char body[256];
-			sprintf(body, (
-				"{"
-					"\"name\":\"%s\""
-				"}"
-			), name);
-
+			sprintf(body, "{\"name\":\"%s\"}", name);
 			free(name);
 
 			response_free(api_request(client.token, path, "PATCH", body, NULL));

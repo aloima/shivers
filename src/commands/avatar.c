@@ -9,7 +9,10 @@
 #include <json.h>
 
 static void execute(const struct Client client, const struct InteractionCommand command) {
-	struct Embed embed = {0};
+	struct Embed embed = {
+		.color = COLOR
+	};
+
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -110,7 +113,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			if (i == 2) {
 				strcpy(png_avatar_urls[i], png_avatar_url);
 			} else {
-				const unsigned short size = pow(2, (8 + i));
+				const unsigned int size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
 				get_avatar_url(gif_avatar_urls[i], user_id, discriminator, hash, false, size);
 			}
@@ -130,7 +133,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char description[1024];
 		char png_avatar_urls[5][102];
 
-		for (unsigned char i = 0; i < 5; ++i) {
+		for (unsigned int i = 0; i < 5; ++i) {
 			if (i != 2) {
 				const unsigned short size = pow(2, (8 + i));
 				get_avatar_url(png_avatar_urls[i], user_id, discriminator, hash, true, size);
@@ -145,8 +148,6 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		embed.description = description;
 		embed.image_url = png_avatar_url;
 	}
-
-	embed.color = COLOR;
 
 	add_embed_to_message_payload(embed, &message.payload);
 	send_message(client, message);

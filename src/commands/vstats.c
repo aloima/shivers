@@ -91,12 +91,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		prepare_voice_stats_channel_name(&channel_name, command.guild_id);
 
 		char request_payload[256];
-		sprintf(request_payload, (
-			"{"
-				"\"name\":\"%s\","
-				"\"type\":2"
-			"}"
-		), channel_name);
+		sprintf(request_payload, "{"
+			"\"name\":\"%s\","
+			"\"type\":2"
+		"}", channel_name);
 		free(channel_name);
 
 		struct Response response = api_request(client.token, path, "POST", request_payload, NULL);

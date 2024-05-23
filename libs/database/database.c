@@ -61,7 +61,7 @@ void database_push(char *key, void *value, const unsigned char type) {
 
 	if (array.exist) {
 		char json_key[(array.element->size / 10) + 4];
-		sprintf(json_key, "[%ld]", array.element->size);
+		sprintf(json_key, "[%u]", array.element->size);
 
 		json_set_val(array.element, json_key, value, type);
 	} else {

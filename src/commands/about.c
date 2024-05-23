@@ -15,85 +15,83 @@
 #include <utils.h>
 #include <json.h>
 
-#define SECONDS_IN_YEAR (60 * 60 * 24 * 30 * 12)
-#define SECONDS_IN_MONTH (60 * 60 * 24 * 30)
-#define SECONDS_IN_DAY (60 * 60 * 24)
-#define SECONDS_IN_HOUR (60 * 60)
-#define SECONDS_IN_MINUTE (60)
+#define YEAR (60 * 60 * 24 * 30 * 12)
+#define MONTH (60 * 60 * 24 * 30)
+#define DAY (60 * 60 * 24)
+#define HOUR (60 * 60)
+#define MINUTE (60)
 
 static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	unsigned long long seconds = ((get_timestamp() - client.ready_at) / 1000);
-	const char years = ((seconds - (seconds % SECONDS_IN_YEAR)) / SECONDS_IN_YEAR);
-	seconds -= (years * SECONDS_IN_YEAR);
-	const char months = ((seconds - (seconds % SECONDS_IN_MONTH)) / SECONDS_IN_MONTH);
-	seconds -= (months * SECONDS_IN_MONTH);
-	const char days = ((seconds - (seconds % SECONDS_IN_DAY)) / SECONDS_IN_DAY);
-	seconds -= (days * SECONDS_IN_DAY);
-	const char hours = ((seconds - (seconds % SECONDS_IN_HOUR)) / SECONDS_IN_HOUR);
-	seconds -= (hours * SECONDS_IN_HOUR);
-	const char minutes = ((seconds - (seconds % SECONDS_IN_MINUTE)) / SECONDS_IN_MINUTE);
-	seconds -= (minutes * SECONDS_IN_MINUTE);
+	const int years = ((seconds - (seconds % YEAR)) / YEAR);
+	seconds -= (years * YEAR);
+	const int months = ((seconds - (seconds % MONTH)) / MONTH);
+	seconds -= (months * MONTH);
+	const int days = ((seconds - (seconds % DAY)) / DAY);
+	seconds -= (days * DAY);
+	const int hours = ((seconds - (seconds % HOUR)) / HOUR);
+	seconds -= (hours * HOUR);
+	const int minutes = ((seconds - (seconds % MINUTE)) / MINUTE);
+	seconds -= (minutes * MINUTE);
 
 	struct Join uptime[6];
-	unsigned char uptime_element_count = 0;
+	int value = -1;
 
 	if (years != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, -1, 7, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%hi yrs", years);
+		uptime[value].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%hi yrs", years);
 	}
 
 	if (months != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%hi mths", months);
+		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%hi mths", months);
 	}
 
 	if (days != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%hi days", days);
+		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%hi days", days);
 	}
 
 	if (hours != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, -1, 7, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%hi hrs", hours);
+		uptime[value].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, -1, 8, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%hi mins", minutes);
+		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%hi mins", minutes);
 	}
 
 	if (seconds != 0) {
-		++uptime_element_count;
+		++value;
 
-		const unsigned char index = (uptime_element_count - 1);
-		uptime[index].data = allocate(NULL, 0, 8, sizeof(char));
-		uptime[index].length = sprintf(uptime[index].data, "%llu secs", seconds);
+		uptime[value].data = allocate(NULL, 0, 8, sizeof(char));
+		uptime[value].length = sprintf(uptime[value].data, "%llu secs", seconds);
 	}
 
-	join(uptime, uptime_text, uptime_element_count, " ");
+  ++value;
+	join(uptime, uptime_text, value, " ");
 
-	for (unsigned char i = 0; i < uptime_element_count; ++i) {
+	for (unsigned int i = 0; i < value; ++i) {
 		free(uptime[i].data);
 	}
 }
 
 static void execute(const struct Client client, const struct InteractionCommand command) {
-	struct Embed embed = {0};
+	struct Embed embed = {
+    .color = COLOR
+  };
+
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -126,10 +124,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char latency[7];
 	sprintf(latency, "%ums", get_latency());
 
-	char add[112];
+	char add[110];
 	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
 
-	embed.color = COLOR;
 	embed.description = add;
 
 	add_field_to_embed(&embed, "Maintainer", "<@840217542400409630>", true);
