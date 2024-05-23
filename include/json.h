@@ -5,19 +5,22 @@
 #ifndef JSON_H_
 	#define JSON_H_
 
-	#define JSON_UNSPECIFIED 0
-	#define JSON_BOOLEAN 1
-	#define JSON_NUMBER 2
-	#define JSON_STRING 3
-	#define JSON_OBJECT 4
-	#define JSON_ARRAY 5
-	#define JSON_NULL 6
+	enum JSONType {
+		JSON_UNSPECIFIED,
+		JSON_BOOLEAN,
+		JSON_NUMBER,
+		JSON_STRING,
+		JSON_OBJECT,
+		JSON_ARRAY,
+		JSON_NULL
+	};
 
 	struct JSONElement {
-		char type, *key;
+		char *key;
+		enum JSONType type;
 		void *value;
 		struct JSONElement *parent;
-		unsigned long size;
+		unsigned int size;
 	};
 
 	typedef struct JSONElement jsonelement_t;
@@ -33,7 +36,7 @@
 		jsonvalue_t value;
 		jsonelement_t *element;
 		bool exist;
-		char type;
+		enum JSONType type;
 	} jsonresult_t;
 
 	jsonelement_t *json_parse(const char *text);
@@ -41,9 +44,9 @@
 
 	jsonelement_t *create_empty_json_element(const bool is_array);
 	jsonelement_t *clone_json_element(jsonelement_t *element);
-	char *json_stringify(const jsonelement_t *element, const unsigned char fractional_limit);
+	char *json_stringify(const jsonelement_t *element, const unsigned int fractional_limit);
 
 	jsonresult_t json_get_val(jsonelement_t *element, const char *search);
 	void json_del_val(jsonelement_t *element, const char *search);
-	void json_set_val(jsonelement_t *object, const char *key, void *data, const char type);
+	void json_set_val(jsonelement_t *object, const char *key, void *data, const enum JSONType type);
 #endif

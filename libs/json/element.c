@@ -5,7 +5,7 @@
 #include <utils.h>
 #include <json.h>
 
-jsonelement_t *create_empty_json_element(bool is_array) {
+jsonelement_t *create_empty_json_element(const bool is_array) {
 	jsonelement_t *element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 	element->type = (is_array ? JSON_ARRAY : JSON_OBJECT);
 
@@ -45,6 +45,9 @@ jsonelement_t *clone_json_element(jsonelement_t *element) {
 			case JSON_BOOLEAN:
 				result->value = allocate(NULL, -1, 1, sizeof(bool));
 				((bool *) result->value)[0] = *((bool *) element->value);
+				break;
+
+			default:
 				break;
 		}
 	}

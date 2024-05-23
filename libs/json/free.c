@@ -20,7 +20,7 @@ static void free_element(jsonelement_t *element) {
 static void free_elements(jsonelement_t *parent) {
 	if (parent) {
 		if (parent->type == JSON_ARRAY || parent->type == JSON_OBJECT) {
-			for (unsigned long i = 0; i < parent->size; ++i) {
+			for (unsigned int i = 0; i < parent->size; ++i) {
 				jsonelement_t *element = ((jsonelement_t **) parent->value)[i];
 
 				if (element) {

@@ -14,39 +14,49 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 	const unsigned int splitter_size = splitter.size;
 
 	for (unsigned int ki = 0; ki < splitter_size; ++ki) {
-		if (value->type == JSON_ARRAY) {
-			const unsigned int index = atoi_s(splitter.data[ki].data, splitter.data[ki].length);
+		switch (value->type) {
+			case JSON_ARRAY: {
+				const unsigned int index = atoi_s(splitter.data[ki].data, splitter.data[ki].length);
 
-			if (value->size > index) {
-				value = ((jsonelement_t **) value->value)[index];
-			} else {
-				result.exist = false;
+				if (value->size > index) {
+					value = ((jsonelement_t **) value->value)[index];
+				} else {
+					result.exist = false;
+					ki = splitter_size;
+				}
+
 				break;
 			}
-		} else if (value->type == JSON_OBJECT) {
-			const unsigned int size = value->size;
 
-			if (size == 0) {
-				result.exist = false;
-				break;
-			} else {
-				const unsigned int last_index = (size - 1);
+			case JSON_OBJECT: {
+				const unsigned int size = value->size;
 
-				for (unsigned int i = 0; i < size; ++i) {
-					jsonelement_t *data = ((jsonelement_t **) value->value)[i];
+				if (size == 0) {
+					result.exist = false;
+					ki = splitter_size;
+				} else {
+					const unsigned int last_index = (size - 1);
 
-					if (strsame(data->key, splitter.data[ki].data)) {
-						value = data;
-						i = size;
-					} else if (i == last_index) {
-						result.exist = false;
-						ki = splitter.size;
+					for (unsigned int i = 0; i < size; ++i) {
+						jsonelement_t *data = ((jsonelement_t **) value->value)[i];
+
+						if (strsame(data->key, splitter.data[ki].data)) {
+							value = data;
+							i = size;
+						} else if (i == last_index) {
+							result.exist = false;
+							ki = splitter.size;
+						}
 					}
 				}
+
+				break;
 			}
-		} else {
-			result.exist = false;
-			break;
+
+			default:
+				result.exist = false;
+				ki = splitter_size;
+				break;
 		}
 	}
 
@@ -75,6 +85,9 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 
 			case JSON_ARRAY:
 				result.value.array = value;
+				break;
+
+			default:
 				break;
 		}
 	} else {

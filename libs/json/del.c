@@ -82,6 +82,9 @@ void json_del_val(jsonelement_t *element, const char *search) {
 
 				break;
 			}
+
+			default:
+				break;
 		}
 
 		--parent->size;

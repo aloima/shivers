@@ -7,12 +7,12 @@
 #include <json.h>
 #include <utils.h>
 
-char *json_stringify(const jsonelement_t *element, const unsigned char fractional_limit) {
+char *json_stringify(const jsonelement_t *element, const unsigned int fractional_limit) {
 	char *result = NULL;
 
 	if (!element || element->type == JSON_UNSPECIFIED) {
 		result = allocate(NULL, -1, 8, sizeof(char));
-		strcpy(result, "<empty>");
+		memcpy(result, "<empty>", 8);
 	} else if (element->type == JSON_STRING) {
 		const unsigned long length = strlen(element->value);
 		result = allocate(NULL, -1, length + 3, sizeof(char));
@@ -41,14 +41,14 @@ char *json_stringify(const jsonelement_t *element, const unsigned char fractiona
 
 		if (value) {
 			result = allocate(NULL, -1, 5, sizeof(char));
-			strcpy(result, "true");
+			memcpy(result, "true", 5);
 		} else {
 			result = allocate(NULL, -1, 6, sizeof(char));
-			strcpy(result, "false");
+			memcpy(result, "false", 6);
 		}
 	} else if (element->type == JSON_NULL) {
 		result = allocate(NULL, -1, 5, sizeof(char));
-		strcpy(result, "null");
+		memcpy(result, "null", 5);
 	} else if (element->type == JSON_OBJECT) {
 		unsigned long result_length = 2;
 		unsigned long i;

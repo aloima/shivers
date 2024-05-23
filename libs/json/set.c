@@ -68,7 +68,7 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 	}
 }
 
-void json_set_val(jsonelement_t *target, const char *key, void *value, const char type) {
+void json_set_val(jsonelement_t *target, const char *key, void *value, const enum JSONType type) {
 	jsonelement_t *element = target;
 
 	if (key == NULL) {
