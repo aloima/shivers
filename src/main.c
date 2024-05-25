@@ -35,7 +35,7 @@ int main(void) {
 		connect_gateway(bot_token, "wss://gateway.discord.gg", (
 			(1 << 0) | // GUILDS
 			(1 << 1) | // GUILD_MEMBERS
-			(1 << 7) | // GUILD_VOCE_STATES
+			(1 << 7) | // GUILD_VOICE_STATES
 			(1 << 8) | // GUILD_PRESENCES
 			(1 << 9)   // GUILD_MESSAGES
 		));

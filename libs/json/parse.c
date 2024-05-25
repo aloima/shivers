@@ -11,6 +11,8 @@
 static void parse_v(jsonelement_t *element, const char *text, const unsigned int length, unsigned int *i);
 static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned int length, unsigned int *i);
 
+#define IS_EMPTY(ch) ((ch) == ' ' || (ch) == '\n' || (ch) == '\t' || (ch) == 13)
+
 static void parse_v(jsonelement_t *element, const char *text, const unsigned int length, unsigned int *i) {
 	bool escaping = false;
 
@@ -39,7 +41,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned int
 				*i += 4;
 				element->type = JSON_NULL;
 				break;
-			} else if (ch == ' ' || ch == '\t' || ch == '\n') {
+			} else if (IS_EMPTY(ch)) {
 				++(*i);
 				continue;
 			} else if (ch == '"') {
@@ -61,7 +63,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned int
 					while (sub_condition) {
 						char sub_ch = text[*i - 1];
 
-						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
+						if (IS_EMPTY(sub_ch)) {
 							++(*i);
 						} else if (sub_ch == ',') {
 							sub_condition = false;
@@ -112,7 +114,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned int
 					while (sub_condition) {
 						const char sub_ch = text[*i - 1];
 
-						if (sub_ch == ' ' || sub_ch == '\t' || sub_ch == '\n') {
+						if (IS_EMPTY(sub_ch)) {
 							++(*i);
 						} else if (sub_ch == ',') {
 							waiting_new_element = true;
@@ -196,7 +198,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 	while (*i < length) {
 		const char ch = text[*i];
 
-		if (!parsing_key && !parsing_value && (ch == ' ' || ch == '\t' || ch == '\n')) {
+		if (!parsing_key && !parsing_value && IS_EMPTY(ch)) {
 			++(*i);
 			continue;
 		} else if (!parsing_key && (*element)->key == NULL) {
@@ -219,7 +221,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
-			if (ch == ' ' || ch == '\t' || ch == '\n') {
+			if (IS_EMPTY(ch)) {
 				++(*i);
 				continue;
 			} else if (ch == ':') {
