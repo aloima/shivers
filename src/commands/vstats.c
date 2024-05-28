@@ -46,8 +46,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char database_key[27];
 		sprintf(database_key, "%s.vstats", command.guild_id);
 
-		if (database_has(database_key)) {
-			jsonelement_t *data = database_get(database_key).array;
+		const jsonresult_t vstats_data = database_get(database_key);
+
+		if (vstats_data.exist) {
+			jsonelement_t *data = vstats_data.value.array;
 			char line[256];
 
 			for (unsigned int i = 0; i < data->size; ++i) {
@@ -76,17 +78,16 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char path[37];
 		sprintf(path, "/guilds/%s/channels", command.guild_id);
 
-		const char *name = command.arguments[0].value.subcommand.arguments[0].value.string;
-		const unsigned int name_length = strlen(name);
+		const struct String input = command.arguments[0].value.subcommand.arguments[0].value.string;
 
-		if (name_length > 96) {
+		if (input.length > 96) {
 			message.payload.content = "The length of a voice stats channel name must be `lower than or equal to 96`.";
 			send_message(client, message);
 			return;
 		}
 
-		char *channel_name = allocate(NULL, -1, name_length + 1, sizeof(char));
-		memcpy(channel_name, name, name_length + 1);
+		char *channel_name = allocate(NULL, -1, input.length + 1, sizeof(char));
+		memcpy(channel_name, input.value, input.length + 1);
 
 		prepare_voice_stats_channel_name(&channel_name, command.guild_id);
 
@@ -111,7 +112,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		jsonelement_t *database_data = create_empty_json_element(false);
 		json_set_val(database_data, "id", json_get_val(response_data, "id").value.string, JSON_STRING);
-		json_set_val(database_data, "name", (char *) name, JSON_STRING);
+		json_set_val(database_data, "name", input.value, JSON_STRING);
 		json_free(response_data, false);
 
 		char database_key[27];
@@ -125,11 +126,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char database_key[27];
 		sprintf(database_key, "%s.vstats", command.guild_id);
 
-		const char *input = command.arguments[0].value.subcommand.arguments[0].value.string;
+		const struct String input = command.arguments[0].value.subcommand.arguments[0].value.string;
 		bool deleted = false;
 
-		if (database_has(database_key)) {
-			jsonelement_t *data = database_get(database_key).array;
+		const jsonresult_t vstats_data = database_get(database_key);
+
+		if (vstats_data.exist) {
+			jsonelement_t *data = vstats_data.value.array;
 
 			for (unsigned int i = 0; i < data->size; ++i) {
 				char id_key[6];
@@ -137,7 +140,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 				const char *id = json_get_val(data, id_key).value.string;
 
-				if (strsame(id, input)) {
+				if (strsame(id, input.value)) {
 					char database_deletion_key[30], path[30];
 					sprintf(database_deletion_key, "%s.vstats.%d", command.guild_id, i);
 					sprintf(path, "/channels/%s", id);

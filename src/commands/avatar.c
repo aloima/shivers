@@ -27,9 +27,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	if (command.argument_size == 1) {
 		if (strsame(command.arguments[0].name, "id")) {
-			const char *input = command.arguments[0].value.string;
+			struct String input = command.arguments[0].value.string;
 
-			if (!check_snowflake(input)) {
+			if (!check_snowflake(input.value)) {
 				message.payload = (struct MessagePayload) {
 					.content = INVALID_ARGUMENT,
 					.ephemeral = true
@@ -39,7 +39,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				return;
 			}
 
-			strcpy(user_id, input);
+			memcpy(user_id, input.value, input.length + 1);
 
 			char path[27] = "/users/";
 			strcat(path, user_id);

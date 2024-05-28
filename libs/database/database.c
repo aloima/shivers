@@ -52,11 +52,11 @@ void database_destroy() {
 	json_free(data, false);
 }
 
-void database_set(char *key, void *value, const unsigned char type) {
+void database_set(char *key, void *value, const enum JSONType type) {
 	json_set_val(data, key, value, type);
 }
 
-void database_push(char *key, void *value, const unsigned char type) {
+void database_push(char *key, void *value, const enum JSONType type) {
 	jsonresult_t array = json_get_val(data, key);
 
 	if (array.exist) {
@@ -72,18 +72,10 @@ void database_push(char *key, void *value, const unsigned char type) {
 	}
 }
 
-bool database_has(const char *key) {
-	return json_get_val(data, key).exist;
-}
-
 void database_delete(const char *key) {
 	json_del_val(data, key);
 }
 
-jsonvalue_t database_get(const char *key) {
-	return json_get_val(data, key).value;
-}
-
-jsonresult_t database_get_pure(const char *key) {
+jsonresult_t database_get(const char *key) {
 	return json_get_val(data, key);
 }

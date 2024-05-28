@@ -128,14 +128,17 @@ static void onstart() {
 	puts("Websocket is started.");
 }
 
-static void parse_interaction_base_arguments(struct InteractionArgument *argument, jsonelement_t *data, unsigned char type, char *name, jsonvalue_t value) {
+static void parse_interaction_base_arguments(struct InteractionArgument *argument, jsonelement_t *data, unsigned char type, char *name, jsonresult_t input) {
 	switch (type) {
 		case STRING_ARGUMENT:
 			*argument = (struct InteractionArgument) {
 				.name = name,
 				.type = type,
 				.value = {
-					.string = value.string
+					.string = {
+						.value = input.value.string,
+						.length = input.element->size
+					}
 				}
 			};
 
@@ -146,7 +149,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 				.name = name,
 				.type = type,
 				.value = {
-					.number = value.number
+					.number = input.value.number
 				}
 			};
 
@@ -157,16 +160,16 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 				.name = name,
 				.type = type,
 				.value = {
-					.boolean = value.boolean
+					.boolean = input.value.boolean
 				}
 			};
 
 			break;
 
 		case USER_ARGUMENT: {
-			char user_search[35], member_search[36];
-			sprintf(user_search, "resolved.users.%s", value.string);
-			sprintf(member_search, "resolved.members.%s", value.string);
+			char user_search[16 + input.element->size], member_search[18 + input.element->size];
+			sprintf(user_search, "resolved.users.%s", input.value.string);
+			sprintf(member_search, "resolved.members.%s", input.value.string);
 
 			jsonresult_t member_result = json_get_val(data, member_search);
 
@@ -185,8 +188,8 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 		}
 
 		case CHANNEL_ARGUMENT: {
-			char search[38];
-			sprintf(search, "resolved.channels.%s", value.string);
+			char search[19 + input.element->size];
+			sprintf(search, "resolved.channels.%s", input.value.string);
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
@@ -200,8 +203,8 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 		}
 
 		case ROLE_ARGUMENT: {
-			char search[35];
-			sprintf(search, "resolved.roles.%s", value.string);
+			char search[16 + input.element->size];
+			sprintf(search, "resolved.roles.%s", input.value.string);
 
 			*argument = (struct InteractionArgument) {
 				.name = name,
@@ -377,13 +380,13 @@ static void onmessage(const struct WebsocketFrame frame) {
 										char *option_name = json_get_val(option_element, "name").value.string;
 
 										struct InteractionArgument *subcommand_argument = &(subcommand->arguments[s]);
-										jsonvalue_t option_value = json_get_val(option_element, "value").value;
+										jsonresult_t option_value = json_get_val(option_element, "value");
 										parse_interaction_base_arguments(subcommand_argument, interaction_data, option_type, option_name, option_value);
 									}
 								}
 							} else {
 								struct InteractionArgument *argument = &(command.arguments[i]);
-								jsonvalue_t option_value = json_get_val(option_element, "value").value;
+								jsonresult_t option_value = json_get_val(option_element, "value");
 								parse_interaction_base_arguments(argument, interaction_data, option_type, option_name, option_value);
 							}
 						}

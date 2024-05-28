@@ -20,7 +20,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	};
 
 	char search_url[512];
-	sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", command.arguments[0].value.string);
+	sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", command.arguments[0].value.string.value);
 	config.url = search_url;
 
 	struct Response search_response = request(config);

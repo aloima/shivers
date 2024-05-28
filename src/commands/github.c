@@ -30,13 +30,12 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		.header_size = 1
 	};
 
-	char url[184];
+	const struct String query = command.arguments[0].value.string;
+	char url[30 + query.length];
 	struct Response response;
 
-	const char *query = command.arguments[0].value.string;
-
-	if (char_at(query, '/', 0) == -1) {
-		sprintf(url, "https://api.github.com/users/%s", query);
+	if (char_at(query.value, '/', 0) == -1) {
+		sprintf(url, "https://api.github.com/users/%s", query.value);
 
 		config.url = url;
 		response = request(config);
@@ -107,7 +106,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			free(embed.fields);
 		}
 	} else {
-		sprintf(url, "https://api.github.com/repos/%s", query);
+		sprintf(url, "https://api.github.com/repos/%s", query.value);
 
 		config.url = url;
 		response = request(config);

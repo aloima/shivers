@@ -23,10 +23,14 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 			sprintf(channel_key, "%s.settings.level.channel", guild_id);
 			sprintf(message_key, "%s.settings.level.message", guild_id);
 
-			double xp = (database_has(xp_key) ? database_get(xp_key).number : 0.0);
-			double level = (database_has(level_key) ? database_get(level_key).number : 1.0);
+			const jsonresult_t xp_data = database_get(xp_key);
+			const jsonresult_t level_data = database_get(level_key);
+			const jsonresult_t factor_data = database_get(factor_key);
 
-			const double factor = (database_has(factor_key) ? database_get(factor_key).number : 100.0);
+			double xp = (xp_data.exist ? xp_data.value.number : 0.0);
+			double level = (level_data.exist ? level_data.value.number : 1.0);
+
+			const double factor = (factor_data.exist ? factor_data.value.number : 100.0);
 			const double bound = (level * factor);
 			xp += (rand() % 10);
 
@@ -36,8 +40,11 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 
 				database_set(level_key, &level, JSON_NUMBER);
 
-				if (database_has(channel_key) && database_has(message_key)) {
-					char *level_message = database_get(message_key).string;
+				const jsonresult_t channel_data = database_get(channel_key);
+				const jsonresult_t message_data = database_get(message_key);
+
+				if (channel_data.element && message_data.exist) {
+					char *level_message = message_data.value.string;
 					char *level_message_dup = allocate(NULL, -1, strlen(level_message) + 1, sizeof(char));
 					strcpy(level_message_dup, level_message);
 
@@ -54,7 +61,7 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 					const struct Message message = {
 						.target_type = TARGET_CHANNEL,
 						.target = {
-							.channel_id = database_get(channel_key).string
+							.channel_id = channel_data.value.string
 						},
 						.payload = {
 							.content = level_message_dup

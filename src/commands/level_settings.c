@@ -30,7 +30,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		{
 			sprintf(key, "%s.settings.level.factor", command.guild_id);
-			data = database_get_pure(key);
+			data = database_get(key);
 
 			if (!data.exist) {
 				sprintf(factor_text, "Not set (100)");
@@ -43,7 +43,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		{
 			sprintf(key, "%s.settings.level.channel", command.guild_id);
-			data = database_get_pure(key);
+			data = database_get(key);
 
 			if (!data.exist) {
 				sprintf(channel_text, "Not set");
@@ -56,7 +56,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		{
 			sprintf(key, "%s.settings.level.message", command.guild_id);
-			data = database_get_pure(key);
+			data = database_get(key);
 
 			if (!data.exist) {
 				add_field_to_embed(&embed, "Message", "Not set", false);
@@ -104,7 +104,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 					database_set(key, json_get_val(option.value.channel, "id").value.string, JSON_STRING);
 				} else if (strsame(option_name, "message")) {
 					sprintf(key, "%s.settings.level.message", command.guild_id);
-					database_set(key, option.value.string, JSON_STRING);
+					database_set(key, option.value.string.value, JSON_STRING);
 				}
 			}
 

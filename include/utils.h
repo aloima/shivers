@@ -15,6 +15,11 @@
 		int number;
 	};
 
+	struct String {
+		char *value;
+		unsigned int length;
+	};
+
 	struct Split {
 		struct SplitData *data;
 		unsigned int size;

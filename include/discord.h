@@ -1,6 +1,7 @@
 #include <stdbool.h>
 
 #include <json.h>
+#include <utils.h>
 #include <network.h>
 
 #ifndef DISCORD_H_
@@ -31,7 +32,7 @@
 		char **online_members;
 		unsigned long long bot_count;
 		unsigned long long ban_count;
-		unsigned short channel_count;
+		unsigned int channel_count;
 		unsigned long long member_at_voice_count;
 		char **members_at_voice;
 	};
@@ -55,7 +56,7 @@
 		struct EmbedAuthor author;
 		struct EmbedFooter footer;
 		struct EmbedField *fields;
-		unsigned char field_size;
+		unsigned int field_size;
 	};
 
 	struct File {
@@ -63,21 +64,25 @@
 		unsigned long size;
 	};
 
-	#define TARGET_INTERACTION_COMMAND 1
-	#define TARGET_CHANNEL 2
+	enum InteractionCommandTargetTypes {
+		TARGET_INTERACTION_COMMAND = 1,
+		TARGET_CHANNEL
+	};
 
-	#define SUBCOMMAND_ARGUMENT 1
-	#define SUBCOMMAND_GROUP_ARGUMENT 2
-	#define STRING_ARGUMENT 3
-	#define INTEGER_ARGUMENT 4
-	#define BOOLEAN_ARGUMENT 5
-	#define USER_ARGUMENT 6
-	#define CHANNEL_ARGUMENT 7
-	#define ROLE_ARGUMENT 8
+	enum ArgumentTypes {
+		SUBCOMMAND_ARGUMENT = 1,
+		SUBCOMMAND_GROUP_ARGUMENT,
+		STRING_ARGUMENT,
+		INTEGER_ARGUMENT,
+		BOOLEAN_ARGUMENT,
+		USER_ARGUMENT,
+		CHANNEL_ARGUMENT,
+		ROLE_ARGUMENT
+	};
 
 	struct MessagePayload {
 		char *content;
-		unsigned char embed_size, file_size;
+		unsigned int embed_size, file_size;
 		struct Embed *embeds;
 		struct File *files;
 		bool ephemeral;
@@ -85,15 +90,15 @@
 
 	struct InteractionSubcommand {
 		struct InteractionArgument *arguments;
-		unsigned char argument_size;
+		unsigned int argument_size;
 	};
 
 	struct InteractionArgument {
 		char *name;
-		unsigned char type;
+		enum ArgumentTypes type;
 
 		union {
-			char *string;
+			struct String string;
 			long number;
 			bool boolean;
 
@@ -110,7 +115,7 @@
 		char *id, *token, *guild_id, *channel_id, *name;
 		jsonelement_t *user;
 		struct InteractionArgument *arguments;
-		unsigned char argument_size;
+		unsigned int argument_size;
 	};
 
 	struct Message {
@@ -120,7 +125,7 @@
 		} target;
 
 		struct MessagePayload payload;
-		unsigned char target_type;
+		enum InteractionCommandTargetTypes target_type;
 	};
 
 	void connect_gateway(const char *bot_token, const char *url, const unsigned int bot_intents);

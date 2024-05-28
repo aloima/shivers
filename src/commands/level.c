@@ -86,14 +86,15 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	sprintf(factor_key, "%s.settings.level.factor", command.guild_id);
 	sprintf(levels_key, "%s.levels", command.guild_id);
 
-	const unsigned short factor = (database_has(factor_key) ? database_get(factor_key).number : 100);
+	const jsonresult_t factor_data = database_get(factor_key);
+	const unsigned short factor = (factor_data.exist ? factor_data.value.number : 100);
 
-	jsonvalue_t levels = database_get(levels_key);
-	const unsigned int sorted_length = (database_has(levels_key) ? levels.object->size : 0);
+	const jsonresult_t levels = database_get(levels_key);
+	const unsigned int sorted_length = (levels.exist ? levels.value.object->size : 0);
 	struct Sort sorted[sorted_length];
 
 	for (unsigned int i = 0; i < sorted_length; ++i) {
-		sorted[i].value = ((jsonelement_t **) levels.object->value)[i];
+		sorted[i].value = ((jsonelement_t **) levels.value.object->value)[i];
 
 		jsonelement_t *value = sorted[i].value;
 		const jsonresult_t json_level = json_get_val(value, "level");
@@ -104,8 +105,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	sort(sorted, sorted_length);
 
-	const unsigned int xp = (database_has(xp_key) ? database_get(xp_key).number : 0);
-	const unsigned int level = (database_has(level_key) ? database_get(level_key).number : 1);
+	const jsonresult_t xp_data = database_get(xp_key);
+	const jsonresult_t level_data = database_get(level_key);
+
+	const unsigned int xp = (xp_data.exist ? xp_data.value.number : 0);
+	const unsigned int level = (level_data.exist ? level_data.value.number : 1);
 
 	char xp_text[24], level_text[16], rank[12];
 	sprintf(level_text, "Level %d", level);
