@@ -20,10 +20,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	if (command.argument_size == 1) {
 		jsonelement_t *user = command.arguments[0].value.user.user_data;
-		const jsonresult_t bot_result = json_get_val(user, "bot");
+		const jsonresult_t json_is_bot = json_get_val(user, "bot");
 
 		const bool is_in_guild = (command.arguments[0].value.user.member_data != NULL);
-		const bool is_bot = (bot_result.exist ? bot_result.value.boolean : false);
+		const bool is_bot = (json_is_bot.exist ? json_is_bot.value.boolean : false);
 
 		if (!is_in_guild) {
 			message.payload = (struct MessagePayload) {
@@ -56,7 +56,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		jsonresult_t json_avatar = json_get_val(user, "avatar");
 
-		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+		if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 
@@ -73,7 +73,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		jsonresult_t json_avatar = json_get_val(command.user, "avatar");
 
-		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+		if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 

@@ -9,7 +9,7 @@ Shivers is a Discord bot made for hobby and educational purposes.
 + zlib and its headers
 + freetype and its headers
 
-### Windows
+### Windows (WIP)
 + MSYS2
 + MSYS2 compiler (gcc is recommended)
 + OpenSSL and its headers for MSYS2

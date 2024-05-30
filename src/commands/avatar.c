@@ -52,7 +52,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			jsonresult_t json_avatar = json_get_val(user, "avatar");
 
-			if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+			if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 			}
 
@@ -72,7 +72,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			jsonresult_t json_avatar = json_get_val(user, "avatar");
 
-			if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+			if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 			}
 
@@ -96,7 +96,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		jsonresult_t json_avatar = json_get_val(command.user, "avatar");
 
-		if (json_avatar.exist && json_avatar.type == JSON_STRING) {
+		if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
 		}
 

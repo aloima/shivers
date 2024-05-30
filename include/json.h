@@ -36,7 +36,6 @@
 		jsonvalue_t value;
 		jsonelement_t *element;
 		bool exist;
-		enum JSONType type;
 	} jsonresult_t;
 
 	jsonelement_t *json_parse(const char *text);

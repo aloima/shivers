@@ -9,7 +9,10 @@
 #include <json.h>
 
 static void execute(const struct Client client, const struct InteractionCommand command) {
-	struct Embed embed = {0};
+	struct Embed embed = {
+		.color = COLOR
+	};
+
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -49,8 +52,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			send_message(client, message);
 		} else {
 			jsonelement_t *user = json_parse((const char *) response.data);
-			const jsonresult_t login_data = json_get_val(user, "login");
-			const jsonresult_t name_data = json_get_val(user, "name");
+			const jsonresult_t json_login = json_get_val(user, "login");
+			const jsonresult_t json_name = json_get_val(user, "name");
 			const jsonresult_t bio = json_get_val(user, "bio");
 
 			char following[8];
@@ -77,11 +80,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			sprintf(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi_s(month_string, -1) - 1], joined_at_string);
 
-			char name[128];
-			sprintf(name, "@%s", login_data.value.string);
+			char name[json_login.element->size + 1];
+			sprintf(name, "@%s", json_login.value.string);
 
-			if (name_data.type != JSON_NULL && !strsame(login_data.value.string, name_data.value.string)) {
-				sprintf(name, "%s (@%s)", name_data.value.string, login_data.value.string);
+			if (json_name.element->type != JSON_NULL && !strsame(json_login.value.string, json_name.value.string)) {
+				sprintf(name, "%s (@%s)", json_name.value.string, json_login.value.string);
 			}
 
 			add_field_to_embed(&embed, "Repositories", repositories, true);
@@ -91,10 +94,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			add_field_to_embed(&embed, "Gists", gists, true);
 
 			embed.thumbnail_url = json_get_val(user, "avatar_url").value.string;
-			embed.color = COLOR;
 			set_embed_author(&embed, name, json_get_val(user, "html_url").value.string, NULL);
 
-			if (bio.type != JSON_NULL) {
+			if (bio.element->type != JSON_NULL) {
 				embed.description = bio.value.string;
 			}
 
@@ -137,13 +139,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			add_field_to_embed(&embed, "Watchers", watchers, true);
 			add_field_to_embed(&embed, "Forks", forks, true);
 			add_field_to_embed(&embed, "Is archived?", json_get_val(repository, "archived").value.boolean ? "Yes" : "No", true);
-			add_field_to_embed(&embed, "Major language", language.type != JSON_NULL ? language.value.string : "None", true);
-			add_field_to_embed(&embed, "License", license.type != JSON_NULL ? json_get_val(license.value.object, "spdx_id").value.string : "None", true);
+			add_field_to_embed(&embed, "Major language", language.element->type != JSON_NULL ? language.value.string : "None", true);
+			add_field_to_embed(&embed, "License", license.element->type != JSON_NULL ? json_get_val(license.value.object, "spdx_id").value.string : "None", true);
 
 			embed.color = COLOR;
 			set_embed_author(&embed, json_get_val(repository, "full_name").value.string, json_get_val(repository, "html_url").value.string, NULL);
 
-			if (description.type != JSON_NULL) {
+			if (description.element->type != JSON_NULL) {
 				embed.description = description.value.string;
 			}
 

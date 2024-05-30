@@ -63,7 +63,6 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 	split_free(splitter);
 
 	if (result.exist) {
-		result.type = value->type;
 		result.element = value;
 
 		switch (value->type) {

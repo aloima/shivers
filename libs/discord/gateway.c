@@ -343,7 +343,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 					jsonresult_t guild_id = json_get_val(interaction, "guild_id");
 
-					if (guild_id.exist && guild_id.type != JSON_NULL) {
+					if (guild_id.exist && guild_id.element->type != JSON_NULL) {
 						command.guild_id = guild_id.value.string;
 						command.user = json_get_val(interaction, "member.user").value.object;
 					} else {
@@ -353,7 +353,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 					jsonresult_t options_result = json_get_val(interaction_data, "options");
 					unsigned char options_size = (options_result.exist ? options_result.value.array->size : 0);
 
-					if (options_result.exist && options_result.type == JSON_ARRAY && options_size != 0) {
+					if (options_result.exist && options_result.element->type == JSON_ARRAY && options_size != 0) {
 						command.arguments = allocate(NULL, -1, options_size, sizeof(struct InteractionArgument));
 						command.argument_size = options_result.value.array->size;
 
@@ -369,7 +369,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 								jsonresult_t sc_options_result = json_get_val(option_element, "options");
 								const unsigned char sc_options_size = sc_options_result.value.array->size;
 
-								if (sc_options_result.type == JSON_ARRAY && sc_options_size != 0) {
+								if (sc_options_result.element->type == JSON_ARRAY && sc_options_size != 0) {
 									struct InteractionSubcommand *subcommand = &(command.arguments[i].value.subcommand);
 									subcommand->arguments = allocate(NULL, -1, sc_options_size, sizeof(struct InteractionArgument));
 									subcommand->argument_size = sc_options_size;
@@ -449,10 +449,10 @@ static void onmessage(const struct WebsocketFrame frame) {
 				const jsonresult_t channel_id = json_get_val(data, "d.channel_id");
 				const jsonresult_t guild_id = json_get_val(data, "d.guild_id");
 
-				if (guild_id.exist && guild_id.type == JSON_STRING) {
+				if (guild_id.exist && guild_id.element->type == JSON_STRING) {
 					struct Guild *guild = get_guild_from_cache(guild_id.value.string);
 
-					if (!channel_id.exist && channel_id.type == JSON_NULL) {
+					if (!channel_id.exist && channel_id.element->type == JSON_NULL) {
 						for (unsigned long long i = 0; i < guild->member_at_voice_count; ++i) {
 							if (strsame(guild->members_at_voice[i], user_id.value.string)) {
 								--guild->member_at_voice_count;

@@ -10,11 +10,11 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 
 	if (!is_webhook) {
 		const jsonresult_t author_bot = json_get_val(message, "author.bot");
-		const jsonresult_t guild_id_element = json_get_val(message, "guild_id");
+		const jsonresult_t json_guild_id = json_get_val(message, "guild_id");
 
-		if ((!author_bot.exist || author_bot.value.boolean == false) && (guild_id_element.exist && guild_id_element.type != JSON_NULL)) {
+		if ((!author_bot.exist || author_bot.value.boolean == false) && (json_guild_id.exist && json_guild_id.element->type != JSON_NULL)) {
 			const char *user_id = json_get_val(message, "author.id").value.string;
-			const char *guild_id = guild_id_element.value.string;
+			const char *guild_id = json_guild_id.value.string;
 
 			char xp_key[50], level_key[53], factor_key[42], channel_key[43], message_key[43];
 			sprintf(xp_key, "%s.levels.%s.xp", guild_id, user_id);
