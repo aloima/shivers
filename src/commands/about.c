@@ -23,15 +23,15 @@
 
 static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	unsigned long long seconds = ((get_timestamp() - client.ready_at) / 1000);
-	const int years = ((seconds - (seconds % YEAR)) / YEAR);
+	const int years = (seconds / YEAR);
 	seconds -= (years * YEAR);
-	const int months = ((seconds - (seconds % MONTH)) / MONTH);
+	const int months = (seconds / MONTH);
 	seconds -= (months * MONTH);
-	const int days = ((seconds - (seconds % DAY)) / DAY);
+	const int days = (seconds / DAY);
 	seconds -= (days * DAY);
-	const int hours = ((seconds - (seconds % HOUR)) / HOUR);
+	const int hours = (seconds / HOUR);
 	seconds -= (hours * HOUR);
-	const int minutes = ((seconds - (seconds % MINUTE)) / MINUTE);
+	const int minutes = (seconds / MINUTE);
 	seconds -= (minutes * MINUTE);
 
 	struct Join uptime[6];
