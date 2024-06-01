@@ -233,8 +233,8 @@ static void onmessage(const struct WebsocketFrame frame) {
 				client.token = token;
 				client.ready_at = get_timestamp();
 
-				jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
-				jsonresult_t json_session_id= json_get_val(data, "d.session_id");
+				const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
+				const jsonresult_t json_session_id= json_get_val(data, "d.session_id");
 
 				memcpy(resume_gateway_url, json_resume_gateway_url.value.string, json_resume_gateway_url.element->size + 1);
 				memcpy(session_id, json_session_id.value.string, json_session_id.element->size + 1);
@@ -243,10 +243,10 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
-				jsonresult_t id = json_get_val(data, "d.id");
-				jsonresult_t members = json_get_val(data, "d.members");
-				jsonresult_t presences = json_get_val(data, "d.presences");
-				jsonresult_t voice_states = json_get_val(data, "d.voice_states");
+				const jsonresult_t id = json_get_val(data, "d.id");
+				const jsonresult_t members = json_get_val(data, "d.members");
+				const jsonresult_t presences = json_get_val(data, "d.presences");
+				const jsonresult_t voice_states = json_get_val(data, "d.voice_states");
 
 				struct Guild guild = {
 					.id = allocate(NULL, -1, id.element->size + 1, sizeof(char)),
@@ -254,44 +254,34 @@ static void onmessage(const struct WebsocketFrame frame) {
 					.bot_count = 0,
 					.online_count = 0,
 					.online_members = NULL,
-					.member_at_voice_count = voice_states.value.array->size,
-					.members_at_voice = allocate(NULL, -1, voice_states.value.array->size, sizeof(char *))
+					.member_at_voice_count = voice_states.element->size,
+					.members_at_voice = allocate(NULL, -1, voice_states.element->size, sizeof(char *))
 				};
 
-				for (unsigned long long i = 0; i < members.value.array->size; ++i) {
-					const bool is_bot = json_get_val(((jsonelement_t **) members.value.array->value)[i], "user.bot").value.boolean;
+				for (unsigned long long i = 0; i < members.element->size; ++i) {
+					const bool is_bot = json_get_val(((jsonelement_t **) members.element->value)[i], "user.bot").value.boolean;
 
 					if (is_bot) {
 						++guild.bot_count;
 					}
 				}
 
-				for (unsigned long long i = 0; i < presences.value.array->size; ++i) {
-					jsonelement_t *presence = ((jsonelement_t **) presences.value.array->value)[i];
+				for (unsigned long long i = 0; i < presences.element->size; ++i) {
+					jsonelement_t *presence = ((jsonelement_t **) presences.element->value)[i];
 					const char *status = json_get_val(presence, "status").value.string;
+					const jsonresult_t user_id = json_get_val(presence, "user.id");
 
 					if (!strsame(status, "offline")) {
+						guild.online_members = allocate(guild.online_members, guild.online_count, guild.online_count + 1, sizeof(char *));
+
+						guild.online_members[guild.online_count] = allocate(guild.online_members[guild.online_count], -1, 20, sizeof(char));
+						memcpy(guild.online_members[guild.online_count], user_id.value.string, user_id.element->size + 1);
 						++guild.online_count;
 					}
 				}
 
-				guild.online_members = allocate(NULL, -1, guild.online_count, sizeof(char *));
-
-				for (unsigned long long i = 0, s = 0; i < presences.value.array->size; ++i) {
-					jsonelement_t *presence = ((jsonelement_t **) presences.value.array->value)[i];
-					const char *status = json_get_val(presence, "status").value.string;
-					jsonresult_t user_id = json_get_val(presence, "user.id");
-
-					if (!strsame(status, "offline")) {
-						guild.online_members[s] = allocate(guild.online_members[s], -1, 20, sizeof(char));
-						memcpy(guild.online_members[s], user_id.value.string, user_id.element->size + 1);
-						++s;
-					}
-				}
-
 				for (unsigned long long i = 0; i < guild.member_at_voice_count; ++i) {
-					jsonelement_t *voice_state = ((jsonelement_t **) voice_states.value.array)[i];
-					jsonresult_t user_id = json_get_val(voice_state, "user_id");
+					const jsonresult_t user_id = json_get_val(((jsonelement_t **) voice_states.element->value)[i], "user_id");
 
 					guild.members_at_voice[i] = allocate(guild.members_at_voice[i], -1, 20, sizeof(char));
 					memcpy(guild.members_at_voice[i], user_id.value.string, user_id.element->size + 1);

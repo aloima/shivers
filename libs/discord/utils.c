@@ -57,22 +57,17 @@ struct Response api_request(const char *token, const char *path, const char *met
 }
 
 bool check_snowflake(const char *snowflake) {
-	const unsigned char length = strlen(snowflake);
+	unsigned int i = 0;
 
-	if (length != 18 && length != 19) {
-		return false;
-	} else {
-		bool result = true;
-
-		for (unsigned char i = 0; i < length; ++i) {
-			if (!isdigit(snowflake[i])) {
-				result = false;
-				break;
-			}
+	while (snowflake[i] != '\0') {
+		if (!isdigit(snowflake[i])) {
+			return false;
 		}
 
-		return result;
+		++i;
 	}
+
+	return (i == 18 || i == 19);
 }
 
 void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {

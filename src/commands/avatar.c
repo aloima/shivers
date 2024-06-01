@@ -27,7 +27,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	if (command.argument_size == 1) {
 		if (strsame(command.arguments[0].name, "id")) {
-			struct String input = command.arguments[0].value.string;
+			const struct String input = command.arguments[0].value.string;
 
 			if (!check_snowflake(input.value)) {
 				message.payload = (struct MessagePayload) {
@@ -42,15 +42,15 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			memcpy(user_id, input.value, input.length + 1);
 
 			char path[27] = "/users/";
-			strcat(path, user_id);
+			memcpy(path + 7, user_id, input.length + 1);
 
 			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
 			jsonelement_t *user = json_parse((const char *) response.data);
 
-			jsonresult_t json_discriminator = json_get_val(user, "discriminator");
+			const jsonresult_t json_discriminator = json_get_val(user, "discriminator");
 			memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
 
-			jsonresult_t json_avatar = json_get_val(user, "avatar");
+			const jsonresult_t json_avatar = json_get_val(user, "avatar");
 
 			if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
@@ -64,13 +64,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		} else {
 			jsonelement_t *user = command.arguments[0].value.user.user_data;
 
-			jsonresult_t json_id = json_get_val(user, "id");
+			const jsonresult_t json_id = json_get_val(user, "id");
 			memcpy(user_id, json_id.value.string, (json_id.element->size + 1));
 
-			jsonresult_t json_discriminator = json_get_val(user, "discriminator");
+			const jsonresult_t json_discriminator = json_get_val(user, "discriminator");
 			memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
 
-			jsonresult_t json_avatar = json_get_val(user, "avatar");
+			const jsonresult_t json_avatar = json_get_val(user, "avatar");
 
 			if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 				memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
@@ -88,13 +88,13 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		send_message(client, message);
 		return;
 	} else {
-		jsonresult_t json_id = json_get_val(command.user, "id");
+		const jsonresult_t json_id = json_get_val(command.user, "id");
 		memcpy(user_id, json_id.value.string, (json_id.element->size + 1));
 
-		jsonresult_t json_discriminator = json_get_val(command.user, "discriminator");
+		const jsonresult_t json_discriminator = json_get_val(command.user, "discriminator");
 		memcpy(discriminator, json_discriminator.value.string, (json_discriminator.element->size + 1));
 
-		jsonresult_t json_avatar = json_get_val(command.user, "avatar");
+		const jsonresult_t json_avatar = json_get_val(command.user, "avatar");
 
 		if (json_avatar.exist && json_avatar.element->type == JSON_STRING) {
 			memcpy(hash, json_avatar.value.string, (json_avatar.element->size + 1));
