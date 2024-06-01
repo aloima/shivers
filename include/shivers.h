@@ -11,6 +11,11 @@
 		unsigned long long timestamp;
 	};
 
+	struct VoiceStatsChannel {
+		char *name;
+		char *id;
+	};
+
 	struct CommandArgument {
 		const char *name, *description;
 		const unsigned char type, arg_size;
