@@ -442,7 +442,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				if (guild_id.exist && guild_id.element->type == JSON_STRING) {
 					struct Guild *guild = get_guild_from_cache(guild_id.value.string);
 
-					if (!channel_id.exist && channel_id.element->type == JSON_NULL) {
+					if (!channel_id.exist || channel_id.element->type == JSON_NULL) {
 						for (unsigned long long i = 0; i < guild->member_at_voice_count; ++i) {
 							if (strsame(guild->members_at_voice[i], user_id.value.string)) {
 								--guild->member_at_voice_count;
