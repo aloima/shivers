@@ -30,7 +30,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		embed.description = (
 			"To add a voice channel using voice stats system, use `/vstats add {name}`.\\n"
 			"To delete a voice channel, use `/vstats delete {id}`.\\n"
-			"To list voice stats channels with their IDs, use `vstats list` command.\\n\\n"
+			"To list voice stats channels with their IDs, use `/vstats list`.\\n\\n"
 			"You can use some arguments in voice stats channels' name:\\n"
 			"{members} - Displays total members in the server\\n"
 			"{online} - Displays total online members in the server\\n"
