@@ -42,6 +42,11 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 			}
 
 			if (!at_cache) {
+				struct Response response = api_request(client.token, path, "GET", NULL, NULL);
+				jsonelement_t *data = json_parse((char *) response.data);
+				const char *channel_name = json_get_val(data, "name").value.string;
+				response_free(response);
+
 				++channel_count;
 				channels = allocate(channels, -1, channel_count, sizeof(struct VoiceStatsChannel));
 				channels[v].id = id.value.string; // no need to allocation, it's in database
@@ -49,6 +54,11 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 
 				memcpy(channels[v].name, name.value.string, name.element->size + 1);
 				prepare_voice_stats_channel_name(client, &(channels[v].name), guild_id);
+
+				if (strsame(channel_name, channels[v].name)) {
+					json_free(data, false);
+					continue;
+				} else json_free(data, false);;
 			} else {
 				char *tmp = allocate(NULL, -1, name.element->size + 1, sizeof(char));
 				memcpy(tmp, name.value.string, name.element->size + 1);
