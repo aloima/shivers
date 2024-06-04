@@ -72,16 +72,16 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		free_message_payload(message.payload);
 		free(embed.fields);
 	} else if (strsame(argument, "set")) {
-		unsigned char options_size = command.arguments[0].value.subcommand.argument_size;
+		const unsigned int options_size = command.arguments[0].value.subcommand.argument_size;
 		char key[43], response[256] = {0};
 
 		if (options_size != 0) {
-			const int last_index = (options_size - 1);
+			const unsigned int last_index = (options_size - 1);
 			char temp[34];
 
 			for (unsigned int i = 0; i < options_size; ++i) {
-				struct InteractionArgument option = command.arguments[0].value.subcommand.arguments[i];
-				char *option_name = option.name;
+				const struct InteractionArgument option = command.arguments[0].value.subcommand.arguments[i];
+				const char *option_name = option.name;
 
 				if (options_size == 1) {
 					sprintf(response, "`%.8s` setting is set.", option_name);
@@ -111,7 +111,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			message.payload.content = response;
 			send_message(client, message);
 		} else {
-			message.payload.content = "You must specify an argument to use `/level-settings set` command.";
+			message.payload.content = "You must specify at least one argument to use `/level-settings set` command.";
 			send_message(client, message);
 		}
 	} else if (strsame(argument, "help")) {
