@@ -7,8 +7,6 @@
 #include <png.h>
 
 void on_ready(struct Client client) {
-	const char *username = json_get_val(client.user, "username").value.string;
-
 	setup_commands(client);
 	puts("Set up all commands.");
 
@@ -18,5 +16,5 @@ void on_ready(struct Client client) {
 	initialize_fonts();
 	puts("Fonts are initialized.");
 
-	printf("%s is connected to gateway.\n", username);
+	printf("%s is connected to gateway.\n", json_get_val(client.user, "username").value.string);
 }
