@@ -32,6 +32,7 @@ make
 + libs: Internal libraries
 	+ database: Database library
 	+ discord: Discord library which create connections with Discord
+	+ hash: HashMap library
 	+ png: PNG manipulation library
 	+ json: JSON library
 	+ network: Network library that contains websocket part and HTTP request

@@ -103,7 +103,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		sorted[i].number = (json_get_val(value, "xp").value.number + (level * (level + 1) * factor / 2.0));
 	}
 
-	sort(sorted, sorted_length);
+	if (sorted_length != 0) {
+		sort(sorted, sorted_length);
+	}
 
 	const jsonresult_t xp_data = database_get(xp_key);
 	const jsonresult_t level_data = database_get(level_key);
@@ -139,12 +141,12 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	initialize_png(&background_image);
 
 	const unsigned char font_color[3] = {255, 255, 255};
-	write_text(&background_image, 518, 184, username, get_fonts().arial, font_color, 18, PNG_TEXT_LEFT);
-	write_text(&background_image, 518, 364, level_text, get_fonts().arial, font_color, 16, PNG_TEXT_LEFT);
-	write_text(&background_image, 1486, 364, xp_text, get_fonts().arial, font_color, 16, PNG_TEXT_RIGHT);
+	write_text(&background_image, 518, 184, username, get_fonts().quicksand, font_color, 18, PNG_TEXT_LEFT);
+	write_text(&background_image, 518, 364, level_text, get_fonts().quicksand, font_color, 16, PNG_TEXT_LEFT);
+	write_text(&background_image, 1486, 364, xp_text, get_fonts().quicksand, font_color, 16, PNG_TEXT_RIGHT);
 
 	if (rank[0] != 0) {
-		write_text(&background_image, 1486, 184, rank, get_fonts().arial, font_color, 16, PNG_TEXT_RIGHT);
+		write_text(&background_image, 1486, 184, rank, get_fonts().quicksand, font_color, 16, PNG_TEXT_RIGHT);
 	}
 
 	unsigned char xp_bar_color[4] = {0, 221, 255, 255};

@@ -3,7 +3,6 @@
 
 #include <hash.h>
 #include <utils.h>
-#include <stdio.h>
 
 unsigned int hash(const char *key, const unsigned int size) {
 	unsigned long hash = 5381;

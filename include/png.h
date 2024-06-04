@@ -31,6 +31,7 @@
 
 	struct Fonts {
 		FT_Face arial;
+		FT_Face quicksand;
 	};
 
 	struct PNG {
