@@ -54,10 +54,11 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 			((jsonelement_t **) element->value)[i] = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 			jsonelement_t *object_element = ((jsonelement_t **) object->value)[i];
 			jsonelement_t *sub_element = ((jsonelement_t **) element->value)[i];
+			const unsigned int key_size = (strlen(object_element->key) + 1);
 
 			sub_element->parent = element;
-			sub_element->key = allocate(sub_element->key, -1, strlen(object_element->key) + 1, sizeof(char));
-			strcpy(sub_element->key, object_element->key);
+			sub_element->key = allocate(sub_element->key, -1, key_size, sizeof(char));
+			memcpy(sub_element->key, object_element->key, key_size);
 
 			if (object_element->type == JSON_ARRAY || object_element->type == JSON_OBJECT) {
 				set_value(sub_element, object_element, object_element->type);
@@ -69,104 +70,102 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 }
 
 void json_set_val(jsonelement_t *target, const char *key, void *value, const enum JSONType type) {
-	jsonelement_t *element = target;
-
 	if (key == NULL) {
-		++element->size;
-		element->value = allocate(element->value, -1, element->size, sizeof(jsonelement_t *));
-		((jsonelement_t **) element->value)[element->size - 1] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
-		((jsonelement_t **) element->value)[element->size - 1]->parent = element;
+		++target->size;
+		target->value = allocate(target->value, -1, target->size, sizeof(jsonelement_t *));
+		((jsonelement_t **) target->value)[target->size - 1] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
+		((jsonelement_t **) target->value)[target->size - 1]->parent = target;
 
-		element = ((jsonelement_t **) element->value)[element->size - 1];
-		set_value(element, value, type);
+		target = ((jsonelement_t **) target->value)[target->size - 1];
+		set_value(target, value, type);
 	} else {
-		const unsigned long key_length = strlen(key);
+		const unsigned int key_length = strlen(key);
 		struct Split splitter = split(key, key_length, ".");
 
-		const unsigned long loop_index_bound = (splitter.size - 1);
+		const unsigned int loop_index_bound = (splitter.size - 1);
 
 		for (unsigned long i = 0; i < splitter.size; ++i) {
 			const char *skey = splitter.data[i].data;
-			const unsigned long skey_length = splitter.data[i].length;
+			const unsigned int skey_length = splitter.data[i].length;
 
-			const unsigned long bwp_length = (skey_length - 2);
+			const unsigned int bwp_length = (skey_length - 2);
 			char bwp[bwp_length + 1];
 			bwp[bwp_length] = 0;
 			strncpy(bwp, skey + 1, bwp_length);
 			const int iskey = atoi_s(bwp, bwp_length);
 
 			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || strsame(bwp, "0"))) {
-				if (element->type != JSON_ARRAY) {
-					if (element->type == JSON_OBJECT) {
-						for (unsigned long n = 0; n < element->size; ++n) {
-							json_free(((jsonelement_t **) element->value)[n], false);
+				if (target->type != JSON_ARRAY) {
+					if (target->type == JSON_OBJECT) {
+						for (unsigned int n = 0; n < target->size; ++n) {
+							json_free(((jsonelement_t **) target->value)[n], false);
 						}
 					}
 
-					element->type = JSON_ARRAY;
-					element->size = 0;
+					target->type = JSON_ARRAY;
+					target->size = 0;
 				}
 
-				if (element->size < (iskey + 1)) {
-					element->value = allocate(element->value, element->size, (iskey + 1), sizeof(jsonelement_t *));
-					element->size = (iskey + 1);
-					((jsonelement_t **) element->value)[iskey] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
-					((jsonelement_t **) element->value)[iskey]->parent = element;
+				if (target->size < (iskey + 1)) {
+					target->value = allocate(target->value, target->size, (iskey + 1), sizeof(jsonelement_t *));
+					target->size = (iskey + 1);
+					((jsonelement_t **) target->value)[iskey] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
+					((jsonelement_t **) target->value)[iskey]->parent = target;
 				}
 
 				if (i == loop_index_bound) {
-					element = ((jsonelement_t **) element->value)[iskey];
-					set_value(element, value, type);
+					target = ((jsonelement_t **) target->value)[iskey];
+					set_value(target, value, type);
 				} else {
 					char new_key[key_length - skey_length + 1];
 
-					element = ((jsonelement_t **) element->value)[iskey];
+					target = ((jsonelement_t **) target->value)[iskey];
 					join((struct Join *) (splitter.data + 1), new_key, splitter.size - 1, ".");
 
-					json_set_val(element, new_key, value, type);
+					json_set_val(target, new_key, value, type);
 				}
 			} else {
-				if (element->type != JSON_OBJECT) {
-					if (element->type == JSON_ARRAY) {
-						for (unsigned long n = 0; n < element->size; ++n) {
-							json_free(((jsonelement_t **) element->value)[n], false);
+				if (target->type != JSON_OBJECT) {
+					if (target->type == JSON_ARRAY) {
+						for (unsigned int n = 0; n < target->size; ++n) {
+							json_free(((jsonelement_t **) target->value)[n], false);
 						}
 					}
 
-					element->type = JSON_OBJECT;
-					element->size = 0;
+					target->type = JSON_OBJECT;
+					target->size = 0;
 				}
 
 				long at = -1;
 
-				for (unsigned long n = 0; n < element->size; ++n) {
-					if (strsame(((jsonelement_t **) element->value)[n]->key, skey)) {
+				for (unsigned int n = 0; n < target->size; ++n) {
+					if (strsame(((jsonelement_t **) target->value)[n]->key, skey)) {
 						at = n;
-						n = element->size;
+						break;
 					}
 				}
 
 				if (at == -1) {
-					++element->size;
-					element->value = allocate(element->value, element->size - 1, element->size, sizeof(jsonelement_t *));
-					at = element->size - 1;
-					((jsonelement_t **) element->value)[at] = allocate(((jsonelement_t **) element->value)[at], 0, 1, sizeof(jsonelement_t));
-					((jsonelement_t **) element->value)[at]->parent = element;
+					++target->size;
+					target->value = allocate(target->value, target->size - 1, target->size, sizeof(jsonelement_t *));
+					at = target->size - 1;
+					((jsonelement_t **) target->value)[at] = allocate(((jsonelement_t **) target->value)[at], 0, 1, sizeof(jsonelement_t));
+					((jsonelement_t **) target->value)[at]->parent = target;
 
-					element = ((jsonelement_t **) element->value)[at];
-					element->key = allocate(element->key, -1, skey_length + 1, sizeof(char));
-					strcpy(element->key, skey);
+					target = ((jsonelement_t **) target->value)[at];
+					target->key = allocate(target->key, -1, skey_length + 1, sizeof(char));
+					memcpy(target->key, skey, skey_length + 1);
 				} else {
-					element = ((jsonelement_t **) element->value)[at];
+					target = ((jsonelement_t **) target->value)[at];
 				}
 
 				if (i == loop_index_bound) {
-					set_value(element, value, type);
+					set_value(target, value, type);
 				} else {
 					char new_key[key_length - skey_length + 1];
 
 					join((struct Join *) (splitter.data + 1), new_key, splitter.size - 1, ".");
-					json_set_val(element, new_key, value, type);
+					json_set_val(target, new_key, value, type);
 					i = splitter.size;
 				}
 			}
