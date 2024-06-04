@@ -29,7 +29,6 @@
 		char *string;
 		double number;
 		bool boolean;
-		jsonelement_t *object, *array;
 	} jsonvalue_t;
 
 	typedef struct {

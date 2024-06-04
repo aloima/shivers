@@ -90,11 +90,11 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	const unsigned short factor = (factor_data.exist ? factor_data.value.number : 100);
 
 	const jsonresult_t levels = database_get(levels_key);
-	const unsigned int sorted_length = (levels.exist ? levels.value.object->size : 0);
+	const unsigned int sorted_length = (levels.exist ? levels.element->size : 0);
 	struct Sort sorted[sorted_length];
 
 	for (unsigned int i = 0; i < sorted_length; ++i) {
-		sorted[i].value = ((jsonelement_t **) levels.value.object->value)[i];
+		sorted[i].value = ((jsonelement_t **) levels.element->value)[i];
 
 		jsonelement_t *value = sorted[i].value;
 		const jsonresult_t json_level = json_get_val(value, "level");

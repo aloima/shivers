@@ -19,7 +19,7 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 	const jsonresult_t data = database_get(database_key);
 
 	if (data.exist) {
-		const jsonelement_t *array = data.value.array;
+		const jsonelement_t *array = data.element;
 
 		for (unsigned int i = 0; i < array->size; ++i) {
 			jsonelement_t *object = ((jsonelement_t **) array->value)[i];

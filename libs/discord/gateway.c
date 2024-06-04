@@ -179,8 +179,8 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 				.type = type,
 				.value = {
 					.user = {
-						.user_data = json_get_val(data, user_search).value.object,
-						.member_data = member_result.exist ? member_result.value.object : NULL
+						.user_data = json_get_val(data, user_search).element,
+						.member_data = member_result.exist ? member_result.element : NULL
 					}
 				}
 			};
@@ -196,7 +196,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 				.name = name,
 				.type = type,
 				.value = {
-					.channel = json_get_val(data, search).value.object
+					.channel = json_get_val(data, search).element
 				}
 			};
 
@@ -211,7 +211,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 				.name = name,
 				.type = type,
 				.value = {
-					.channel = json_get_val(data, search).value.object
+					.channel = json_get_val(data, search).element
 				}
 			};
 
@@ -241,7 +241,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				memcpy(resume_gateway_url, json_resume_gateway_url.value.string, json_resume_gateway_url.element->size + 1);
 				memcpy(session_id, json_session_id.value.string, json_session_id.element->size + 1);
 
-				ready_guild_size = json_get_val(data, "d.guilds").value.array->size;
+				ready_guild_size = json_get_val(data, "d.guilds").element->size;
 
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
@@ -330,13 +330,13 @@ static void onmessage(const struct WebsocketFrame frame) {
 				delete_node(guild->members, user_id);
 				on_guild_member_remove(client, guild_node);
 			} else if (strsame(event_name, "MESSAGE_CREATE")) {
-				jsonelement_t *message = json_get_val(data, "d").value.object;
+				jsonelement_t *message = json_get_val(data, "d").element;
 				on_message_create(client, message);
 			} else if (strsame(event_name, "INTERACTION_CREATE")) {
-				jsonelement_t *interaction = json_get_val(data, "d").value.object;
+				jsonelement_t *interaction = json_get_val(data, "d").element;
 
 				if (json_get_val(interaction, "type").value.number == 2.0) {
-					jsonelement_t *interaction_data = json_get_val(interaction, "data").value.object;
+					jsonelement_t *interaction_data = json_get_val(interaction, "data").element;
 
 					struct InteractionCommand command = {
 						.id = json_get_val(interaction, "id").value.string,
@@ -349,17 +349,17 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 					if (guild_id.exist && guild_id.element->type != JSON_NULL) {
 						command.guild_id = guild_id.value.string;
-						command.user = json_get_val(interaction, "member.user").value.object;
+						command.user = json_get_val(interaction, "member.user").element;
 					} else {
-						command.user = json_get_val(interaction, "user").value.object;
+						command.user = json_get_val(interaction, "user").element;
 					}
 
 					jsonresult_t options_result = json_get_val(interaction_data, "options");
-					unsigned char options_size = (options_result.exist ? options_result.value.array->size : 0);
+					unsigned char options_size = (options_result.exist ? options_result.element->size : 0);
 
 					if (options_result.exist && options_result.element->type == JSON_ARRAY && options_size != 0) {
 						command.arguments = allocate(NULL, -1, options_size, sizeof(struct InteractionArgument));
-						command.argument_size = options_result.value.array->size;
+						command.argument_size = options_result.element->size;
 
 						for (unsigned char i = 0; i < options_size; ++i) {
 							jsonelement_t *option_element = ((jsonelement_t **) options_result.element->value)[i];
@@ -371,7 +371,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 								command.arguments[i].type = option_type;
 
 								jsonresult_t sc_options_result = json_get_val(option_element, "options");
-								const unsigned char sc_options_size = sc_options_result.value.array->size;
+								const unsigned char sc_options_size = sc_options_result.element->size;
 
 								if (sc_options_result.element->type == JSON_ARRAY && sc_options_size != 0) {
 									struct InteractionSubcommand *subcommand = &(command.arguments[i].value.subcommand);

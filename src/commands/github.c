@@ -140,7 +140,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			add_field_to_embed(&embed, "Forks", forks, true);
 			add_field_to_embed(&embed, "Is archived?", json_get_val(repository, "archived").value.boolean ? "Yes" : "No", true);
 			add_field_to_embed(&embed, "Major language", language.element->type != JSON_NULL ? language.value.string : "None", true);
-			add_field_to_embed(&embed, "License", license.element->type != JSON_NULL ? json_get_val(license.value.object, "spdx_id").value.string : "None", true);
+			add_field_to_embed(&embed, "License", license.element->type != JSON_NULL ? json_get_val(license.element, "spdx_id").value.string : "None", true);
 
 			embed.color = COLOR;
 			set_embed_author(&embed, json_get_val(repository, "full_name").value.string, json_get_val(repository, "html_url").value.string, NULL);

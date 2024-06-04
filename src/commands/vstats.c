@@ -49,7 +49,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const jsonresult_t vstats_data = database_get(database_key);
 
 		if (vstats_data.exist) {
-			jsonelement_t *data = vstats_data.value.array;
+			jsonelement_t *data = vstats_data.element;
 			char line[256];
 
 			for (unsigned int i = 0; i < data->size; ++i) {
@@ -132,7 +132,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		const jsonresult_t vstats_data = database_get(database_key);
 
 		if (vstats_data.exist) {
-			jsonelement_t *data = vstats_data.value.array;
+			jsonelement_t *data = vstats_data.element;
 
 			for (unsigned int i = 0; i < data->size; ++i) {
 				char id_key[6];

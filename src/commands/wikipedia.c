@@ -34,7 +34,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		struct Response info_response = request(config);
 		jsonelement_t *info_data = json_parse((const char *) info_response.data);
-		jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
+		jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
 		jsonresult_t page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
 
 		if (!page_description.exist) {
@@ -57,7 +57,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			info_response = request(config);
 
 			info_data = json_parse((const char *) info_response.data);
-			page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").value.object->value)[0];
+			page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
 			page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
 		}
 
@@ -81,7 +81,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 			struct Response image_response = request(config);
 			jsonelement_t *image_data = json_parse((const char *) image_response.data);
-			jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").value.object->value)[0];
+			jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").element->value)[0];
 
 			jsonresult_t final_image = json_get_val(image_info, "imageinfo.0.url");
 			char *final_image_url = final_image.value.string;
