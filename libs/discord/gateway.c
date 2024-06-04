@@ -17,6 +17,7 @@
 #include <network.h>
 #include <database.h>
 #include <json.h>
+#include <hash.h>
 
 static struct Websocket websocket = {0};
 
@@ -232,6 +233,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				client.user = clone_json_element(json_get_val(data, "d.user").element);
 				client.token = token;
 				client.ready_at = get_timestamp();
+				client.guilds = create_hashmap(16);
 
 				const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
 				const jsonresult_t json_session_id= json_get_val(data, "d.session_id");
@@ -243,52 +245,56 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				on_ready(client);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
-				const jsonresult_t id = json_get_val(data, "d.id");
+				const char *id = json_get_val(data, "d.id").value.string;
 				const jsonresult_t members = json_get_val(data, "d.members");
 				const jsonresult_t presences = json_get_val(data, "d.presences");
 				const jsonresult_t voice_states = json_get_val(data, "d.voice_states");
 
 				struct Guild guild = {
-					.id = allocate(NULL, -1, id.element->size + 1, sizeof(char)),
-					.member_count = json_get_val(data, "d.member_count").value.number,
+					.members = create_hashmap(32),
+					.total_member_count = json_get_val(data, "d.member_count").value.number,
 					.bot_count = 0,
-					.online_count = 0,
-					.online_members = NULL,
-					.member_at_voice_count = voice_states.element->size,
-					.members_at_voice = allocate(NULL, -1, voice_states.element->size, sizeof(char *))
+					.non_offline_count = 0,
+					.member_at_voice_count = voice_states.element->size
 				};
 
-				for (unsigned long long i = 0; i < members.element->size; ++i) {
-					const bool is_bot = json_get_val(((jsonelement_t **) members.element->value)[i], "user.bot").value.boolean;
+				for (unsigned int i = 0; i < members.element->size; ++i) {
+					jsonelement_t *json_user = json_get_val(((jsonelement_t **) members.element->value)[i], "user").element;
 
-					if (is_bot) {
-						++guild.bot_count;
-					}
+					struct Member member = {
+						.bot = json_get_val(json_user, "bot").value.boolean
+					};
+
+					insert_node(guild.members, json_get_val(json_user, "id").value.string, &member, sizeof(struct Member));
+					if (member.bot) ++guild.bot_count;
 				}
 
-				for (unsigned long long i = 0; i < presences.element->size; ++i) {
+				for (unsigned int i = 0; i < presences.element->size; ++i) {
 					jsonelement_t *presence = ((jsonelement_t **) presences.element->value)[i];
 					const char *status = json_get_val(presence, "status").value.string;
-					const jsonresult_t user_id = json_get_val(presence, "user.id");
+					const char *user_id = json_get_val(presence, "user.id").value.string;
 
 					if (!strsame(status, "offline")) {
-						guild.online_members = allocate(guild.online_members, guild.online_count, guild.online_count + 1, sizeof(char *));
+						struct Member *member = get_node(guild.members, user_id)->value;
 
-						guild.online_members[guild.online_count] = allocate(guild.online_members[guild.online_count], -1, 20, sizeof(char));
-						memcpy(guild.online_members[guild.online_count], user_id.value.string, user_id.element->size + 1);
-						++guild.online_count;
+						if (strsame(status, "offline")) member->status = OFFLINE;
+						else {
+							if (strsame(status, "online")) member->status = ONLINE;
+							else if (strsame(status, "idle")) member->status = IDLE;
+							else if (strsame(status, "dnd")) member->status = DND;
+
+							++guild.non_offline_count;
+						}
 					}
 				}
 
-				for (unsigned long long i = 0; i < guild.member_at_voice_count; ++i) {
-					const jsonresult_t user_id = json_get_val(((jsonelement_t **) voice_states.element->value)[i], "user_id");
-
-					guild.members_at_voice[i] = allocate(guild.members_at_voice[i], -1, 20, sizeof(char));
-					memcpy(guild.members_at_voice[i], user_id.value.string, user_id.element->size + 1);
+				for (unsigned int i = 0; i < guild.member_at_voice_count; ++i) {
+					const char *user_id = json_get_val(((jsonelement_t **) voice_states.element->value)[i], "user_id").value.string;
+					struct Member *member = get_node(guild.members, user_id)->value;
+					member->at_voice = true;
 				}
 
-				memcpy(guild.id, id.value.string, id.element->size + 1);
-				add_guild_to_cache(guild);
+				insert_node(client.guilds, id, &guild, sizeof(struct Guild));
 
 				if (!handled_ready_guilds) {
 					--ready_guild_size;
@@ -302,19 +308,27 @@ static void onmessage(const struct WebsocketFrame frame) {
 				}
 			} else if (strsame(event_name, "GUILD_DELETE")) {
 				const char *id = json_get_val(data, "d.id").value.string;
-				remove_guild_from_cache(id);
+				delete_node(client.guilds, id);
 
 				on_guild_delete(client);
 			} else if (strsame(event_name, "GUILD_MEMBER_ADD")) {
-				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
-				++guild->member_count;
+				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Guild *guild = guild_node->value;
+				jsonelement_t *user = json_get_val(data, "d.user").element;
+				const char *user_id = json_get_val(user, "id").value.string;
+				struct Member member = {
+					.bot = json_get_val(user, "bot").value.string
+				};
 
-				on_guild_member_add(client, guild);
+				insert_node(guild->members, user_id, &member, sizeof(struct Member));
+				on_guild_member_add(client, guild_node);
 			} else if (strsame(event_name, "GUILD_MEMBER_REMOVE")) {
-				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
-				--guild->member_count;
+				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Guild *guild = guild_node->value;
+				const char *user_id = json_get_val(data, "d.user.id").value.string;
 
-				on_guild_member_remove(client, guild);
+				delete_node(guild->members, user_id);
+				on_guild_member_remove(client, guild_node);
 			} else if (strsame(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").value.object;
 				on_message_create(client, message);
@@ -395,88 +409,45 @@ static void onmessage(const struct WebsocketFrame frame) {
 					free(command.arguments);
 				}
 			} else if (strsame(event_name, "PRESENCE_UPDATE")) {
-				const jsonresult_t user_id = json_get_val(data, "d.user.id");
+				const char *user_id = json_get_val(data, "d.user.id").value.string;
 				const char *status = json_get_val(data, "d.status").value.string;
-				struct Guild *guild = get_guild_from_cache(json_get_val(data, "d.guild_id").value.string);
+				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Guild *guild = guild_node->value;
+				struct Member *member = get_node(guild->members, user_id)->value;
 
 				if (strsame(status, "offline")) {
-					for (unsigned long long i = 0; i < guild->online_count; ++i) {
-						if (strsame(guild->online_members[i], user_id.value.string)) {
-							--guild->online_count;
-
-							for (unsigned long long s = i; s < guild->online_count; ++s) {
-								memcpy(guild->online_members[s], guild->online_members[s + 1], strlen(guild->online_members[s + 1]) + 1);
-							}
-
-							free(guild->online_members[guild->online_count]);
-							guild->online_members = allocate(guild->online_members, -1, guild->online_count, sizeof(char *));
-							i = guild->online_count;
-						}
-					}
+					--guild->non_offline_count;
+					member->status = OFFLINE;
 				} else {
-					bool found = false;
-
-					for (unsigned long long i = 0; i < guild->online_count; ++i) {
-						if (strsame(guild->online_members[i], user_id.value.string)) {
-							found = true;
-							i = guild->online_count;
-						}
+					if (member->status == OFFLINE) {
+						++guild->non_offline_count;
 					}
 
-					if (!found) {
-						++guild->online_count;
-
-						const unsigned long long last_index = (guild->online_count - 1);
-						guild->online_members = allocate(guild->online_members, -1, guild->online_count, sizeof(char *));
-						guild->online_members[last_index] = allocate(NULL, -1, 20, sizeof(char));
-						memcpy(guild->online_members[last_index], user_id.value.string, user_id.element->size + 1);
-					}
+					if (strsame(status, "online")) member->status = ONLINE;
+					else if (strsame(status, "idle")) member->status = IDLE;
+					else if (strsame(status, "dnd")) member->status = DND;
 				}
 
-				on_presence_update(client, guild);
+				on_presence_update(client, guild_node);
 			} else if (strsame(event_name, "VOICE_STATE_UPDATE")) {
-				const jsonresult_t user_id = json_get_val(data, "d.user_id");
+				const char *user_id = json_get_val(data, "d.user_id").value.string;
 				const jsonresult_t channel_id = json_get_val(data, "d.channel_id");
 				const jsonresult_t guild_id = json_get_val(data, "d.guild_id");
 
 				if (guild_id.exist && guild_id.element->type == JSON_STRING) {
-					struct Guild *guild = get_guild_from_cache(guild_id.value.string);
+					struct Node *guild_node = get_node(client.guilds, guild_id.value.string);
+					struct Guild *guild = guild_node->value;
+					struct Member *member = get_node(guild->members, user_id)->value;
 
 					if (!channel_id.exist || channel_id.element->type == JSON_NULL) {
-						for (unsigned long long i = 0; i < guild->member_at_voice_count; ++i) {
-							if (strsame(guild->members_at_voice[i], user_id.value.string)) {
-								--guild->member_at_voice_count;
-
-								for (unsigned long long s = i; s < guild->member_at_voice_count; ++s) {
-									memcpy(guild->members_at_voice[s], guild->members_at_voice[s + 1], strlen(guild->members_at_voice[s + 1]) + 1);
-								}
-
-								free(guild->members_at_voice[guild->member_at_voice_count]);
-								guild->members_at_voice = allocate(guild->members_at_voice, -1, guild->member_at_voice_count, sizeof(char *));
-								i = guild->member_at_voice_count;
-							}
-						}
+						member->at_voice = false;
+						--guild->member_at_voice_count;
 					} else {
-						bool found = false;
-
-						for (unsigned long long i = 0; i < guild->member_at_voice_count; ++i) {
-							if (strsame(guild->members_at_voice[i], user_id.value.string)) {
-								found = true;
-								i = guild->member_at_voice_count;
-							}
-						}
-
-						if (!found) {
-							++guild->member_at_voice_count;
-
-							const unsigned long long last_index = (guild->member_at_voice_count - 1);
-							guild->members_at_voice = allocate(guild->members_at_voice, -1, guild->member_at_voice_count, sizeof(char *));
-							guild->members_at_voice[last_index] = allocate(NULL, -1, 20, sizeof(char));
-							memcpy(guild->members_at_voice[last_index], user_id.value.string, user_id.element->size + 1);
-						}
+						if (!member->at_voice) ++guild->member_at_voice_count;
+						member->at_voice = true;
 					}
 
-					on_voice_state_update(client, guild);
+					on_voice_state_update(client, guild_node);
 				}
 			}
 
@@ -525,8 +496,19 @@ static void onclose(const short code, const char *reason) {
 	}
 
 	if (code != -2) {
+		for (unsigned int i = 0; i < client.guilds->size; ++i) {
+			struct Node *node = client.guilds->nodes[i];
+
+			if (node != NULL) {
+				while (node) {
+					free_hashmap(((struct Guild *) node->value)->members);
+					node = node->next;
+				}
+			}
+		}
+
+		free_hashmap(client.guilds);
 		on_force_close();
-		clear_guilds();
 	}
 }
 

@@ -56,6 +56,10 @@ struct Response api_request(const char *token, const char *path, const char *met
 	return response;
 }
 
+struct Guild *get_guild(const struct Client client, const char *id) {
+	return (struct Guild *) get_node(client.guilds, id)->value;
+}
+
 bool check_snowflake(const char *snowflake) {
 	unsigned int i = 0;
 

@@ -119,7 +119,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	set_uptime_text(client, uptime_text);
 
 	char guilds[4];
-	sprintf(guilds, "%u", get_guild_count());
+	sprintf(guilds, "%u", client.guilds->length);
 
 	char latency[7];
 	sprintf(latency, "%ums", get_latency());

@@ -1,5 +1,6 @@
 #include <stdbool.h>
 
+#include <hash.h>
 #include <json.h>
 #include <utils.h>
 #include <network.h>
@@ -19,22 +20,28 @@
 	#define ManageRoles (1 << 28)
 	#define ManageThreads (1 << 34)
 
+	enum Status {
+		OFFLINE,
+		ONLINE,
+		IDLE,
+		DND
+	};
+
 	struct Client {
 		jsonelement_t *user;
 		unsigned long long ready_at;
 		char *token;
+		struct HashMap *guilds;
+	};
+
+	struct Member {
+		enum Status status;
+		bool at_voice, bot;
 	};
 
 	struct Guild {
-		char *id;
-		unsigned long long member_count;
-		unsigned long long online_count;
-		char **online_members;
-		unsigned long long bot_count;
-		unsigned long long ban_count;
-		unsigned int channel_count;
-		unsigned long long member_at_voice_count;
-		char **members_at_voice;
+		struct HashMap *members;
+		unsigned int total_member_count, member_at_voice_count, non_offline_count, bot_count, channel_count;
 	};
 
 	struct EmbedField {
@@ -132,14 +139,8 @@
 	unsigned int get_latency();
 	void set_presence(const char *name, const char *state, const char *details, const char type, const char *status);
 
-	void clear_guilds();
-	struct Guild *get_guilds();
-	unsigned int get_guild_count();
-	void add_guild_to_cache(struct Guild guild);
-	struct Guild *get_guild_from_cache(const char *id);
-	void remove_guild_from_cache(const char *id);
-
 	struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata);
+	struct Guild *get_guild(const struct Client client, const char *id);
 	void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size);
 
 	unsigned short send_message(const struct Client client, const struct Message message);

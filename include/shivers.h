@@ -51,7 +51,7 @@
 	struct Cooldown get_cooldown(const char *user_id);
 
 	void update_voice_stats(const struct Client client, const char *guild_id);
-	void prepare_voice_stats_channel_name(char **channel_name, const char *guild_id);
+	void prepare_voice_stats_channel_name(const struct Client client, char **channel_name, const char *guild_id);
 
 	#define INVALID_ARGUMENT "Invalid argument, please use `help` command."
 	#define MISSING_ARGUMENT "Missing argument, please use `help` command."
@@ -62,14 +62,14 @@
 	void on_force_close();
 	void on_guild_create(struct Client client);
 	void on_guild_delete(struct Client client);
-	void on_guild_member_add(struct Client client, struct Guild *guild);
-	void on_guild_member_remove(struct Client client, struct Guild *guild);
+	void on_guild_member_add(struct Client client, struct Node *guild_node);
+	void on_guild_member_remove(struct Client client, struct Node *guild_node);
 	void on_handle_guilds(struct Client client);
 	void on_interaction_command(struct Client client, struct InteractionCommand command);
 	void on_message_create(struct Client client, jsonelement_t *message);
-	void on_presence_update(struct Client client, struct Guild *guild);
+	void on_presence_update(struct Client client, struct Node *guild_node);
 	void on_ready(struct Client client);
-	void on_voice_state_update(struct Client client, struct Guild *guild);
+	void on_voice_state_update(struct Client client, struct Node *guild_node);
 
 	extern const struct Command about;
 	extern const struct Command avatar;

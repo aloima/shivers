@@ -89,7 +89,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char *channel_name = allocate(NULL, -1, input.length + 1, sizeof(char));
 		memcpy(channel_name, input.value, input.length + 1);
 
-		prepare_voice_stats_channel_name(&channel_name, command.guild_id);
+		prepare_voice_stats_channel_name(client, &channel_name, command.guild_id);
 
 		char request_payload[256];
 		sprintf(request_payload, "{"

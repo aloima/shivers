@@ -7,6 +7,7 @@
 #include <shivers.h>
 #include <utils.h>
 #include <json.h>
+#include <hash.h>
 
 struct VoiceStatsChannel *channels = NULL;
 unsigned int channel_count = 0;
@@ -47,11 +48,11 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 				channels[v].name = allocate(NULL, -1, name.element->size + 1, sizeof(char));
 
 				memcpy(channels[v].name, name.value.string, name.element->size + 1);
-				prepare_voice_stats_channel_name(&(channels[v].name), guild_id);
+				prepare_voice_stats_channel_name(client, &(channels[v].name), guild_id);
 			} else {
 				char *tmp = allocate(NULL, -1, name.element->size + 1, sizeof(char));
 				memcpy(tmp, name.value.string, name.element->size + 1);
-				prepare_voice_stats_channel_name(&tmp, guild_id);
+				prepare_voice_stats_channel_name(client, &tmp, guild_id);
 
 				if (strsame(channels[v].name, tmp)) {
 					free(tmp);
@@ -73,18 +74,18 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 	}
 }
 
-void prepare_voice_stats_channel_name(char **channel_name, const char *guild_id) {
-	const struct Guild *guild = get_guild_from_cache(guild_id);
+void prepare_voice_stats_channel_name(const struct Client client, char **channel_name, const char *guild_id) {
+	const struct Guild *guild = get_node(client.guilds, guild_id)->value;
 
-	char members[(guild->member_count / 10) + 2];
-	char online[(guild->online_count / 10) + 2];
+	char members[(guild->members->length / 10) + 2];
+	char online[(guild->non_offline_count / 10) + 2];
 	char bots[(guild->bot_count / 10) + 2];
 	char at_voice[(guild->member_at_voice_count / 10) + 2];
 
-	sprintf(members, "%lld", guild->member_count);
-	sprintf(online, "%lld", guild->online_count);
-	sprintf(bots, "%lld", guild->bot_count);
-	sprintf(at_voice, "%lld", guild->member_at_voice_count);
+	sprintf(members, "%u", guild->members->length);
+	sprintf(online, "%u", guild->non_offline_count);
+	sprintf(bots, "%u", guild->bot_count);
+	sprintf(at_voice, "%u", guild->member_at_voice_count);
 
 	strreplace(channel_name, "{members}", members);
 	strreplace(channel_name, "{online}", online);
