@@ -30,10 +30,10 @@ struct Response api_request(const char *token, const char *path, const char *met
 	};
 
 	if (body != NULL && formdata == NULL) {
-		const unsigned long body_length = strlen(body);
+		const unsigned long body_size = strlen(body) + 1;
 		config.body.is_formdata = false;
-		config.body.payload.data = allocate(NULL, 0, body_length + 1, sizeof(char));
-		strcpy(config.body.payload.data, body);
+		config.body.payload.data = allocate(NULL, 0, body_size, sizeof(char));
+		memcpy(config.body.payload.data, body, body_size);
 
 		headers[1] = (struct Header) {
 			.name = "Content-Type",
@@ -79,9 +79,9 @@ void get_avatar_url(char *url, const char *user_id, const char *discriminator, c
 		const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
 		sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
 	} else {
-		unsigned char index;
+		unsigned int index;
 
-		if (discriminator && discriminator[1] != 0) {
+		if (!strsame(discriminator, "0")) {
 			index = (atoi_s(discriminator, 4) % 5);
 		} else {
 			index = ((atoi_s(user_id, -1) >> 22) % 6);

@@ -132,11 +132,11 @@ unsigned short send_message(const struct Client client, const struct Message mes
 
 		jsonelement_t *attachments = create_empty_json_element(true);
 
-		for (unsigned long i = 0; i < message_payload.file_size; ++i) {
-			struct File file = message_payload.files[i];
+		for (unsigned int i = 0; i < message_payload.file_size; ++i) {
+			const struct File file = message_payload.files[i];
 			jsonelement_t *attachment = create_empty_json_element(false);
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
-			sprintf(field_name, "files[%ld]", i);
+			sprintf(field_name, "files[%u]", i);
 
 			double n = i;
 			json_set_val(attachment, "id", &n, JSON_NUMBER);
@@ -176,10 +176,10 @@ unsigned short send_message(const struct Client client, const struct Message mes
 			.boundary = "deneme"
 		};
 
-		for (unsigned long i = 0; i < message_payload.file_size; ++i) {
-			struct File file = message_payload.files[i];
+		for (unsigned int i = 0; i < message_payload.file_size; ++i) {
+			const struct File file = message_payload.files[i];
 			char *field_name = allocate(NULL, -1, 12, sizeof(char));
-			sprintf(field_name, "files[%ld]", i);
+			sprintf(field_name, "files[%u]", i);
 
 			add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
 			add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);
@@ -201,7 +201,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
 		body = json_stringify(payload, 5);
 
 		if (message.target_type == TARGET_INTERACTION_COMMAND) {
-			const unsigned long body_length = strlen(body);
+			const unsigned int body_length = strlen(body);
 			body = allocate(body, -1, body_length + 19, sizeof(char));
 			memcpy(body + 17, body, body_length);
 			memcpy(body, "{\"type\":4,\"data\":", 17);

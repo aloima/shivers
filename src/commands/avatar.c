@@ -23,7 +23,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char gif_avatar_url[104];
 	char png_avatar_url[104];
 
-	char user_id[20], discriminator[5] = {0}, hash[33] = {0};
+	char user_id[20], discriminator[5], hash[33] = {0};
 
 	if (command.argument_size == 1) {
 		if (strsame(command.arguments[0].name, "id")) {
@@ -109,7 +109,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		char png_avatar_urls[5][102];
 		char gif_avatar_urls[5][104];
 
-		for (unsigned char i = 0; i < 5; ++i) {
+		for (unsigned int i = 0; i < 5; ++i) {
 			if (i == 2) {
 				strcpy(png_avatar_urls[i], png_avatar_url);
 			} else {

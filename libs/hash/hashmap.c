@@ -3,6 +3,7 @@
 
 #include <hash.h>
 #include <utils.h>
+#include <stdio.h>
 
 unsigned int hash(const char *key, const unsigned int size) {
 	unsigned long hash = 5381;
@@ -51,14 +52,38 @@ void expand_hashmap(struct HashMap *map) {
 
 	for (unsigned int i = 0; i < map->size; ++i) {
 		struct Node *node = map->nodes[i];
+		struct Node *next = node->next;
+		node->next = NULL;
 
 		while (node) {
-			insert_node(new, node->key, node->value, node->size);
-			node = node->next;
+			const unsigned int index = hash(node->key, new->size);
+			struct Node *area = new->nodes[index];
+
+			if (area == NULL) {
+				++new->count;
+				++new->length;
+				new->nodes[index] = node;
+			} else {
+				++new->length;
+
+				while (area->next != NULL) {
+					area = area->next;
+				}
+
+				area->next = node;
+			}
+
+			node = next;
+
+			if (node != NULL) {
+				next = node->next;
+				node->next = NULL;
+			}
 		}
 	}
 
-	free_hashmap_nodes(map);
+	free(map->nodes);
+
 	map->nodes = new->nodes;
 	map->count = new->count;
 	map->length = new->length;
