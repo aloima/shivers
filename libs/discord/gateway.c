@@ -122,6 +122,7 @@ static void send_resume() {
 		"}"
 	"}", token, session_id, last_sequence);
 
+	puts(resume_message);
 	send_websocket_message(&websocket, resume_message);
 }
 
@@ -455,6 +456,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 		}
 
 		case 7: {
+			puts("resume");
 			free_cooldowns();
 			database_save();
 			close_websocket(&websocket, -2, NULL);

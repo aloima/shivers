@@ -37,54 +37,52 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	struct Join uptime[6];
 	int value = -1;
 
+	char sseconds[8], sminutes[8], shours[7], sdays[8], smonths[8], syears[7];
+
 	if (years != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[value].data = syears;
 		uptime[value].length = sprintf(uptime[value].data, "%hi yrs", years);
 	}
 
 	if (months != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].data = smonths;
 		uptime[value].length = sprintf(uptime[value].data, "%hi mths", months);
 	}
 
 	if (days != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].data = sdays;
 		uptime[value].length = sprintf(uptime[value].data, "%hi days", days);
 	}
 
 	if (hours != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, -1, 7, sizeof(char));
+		uptime[value].data = shours;
 		uptime[value].length = sprintf(uptime[value].data, "%hi hrs", hours);
 	}
 
 	if (minutes != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, -1, 8, sizeof(char));
+		uptime[value].data = sminutes;
 		uptime[value].length = sprintf(uptime[value].data, "%hi mins", minutes);
 	}
 
 	if (seconds != 0) {
 		++value;
 
-		uptime[value].data = allocate(NULL, 0, 8, sizeof(char));
+		uptime[value].data = sseconds;
 		uptime[value].length = sprintf(uptime[value].data, "%llu secs", seconds);
 	}
 
   ++value;
 	join(uptime, uptime_text, value, " ");
-
-	for (unsigned int i = 0; i < value; ++i) {
-		free(uptime[i].data);
-	}
 }
 
 static void execute(const struct Client client, const struct InteractionCommand command) {
