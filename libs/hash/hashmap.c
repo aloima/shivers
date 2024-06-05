@@ -27,11 +27,6 @@ struct HashMap *create_hashmap(const unsigned int size) {
 }
 
 void free_hashmap(struct HashMap *map) {
-	free_hashmap_nodes(map);
-	free(map);
-}
-
-void free_hashmap_nodes(struct HashMap *map) {
 	for (unsigned int i = 0; i < map->size; ++i) {
 		struct Node *node = map->nodes[i];
 
@@ -45,6 +40,7 @@ void free_hashmap_nodes(struct HashMap *map) {
 	}
 
 	free(map->nodes);
+	free(map);
 }
 
 void expand_hashmap(struct HashMap *map) {
@@ -53,19 +49,17 @@ void expand_hashmap(struct HashMap *map) {
 	for (unsigned int i = 0; i < map->size; ++i) {
 		struct Node *node = map->nodes[i];
 		struct Node *next = node->next;
+		const unsigned int index = hash(node->key, new->size);
 		node->next = NULL;
 
 		while (node) {
-			const unsigned int index = hash(node->key, new->size);
 			struct Node *area = new->nodes[index];
+			++new->length;
 
 			if (area == NULL) {
 				++new->count;
-				++new->length;
 				new->nodes[index] = node;
 			} else {
-				++new->length;
-
 				while (area->next != NULL) {
 					area = area->next;
 				}
@@ -104,11 +98,13 @@ struct Node *get_node(const struct HashMap *map, const char *key) {
 }
 
 void insert_node(struct HashMap *map, const char *key, void *value, const unsigned int size) {
-	if (map->count == map->size) {
+	const unsigned int index = hash(key, map->size);
+	struct Node *area = map->nodes[index];
+
+	if (area != NULL && map->count == map->size) {
 		expand_hashmap(map);
 	}
 
-	const unsigned int index = hash(key, map->size);
 	const unsigned int key_size = strlen(key) + 1;
 
 	struct Node *node = allocate(NULL, -1, 1, sizeof(struct Node));
@@ -119,20 +115,18 @@ void insert_node(struct HashMap *map, const char *key, void *value, const unsign
 	memcpy(node->key, key, key_size);
 	memcpy(node->value, value, size);
 
-	struct Node *tnode = map->nodes[index];
-
-	if (tnode == NULL) {
+	if (area == NULL) {
 		++map->count;
 		++map->length;
 		map->nodes[index] = node;
 	} else {
 		++map->length;
 
-		while (tnode->next != NULL) {
-			tnode = tnode->next;
+		while (area->next != NULL) {
+			area = area->next;
 		}
 
-		tnode->next = node;
+		area->next = node;
 	}
 }
 

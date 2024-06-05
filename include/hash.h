@@ -18,7 +18,6 @@
 	unsigned int hash(const char *key, unsigned int size);
 	struct HashMap *create_hashmap(unsigned int size);
 	void free_hashmap(struct HashMap *map);
-	void free_hashmap_nodes(struct HashMap *map);
 	void expand_hashmap(struct HashMap *map);
 	struct Node *get_node(const struct HashMap *map, const char *key);
 	void insert_node(struct HashMap *map, const char *key, void *value, const unsigned int size);
