@@ -33,7 +33,7 @@
 	struct Split split(const char *text, const unsigned int length, const char *separator);
 	void split_free(struct Split value);
 
-	void *allocate(void *value, const unsigned long old_count, const unsigned long new_count, const unsigned char size);
+	void *allocate(void *value, const long old_count, const unsigned long new_count, const unsigned char size);
 
 	unsigned long join(const struct Join *value, char *source, unsigned short size, const char *separator);
 	unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator);

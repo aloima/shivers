@@ -15,9 +15,10 @@ jsonelement_t *create_empty_json_element(const bool is_array) {
 jsonelement_t *clone_json_element(jsonelement_t *element) {
 	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
 	result->type = element->type;
+	result->parent = element->parent;
 
 	if (element->key != NULL) {
-		const unsigned long long key_size = (strlen(element->key) + 1);
+		const unsigned int key_size = (strlen(element->key) + 1);
 		result->key = allocate(NULL, -1, key_size, sizeof(char));
 		memcpy(result->key, element->key, key_size);
 	}
@@ -48,6 +49,7 @@ jsonelement_t *clone_json_element(jsonelement_t *element) {
 				break;
 
 			default:
+				result->value = NULL;
 				break;
 		}
 	}

@@ -32,7 +32,7 @@ make
 + libs: Internal libraries
 	+ database: Database library
 	+ discord: Discord library which create connections with Discord
-	+ hash: HashMap library
+	+ hash: Hash library, includes HashMap structure
 	+ png: PNG manipulation library
 	+ json: JSON library
 	+ network: Network library that contains websocket part and HTTP request
@@ -42,9 +42,6 @@ make
 
 ## Code
 This project follows GNU99 standard and tries not to use external libraries, so includes some libraries that developed to use in this project.
-
-## Disclaimer
-This project is made using C, so it may be unstable. Contributors of this project cannot be held responsible for results of usage.
 
 ## License
 This project is licensed under [BSD-3-Clause](./LICENSE) license.
