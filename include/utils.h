@@ -7,7 +7,7 @@
 
 	struct SplitData {
 		char *data;
-		unsigned long length;
+		unsigned int length;
 	};
 
 	struct Sort {
@@ -27,10 +27,10 @@
 
 	struct Join {
 		char *data;
-		unsigned long length;
+		unsigned int length;
 	};
 
-	struct Split split(const char *text, const unsigned long length, const char *separator);
+	struct Split split(const char *text, const unsigned int length, const char *separator);
 	void split_free(struct Split value);
 
 	void *allocate(void *value, const unsigned long old_count, const unsigned long new_count, const unsigned char size);

@@ -190,9 +190,10 @@ char *percent_encode(const char *data) {
 		')', '*', '+', ',', ';',
 		'\0'
 	}; // Some of reserved characters are not added because of syntax of URL.
-	const unsigned long length = strlen(data);
-	unsigned long result_length = (length + 1);
+	const unsigned int length = strlen(data);
+	unsigned int result_length = (length + 1);
 	char *result = allocate(NULL, -1, (length + 1), sizeof(char));
+	result[0] = 0;
 
 	for (unsigned long i = 0; i < length; ++i) {
 		const char ch = data[i];

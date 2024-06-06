@@ -243,23 +243,26 @@ struct Response request(struct RequestConfig config) {
 
 		split_free(status_splitter);
 
-		unsigned long i = 0;
+		unsigned int i = 0;
 
 		for (i = 1; i < line_splitter.size; ++i) {
 			if (line_splitter.data[i].data[0] == 0) {
 				break;
 			} else {
 				const char *value = strstr(line_splitter.data[i].data, ": ") + 2;
-				const unsigned long value_length = strlen(value);
-				const unsigned long name_length = (line_splitter.data[i].length - value_length - 2);
+				const unsigned int value_size = strlen(value) + 1;
+				const unsigned int name_size = line_splitter.data[i].length - value_size;
 
 				response.headers = allocate(response.headers, -1, i, sizeof(struct Header));
 				struct Header *header = &response.headers[i - 1];
 
-				header->name = allocate(NULL, -1, name_length + 1, sizeof(char));
-				header->value = allocate(NULL, -1, value_length + 1, sizeof(char));
-				strncpy(header->name, line_splitter.data[i].data, name_length);
-				strncpy(header->value, value, value_length);
+				header->name = allocate(NULL, -1, name_size, sizeof(char));
+				memcpy(header->name, line_splitter.data[i].data, name_size);
+				header->name[name_size - 1] = 0;
+
+				header->value = allocate(NULL, -1, value_size, sizeof(char));
+				memcpy(header->value, value, value_size);
+
 				++response.header_size;
 			}
 		}
@@ -270,8 +273,8 @@ struct Response request(struct RequestConfig config) {
 			++i;
 
 			while (i < line_splitter.size) {
-				const unsigned long hex_length = ahtoi(line_splitter.data[i].data);
-				const unsigned long line_length = line_splitter.data[i + 1].length;
+				const unsigned int hex_length = ahtoi(line_splitter.data[i].data);
+				const unsigned int line_length = line_splitter.data[i + 1].length;
 
 				if (line_length != 0) {
 					if (line_length == hex_length) {

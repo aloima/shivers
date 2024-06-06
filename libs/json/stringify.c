@@ -14,7 +14,7 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 		result = allocate(NULL, -1, 8, sizeof(char));
 		memcpy(result, "<empty>", 8);
 	} else if (element->type == JSON_STRING) {
-		const unsigned long length = strlen(element->value);
+		const unsigned int length = strlen(element->value);
 		result = allocate(NULL, -1, length + 3, sizeof(char));
 		result[0] = '"';
 		memcpy(result + 1, element->value, length);
@@ -25,7 +25,7 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 		double integer;
 		double fractional = (modf(number, &integer) * pow(10, fractional_limit));
 
-		const unsigned long digit_count = ((integer == 0.0) ? 1 : (floor(log10(integer)) + 1));
+		const unsigned int digit_count = ((integer == 0.0) ? 1 : (floor(log10(integer)) + 1));
 		char formatter[13];
 
 		if (fractional != 0.0) {
@@ -50,21 +50,23 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 		result = allocate(NULL, -1, 5, sizeof(char));
 		memcpy(result, "null", 5);
 	} else if (element->type == JSON_OBJECT) {
-		unsigned long result_length = 2;
-		unsigned long i;
+		unsigned int result_length = 2;
+		unsigned int i;
 
 		result = allocate(NULL, -1, result_length + 1, sizeof(char));
+		result[0] = 0;
 		strcat(result, "{");
 
 		for (i = 0; i < element->size; ++i) {
 			const jsonelement_t *data = ((jsonelement_t **) element->value)[i];
 			char *value = json_stringify(data, fractional_limit);
-			const unsigned long key_length = strlen(data->key);
-			const unsigned long value_length = strlen(value);
+			const unsigned int key_length = strlen(data->key);
+			const unsigned int value_length = strlen(value);
 			const bool has_comma = (element->size != (i + 1));
 
 			result_length += key_length + 3 + value_length + has_comma;
 			result = allocate(result, -1, result_length + 1, sizeof(char));
+			result[0] = 0;
 			strcat(result, "\"");
 			strcat(result, data->key);
 			strcat(result, "\":");
@@ -79,20 +81,22 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 
 		strcat(result, "}");
 	} else if (element->type == JSON_ARRAY) {
-		unsigned long result_length = 2;
-		unsigned long i;
+		unsigned int result_length = 2;
+		unsigned int i;
 
 		result = allocate(NULL, -1, result_length + 1, sizeof(char));
+		result[0] = 0;
 		strcat(result, "[");
 
 		for (i = 0; i < element->size; ++i) {
 			const jsonelement_t *data = ((jsonelement_t **) element->value)[i];
 			char *value = json_stringify(data, fractional_limit);
-			const unsigned long value_length = strlen(value);
+			const unsigned int value_length = strlen(value);
 			const bool has_comma = (element->size != (i + 1));
 
 			result_length += value_length + has_comma;
 			result = allocate(result, -1, result_length + 1, sizeof(char));
+			result[0] = 0;
 			strcat(result, value);
 
 			if (has_comma) {

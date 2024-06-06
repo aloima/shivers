@@ -12,15 +12,15 @@ void split_free(struct Split value) {
 	free(value.data);
 }
 
-struct Split split(const char *text, const unsigned long length, const char *separator) {
+struct Split split(const char *text, const unsigned int length, const char *separator) {
 	const unsigned int separator_length = strlen(separator);
 
 	struct Split result = {
-		.data = allocate(NULL, -1, 1, sizeof(struct SplitData)),
+		.data = allocate(NULL, 0, 1, sizeof(struct SplitData)),
 		.size = 1
 	};
 
-	for (unsigned long i = 0; i < length; ++i) {
+	for (unsigned int i = 0; i < length; ++i) {
 		char **data = (char **) &(result.data[result.size - 1].data);
 		struct SplitData *splitdata = &result.data[result.size - 1];
 		const char ch = text[i];

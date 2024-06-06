@@ -8,7 +8,7 @@
 
 static void set_value(jsonelement_t *element, void *value, const unsigned char type) {
 	if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {
-		for (unsigned long i = 0; i < element->size; ++i) {
+		for (unsigned int i = 0; i < element->size; ++i) {
 			json_free(((jsonelement_t **) element->value)[i], false);
 		}
 	}
@@ -16,7 +16,7 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 	element->type = type;
 
 	if (type == JSON_STRING) {
-		const unsigned long value_length = strlen(value);
+		const unsigned int value_length = strlen(value);
 
 		element->size = value_length;
 		element->value = allocate(element->value, -1, value_length + 1, sizeof(char));
@@ -32,8 +32,8 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 		element->size = array->size;
 		element->value = allocate(element->value, -1, array->size, sizeof(jsonelement_t));
 
-		for (unsigned long i = 0; i < array->size; ++i) {
-			((jsonelement_t **) element->value)[i] = allocate(NULL, -1, 1, sizeof(jsonelement_t));
+		for (unsigned int i = 0; i < array->size; ++i) {
+			((jsonelement_t **) element->value)[i] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 			jsonelement_t *array_element = ((jsonelement_t **) array->value)[i];
 			jsonelement_t *sub_element = ((jsonelement_t **) element->value)[i];
 
@@ -50,8 +50,8 @@ static void set_value(jsonelement_t *element, void *value, const unsigned char t
 		element->size = object->size;
 		element->value = allocate(element->value, -1, object->size, sizeof(jsonelement_t *));
 
-		for (unsigned long i = 0; i < object->size; ++i) {
-			((jsonelement_t **) element->value)[i] = allocate(NULL, -1, 1, sizeof(jsonelement_t));
+		for (unsigned int i = 0; i < object->size; ++i) {
+			((jsonelement_t **) element->value)[i] = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 			jsonelement_t *object_element = ((jsonelement_t **) object->value)[i];
 			jsonelement_t *sub_element = ((jsonelement_t **) element->value)[i];
 			const unsigned int key_size = (strlen(object_element->key) + 1);

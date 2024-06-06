@@ -72,6 +72,7 @@ static void handle_events(struct Websocket *websocket) {
 			}
 
 			frame.payload = allocate(NULL, -1, frame.payload_length + 1, sizeof(char));
+			frame.payload[frame.payload_length] = 0;
 
 			switch (frame.opcode) {
 				case 0x1: {

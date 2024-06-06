@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -110,6 +111,7 @@ void insert_node(struct HashMap *map, const char *key, void *value, const unsign
 	node->key = allocate(NULL, -1, key_size, sizeof(char));
 	node->value = allocate(NULL, -1, 1, size);
 	node->size = size;
+	node->next = NULL;
 
 	memcpy(node->key, key, key_size);
 	memcpy(node->value, value, size);

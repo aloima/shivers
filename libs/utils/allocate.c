@@ -5,7 +5,8 @@
 
 void *allocate(void *value, const unsigned long old_count, const unsigned long new_count, const unsigned char size) {
 	if (value == NULL) {
-		return calloc(new_count, size);
+		if (old_count == -1) return malloc(new_count * size);
+		else return calloc(new_count, size);
 	} else {
 		void *val = realloc(value, new_count * size);
 

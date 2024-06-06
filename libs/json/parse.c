@@ -85,7 +85,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned int
 				bool waiting_new_element = false;
 
 				while (condition) {
-					jsonelement_t *sub_element = allocate(NULL, -1, 1, sizeof(jsonelement_t));
+					jsonelement_t *sub_element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 					bool sub_condition = true;
 
 					sub_element->parent = element;
@@ -143,7 +143,7 @@ static void parse_v(jsonelement_t *element, const char *text, const unsigned int
 			if (element->type == JSON_STRING) {
 				if (ch != '"' || escaping) {
 					++element->size;
-					element->value = allocate(element->value, -1, element->size + 1, sizeof(char));
+					element->value = allocate(element->value, element->size - 1, element->size + 1, sizeof(char));
 					strncat(element->value, &ch, 1);
 
 					if (ch == '\\') {
@@ -192,7 +192,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 	bool parsing_key = false;
 	bool parsing_value = false;
 
-	*element = allocate(NULL, -1, 1, sizeof(jsonelement_t));
+	*element = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 	(*element)->parent = parent;
 
 	while (*i < length) {
@@ -217,7 +217,7 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 				parsing_key = false;
 			} else {
 				++key_length;
-				(*element)->key = allocate((*element)->key, -1, key_length + 1, sizeof(char));
+				(*element)->key = allocate((*element)->key, key_length - 1, key_length + 1, sizeof(char));
 				strncat((*element)->key, &ch, 1);
 			}
 		} else {
@@ -244,11 +244,10 @@ static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char 
 }
 
 jsonelement_t *json_parse(const char *text) {
-	jsonelement_t *result = allocate(NULL, -1, 1, sizeof(jsonelement_t));
+	jsonelement_t *result = allocate(NULL, 0, 1, sizeof(jsonelement_t));
 	const unsigned int length = strlen(text);
 	unsigned int i = 0;
 
 	parse_v(result, text, length, &i);
-
 	return result;
 }

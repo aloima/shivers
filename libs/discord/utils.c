@@ -32,7 +32,7 @@ struct Response api_request(const char *token, const char *path, const char *met
 	if (body != NULL && formdata == NULL) {
 		const unsigned long body_size = strlen(body) + 1;
 		config.body.is_formdata = false;
-		config.body.payload.data = allocate(NULL, 0, body_size, sizeof(char));
+		config.body.payload.data = allocate(NULL, -1, body_size, sizeof(char));
 		memcpy(config.body.payload.data, body, body_size);
 
 		headers[1] = (struct Header) {
