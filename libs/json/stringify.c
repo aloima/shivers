@@ -64,9 +64,9 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 			const unsigned int value_length = strlen(value);
 			const bool has_comma = (element->size != (i + 1));
 
-			result_length += key_length + 3 + value_length + has_comma;
-			result = allocate(result, -1, result_length + 1, sizeof(char));
-			result[0] = 0;
+			const unsigned int length_addition = key_length + 3 + value_length + has_comma;
+			result_length += length_addition;
+			result = allocate(result, result_length - length_addition + 1, result_length + 1, sizeof(char));
 			strcat(result, "\"");
 			strcat(result, data->key);
 			strcat(result, "\":");
@@ -94,8 +94,9 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 			const unsigned int value_length = strlen(value);
 			const bool has_comma = (element->size != (i + 1));
 
-			result_length += value_length + has_comma;
-			result = allocate(result, -1, result_length + 1, sizeof(char));
+			const unsigned int length_addition = value_length + has_comma;
+			result_length += length_addition;
+			result = allocate(result, result_length - length_addition + 1, result_length + 1, sizeof(char));
 			result[0] = 0;
 			strcat(result, value);
 
