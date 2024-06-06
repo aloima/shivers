@@ -184,7 +184,7 @@ void close_socket(int sockfd, SSL *ssl) {
 }
 
 char *percent_encode(const char *data) {
-	const char reserved_chars[14] = {
+	char reserved_chars[14] = {
 		' ', '[', ']', '@',
 		'!', '$', '\'', '(',
 		')', '*', '+', ',', ';',
@@ -195,10 +195,10 @@ char *percent_encode(const char *data) {
 	char *result = allocate(NULL, -1, (length + 1), sizeof(char));
 	result[0] = 0;
 
-	for (unsigned long i = 0; i < length; ++i) {
+	for (unsigned int i = 0; i < length; ++i) {
 		const char ch = data[i];
 
-		if (char_at(reserved_chars, data[i], 13) != -1) {
+		if (char_at(reserved_chars, data[i]) != -1) {
 			result = allocate(result, -1, result_length + 2, sizeof(char));
 			result_length += 2;
 

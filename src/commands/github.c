@@ -37,7 +37,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	char url[30 + query.length];
 	struct Response response;
 
-	if (char_at(query.value, '/', 0) == -1) {
+	if (char_at(query.value, '/') == -1) {
 		sprintf(url, "https://api.github.com/users/%s", query.value);
 
 		config.url = url;

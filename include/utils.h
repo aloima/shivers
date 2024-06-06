@@ -48,7 +48,7 @@
 	int atoi_s(const char *str, short length);
 	char *base64_encode(const char *data, const unsigned long data_length);
 
-	int char_at(const char *data, const char ch, int length);
+	int char_at(char *data, const char ch);
 
 	unsigned long long get_timestamp();
 

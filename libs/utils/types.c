@@ -64,13 +64,13 @@ char *base64_encode(const char *data, const unsigned long data_length) {
 }
 
 unsigned long ahtoi(const char *data) {
-	const char hex_alphabet[17] = "0123456789ABCDEF";
-	const unsigned long size = strlen(data);
+	char hex_alphabet[17] = "0123456789ABCDEF";
+	const unsigned int size = strlen(data);
 	unsigned long result = 0;
 
-	for (int i = 0; i < size; ++i) {
+	for (unsigned int i = 0; i < size; ++i) {
 		unsigned long base = pow(16, (size - i - 1));
-		result |= (char_at(hex_alphabet, toupper(data[i]), 16) * ((base == 0) ? 1 : base));
+		result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
 	}
 
 	return result;
