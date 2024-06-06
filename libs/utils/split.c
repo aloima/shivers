@@ -5,7 +5,7 @@
 #include <utils.h>
 
 void split_free(struct Split value) {
-	for (unsigned long i = 0; i < value.size; ++i) {
+	for (unsigned int i = 0; i < value.size; ++i) {
 		free(value.data[i].data);
 	}
 

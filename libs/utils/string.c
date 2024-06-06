@@ -5,19 +5,15 @@
 #include <utils.h>
 
 void strtolower(char *source, const char *dest) {
-	const unsigned long length = strlen(dest);
+	unsigned int i = 0;
+	char ch;
 
-	for (unsigned long i = 0; i < length; ++i) {
-		const char ch = dest[i];
-
-		if (isupper(ch)) {
-			source[i] = tolower(ch);
-		} else {
-			source[i] = ch;
-		}
+	while ((ch = dest[i]) != '\0') {
+		source[i] = islower(ch) ? toupper(ch) : ch;
+		++i;
 	}
 
-	source[length] = '\0';
+	source[i] = '\0';
 }
 
 bool strsame(const char *str1, const char *str2) {
@@ -80,19 +76,15 @@ void strreplace(char **source, char *target, char *replacement) {
 }
 
 void strtoupper(char *source, const char *dest) {
-	const unsigned long length = strlen(dest);
+	unsigned int i = 0;
+	char ch;
 
-	for (unsigned long i = 0; i < length; ++i) {
-		const char ch = dest[i];
-
-		if (islower(ch)) {
-			source[i] = toupper(ch);
-		} else {
-			source[i] = ch;
-		}
+	while ((ch = dest[i]) != '\0') {
+		source[i] = isupper(ch) ? tolower(ch) : ch;
+		++i;
 	}
 
-	source[length] = '\0';
+	source[i] = '\0';
 }
 
 char *ltrim(const char *src) {
