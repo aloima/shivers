@@ -97,7 +97,6 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 			const unsigned int length_addition = value_length + has_comma;
 			result_length += length_addition;
 			result = allocate(result, result_length - length_addition + 1, result_length + 1, sizeof(char));
-			result[0] = 0;
 			strcat(result, value);
 
 			if (has_comma) {
