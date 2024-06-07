@@ -6,8 +6,8 @@
 #include <json.h>
 #include <png.h>
 
-void on_ready(struct Client client) {
-	setup_commands(client);
+void on_ready(struct Shivers *shivers) {
+	setup_commands(shivers);
 	puts("Set up all commands.");
 
 	database_initialize("database.json");
@@ -16,5 +16,5 @@ void on_ready(struct Client client) {
 	initialize_fonts();
 	puts("Fonts are initialized.");
 
-	printf("%s is connected to gateway.\n", json_get_val(client.user, "username").value.string);
+	printf("%s is connected to gateway.\n", json_get_val(shivers->client.user, "username").value.string);
 }

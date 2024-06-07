@@ -1,10 +1,16 @@
 #include <discord.h>
 #include <json.h>
+#include <hash.h>
 
 #ifndef SHIVERS_H_
 	#define SHIVERS_H_
 
 	#define COLOR (double) 0xB8B8B8
+
+	struct Shivers {
+		struct Client client;
+		struct HashMap *commands;
+	};
 
 	struct Cooldown {
 		char *user_id;
@@ -12,30 +18,27 @@
 	};
 
 	struct VoiceStatsChannel {
-		char *name;
-		char *id;
+		char *name, *id;
 	};
 
 	struct CommandArgument {
-		const char *name, *description;
-		const unsigned char type, arg_size;
-		const bool optional;
-		const struct CommandArgument *args;
+		char *name, *description;
+		enum ArgumentTypes type;
+		unsigned int arg_size;
+		bool optional;
+		struct CommandArgument *args;
 	};
 
 	struct Command {
 		void (*execute)(const struct Client client, const struct InteractionCommand command);
-		const char *name, *description;
-		const bool guild_only;
-		const unsigned long permissions;
-		const struct CommandArgument *args;
-		const unsigned char arg_size;
+		char *description;
+		bool guild_only;
+		unsigned long permissions;
+		struct CommandArgument *args;
+		unsigned int arg_size;
 	};
 
-	void setup_commands(const struct Client client);
-	void free_commands();
-	const struct Command *get_commands();
-	const unsigned short get_command_size();
+	void setup_commands(struct Shivers *shivers);
 
 	void free_cooldowns();
 	void run_with_cooldown(
@@ -59,24 +62,24 @@
 
 	#define MISSING_MANAGE_CHANNELS "Could not open a new channel, because I do not have required permissions."
 
-	void on_force_close();
-	void on_guild_create(struct Client client);
-	void on_guild_delete(struct Client client);
-	void on_guild_member_add(struct Client client, struct Node *guild_node);
-	void on_guild_member_remove(struct Client client, struct Node *guild_node);
-	void on_handle_guilds(struct Client client);
-	void on_interaction_command(struct Client client, struct InteractionCommand command);
-	void on_message_create(struct Client client, jsonelement_t *message);
-	void on_presence_update(struct Client client, struct Node *guild_node);
-	void on_ready(struct Client client);
-	void on_voice_state_update(struct Client client, struct Node *guild_node);
+	void on_force_close(struct Shivers *shivers);
+	void on_guild_create(struct Shivers *shivers);
+	void on_guild_delete(struct Shivers *shivers);
+	void on_guild_member_add(struct Shivers *shivers, struct Node *guild_node);
+	void on_guild_member_remove(struct Shivers *shivers, struct Node *guild_node);
+	void on_handle_guilds(struct Shivers *shivers);
+	void on_interaction_command(struct Shivers *shivers, struct InteractionCommand command);
+	void on_message_create(struct Shivers *shivers, jsonelement_t *message);
+	void on_presence_update(struct Shivers *shivers, struct Node *guild_node);
+	void on_ready(struct Shivers *shivers);
+	void on_voice_state_update(struct Shivers *shivers, struct Node *guild_node);
 
-	extern const struct Command about;
-	extern const struct Command avatar;
-	extern const struct Command github;
-	extern const struct Command help;
-	extern const struct Command level;
-	extern const struct Command level_settings;
-	extern const struct Command vstats;
-	extern const struct Command wikipedia;
+	extern struct Command about;
+	extern struct Command avatar;
+	extern struct Command github;
+	extern struct Command help;
+	extern struct Command level;
+	extern struct Command level_settings;
+	extern struct Command vstats;
+	extern struct Command wikipedia;
 #endif

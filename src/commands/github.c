@@ -161,7 +161,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	response_free(response);
 }
 
-static const struct CommandArgument args[] = {
+static struct CommandArgument args[] = {
 	(struct CommandArgument) {
 		.name = "query",
 		.description = "The repository or the user that you want to get information",
@@ -170,9 +170,8 @@ static const struct CommandArgument args[] = {
 	}
 };
 
-const struct Command github = {
+struct Command github = {
 	.execute = execute,
-	.name = "github",
 	.description = "Fetches data from GitHub and sends them",
 	.guild_only = false,
 	.args = args,

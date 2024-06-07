@@ -196,8 +196,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	free_message_payload(message.payload);
 }
 
-static const struct CommandArgument args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument args[] = {
+	(struct CommandArgument) {
 		.name = "member",
 		.description = "The mention of a member whose level status that you want to view",
 		.type = USER_ARGUMENT,
@@ -205,9 +205,8 @@ static const struct CommandArgument args[] = {
 	}
 };
 
-const struct Command level = {
+struct Command level = {
 	.execute = execute,
-	.name = "level",
 	.description = "Displays your level",
 	.guild_only = true,
 	.args = args,

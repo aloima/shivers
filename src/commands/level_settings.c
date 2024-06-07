@@ -147,7 +147,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	}
 }
 
-static const struct CommandArgument set_args[] = {
+static struct CommandArgument set_args[] = {
 	(const struct CommandArgument) {
 		.name = "factor",
 		.description = "Sets factor of level, needed total xp to level up is (factor * level).",
@@ -168,29 +168,28 @@ static const struct CommandArgument set_args[] = {
 	}
 };
 
-static const struct CommandArgument args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument args[] = {
+	(struct CommandArgument) {
 		.name = "set",
 		.description = "Sets level settings of your server",
 		.type = SUBCOMMAND_ARGUMENT,
 		.args = set_args,
 		.arg_size = sizeof(set_args) / sizeof(struct CommandArgument)
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "list",
 		.description = "Lists level settings of your server",
 		.type = SUBCOMMAND_ARGUMENT
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "help",
 		.description = "Describes level settings",
 		.type = SUBCOMMAND_ARGUMENT
 	}
 };
 
-const struct Command level_settings = {
+struct Command level_settings = {
 	.execute = execute,
-	.name = "level-settings",
 	.description = "Base command for level settings of your server",
 	.guild_only = true,
 	.permissions = (ManageMessages | ManageChannels),

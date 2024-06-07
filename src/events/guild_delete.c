@@ -3,8 +3,8 @@
 #include <shivers.h>
 #include <discord.h>
 
-void on_guild_delete(struct Client client) {
+void on_guild_delete(struct Shivers *shivers) {
 	char custom_status[12];
-	sprintf(custom_status, "%u servers", client.guilds->length);
+	sprintf(custom_status, "%u servers", shivers->client.guilds->length);
 	set_presence("custom", custom_status, NULL, 4, "online");
 }

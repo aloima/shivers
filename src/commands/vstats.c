@@ -164,8 +164,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	free_message_payload(message.payload);
 }
 
-static const struct CommandArgument add_args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument add_args[] = {
+	(struct CommandArgument) {
 		.name = "name",
 		.description = "Sets voice stats channel name.",
 		.type = STRING_ARGUMENT,
@@ -173,8 +173,8 @@ static const struct CommandArgument add_args[] = {
 	}
 };
 
-static const struct CommandArgument delete_args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument delete_args[] = {
+	(struct CommandArgument) {
 		.name = "id",
 		.description = "Specifies voice stats channel ID which you want to delete.",
 		.type = STRING_ARGUMENT,
@@ -182,36 +182,35 @@ static const struct CommandArgument delete_args[] = {
 	}
 };
 
-static const struct CommandArgument args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument args[] = {
+	(struct CommandArgument) {
 		.name = "add",
 		.description = "Adds a voice stats channel",
 		.type = SUBCOMMAND_ARGUMENT,
 		.args = add_args,
 		.arg_size = sizeof(add_args) / sizeof(struct CommandArgument)
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "delete",
 		.description = "Deletes a voice stats channel",
 		.type = SUBCOMMAND_ARGUMENT,
 		.args = delete_args,
 		.arg_size = sizeof(delete_args) / sizeof(struct CommandArgument)
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "list",
 		.description = "Lists voice stats channels",
 		.type = SUBCOMMAND_ARGUMENT
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "help",
 		.description = "Describes voice stats system",
 		.type = SUBCOMMAND_ARGUMENT
 	}
 };
 
-const struct Command vstats = {
+struct Command vstats = {
 	.execute = execute,
-	.name = "vstats",
 	.description = "Sets up voice stats",
 	.guild_only = true,
 	.permissions = (ManageChannels),

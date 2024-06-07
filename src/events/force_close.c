@@ -8,12 +8,13 @@
 #include <database.h>
 #include <shivers.h>
 #include <png.h>
+#include <hash.h>
 
-void on_force_close() {
+void on_force_close(struct Shivers *shivers) {
 	free_cooldowns();
 	puts("\nFree'd cooldowns.");
 
-	free_commands();
+	free_hashmap(shivers->commands);
 	puts("Free'd commands.");
 
 	database_save();

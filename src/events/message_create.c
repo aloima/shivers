@@ -5,7 +5,7 @@
 #include <utils.h>
 #include <json.h>
 
-void on_message_create(struct Client client, jsonelement_t *message) {
+void on_message_create(struct Shivers *shivers, jsonelement_t *message) {
 	const bool is_webhook = json_get_val(message, "webhook_id").exist;
 
 	if (!is_webhook) {
@@ -68,7 +68,7 @@ void on_message_create(struct Client client, jsonelement_t *message) {
 						}
 					};
 
-					const unsigned short status = send_message(client, message);
+					const unsigned short status = send_message(shivers->client, message);
 					free(level_message_dup);
 
 					switch (status) {

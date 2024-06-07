@@ -32,15 +32,15 @@ static char token[96];
 static unsigned long long ready_guild_size = 0, intents;
 static bool handled_ready_guilds = false;
 
-static struct Client client = {0};
+static struct Shivers shivers = {0};
 
 static unsigned long long previous_heartbeat_sent_at = 0, heartbeat_sent_at = 0, heartbeat_received_at = 0;
 
 static void handle_exit(int sig) {
 	close_websocket(&websocket, -1, NULL);
 
-	if (client.user != NULL) {
-		json_free(client.user, false);
+	if (shivers.client.user != NULL) {
+		json_free(shivers.client.user, false);
 	}
 
 	pthread_cancel(heartbeat_thread);
@@ -231,10 +231,10 @@ static void onmessage(const struct WebsocketFrame frame) {
 			last_sequence = json_get_val(data, "s").value.number;
 
 			if (strsame(event_name, "READY")) {
-				client.user = clone_json_element(json_get_val(data, "d.user").element);
-				client.token = token;
-				client.ready_at = get_timestamp();
-				client.guilds = create_hashmap(16);
+				shivers.client.user = clone_json_element(json_get_val(data, "d.user").element);
+				shivers.client.token = token;
+				shivers.client.ready_at = get_timestamp();
+				shivers.client.guilds = create_hashmap(16);
 
 				const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
 				const jsonresult_t json_session_id= json_get_val(data, "d.session_id");
@@ -244,7 +244,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				ready_guild_size = json_get_val(data, "d.guilds").element->size;
 
-				on_ready(client);
+				on_ready(&shivers);
 			} else if (strsame(event_name, "GUILD_CREATE")) {
 				const char *id = json_get_val(data, "d.id").value.string;
 				const jsonresult_t members = json_get_val(data, "d.members");
@@ -295,25 +295,25 @@ static void onmessage(const struct WebsocketFrame frame) {
 					member->at_voice = true;
 				}
 
-				insert_node(client.guilds, id, &guild, sizeof(struct Guild));
+				insert_node(shivers.client.guilds, id, &guild, sizeof(struct Guild));
 
 				if (!handled_ready_guilds) {
 					--ready_guild_size;
 
 					if (ready_guild_size == 0) {
 						handled_ready_guilds = true;
-						on_handle_guilds(client);
+						on_handle_guilds(&shivers);
 					}
 				} else {
-					on_guild_create(client);
+					on_guild_create(&shivers);
 				}
 			} else if (strsame(event_name, "GUILD_DELETE")) {
 				const char *id = json_get_val(data, "d.id").value.string;
-				delete_node(client.guilds, id);
+				delete_node(shivers.client.guilds, id);
 
-				on_guild_delete(client);
+				on_guild_delete(&shivers);
 			} else if (strsame(event_name, "GUILD_MEMBER_ADD")) {
-				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				jsonelement_t *user = json_get_val(data, "d.user").element;
 				const char *user_id = json_get_val(user, "id").value.string;
@@ -322,17 +322,17 @@ static void onmessage(const struct WebsocketFrame frame) {
 				};
 
 				insert_node(guild->members, user_id, &member, sizeof(struct Member));
-				on_guild_member_add(client, guild_node);
+				on_guild_member_add(&shivers, guild_node);
 			} else if (strsame(event_name, "GUILD_MEMBER_REMOVE")) {
-				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				const char *user_id = json_get_val(data, "d.user.id").value.string;
 
 				delete_node(guild->members, user_id);
-				on_guild_member_remove(client, guild_node);
+				on_guild_member_remove(&shivers, guild_node);
 			} else if (strsame(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").element;
-				on_message_create(client, message);
+				on_message_create(&shivers, message);
 			} else if (strsame(event_name, "INTERACTION_CREATE")) {
 				jsonelement_t *interaction = json_get_val(data, "d").element;
 
@@ -362,7 +362,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 						command.arguments = allocate(NULL, -1, options_size, sizeof(struct InteractionArgument));
 						command.argument_size = options_result.element->size;
 
-						for (unsigned char i = 0; i < options_size; ++i) {
+						for (unsigned int i = 0; i < options_size; ++i) {
 							jsonelement_t *option_element = ((jsonelement_t **) options_result.element->value)[i];
 							const unsigned int option_type = json_get_val(option_element, "type").value.number;
 							char *option_name = json_get_val(option_element, "name").value.string;
@@ -371,15 +371,15 @@ static void onmessage(const struct WebsocketFrame frame) {
 								command.arguments[i].name = option_name;
 								command.arguments[i].type = option_type;
 
+								struct InteractionSubcommand *subcommand = &(command.arguments[i].value.subcommand);
 								jsonresult_t sc_options_result = json_get_val(option_element, "options");
-								const unsigned char sc_options_size = sc_options_result.element->size;
+								subcommand->argument_size = sc_options_result.element->size;
 
-								if (sc_options_result.element->type == JSON_ARRAY && sc_options_size != 0) {
+								if (sc_options_result.element->type == JSON_ARRAY && subcommand->argument_size != 0) {
 									struct InteractionSubcommand *subcommand = &(command.arguments[i].value.subcommand);
-									subcommand->arguments = allocate(NULL, -1, sc_options_size, sizeof(struct InteractionArgument));
-									subcommand->argument_size = sc_options_size;
+									subcommand->arguments = allocate(NULL, -1, subcommand->argument_size, sizeof(struct InteractionArgument));
 
-									for (unsigned char s = 0; s < sc_options_size; ++s) {
+									for (unsigned int s = 0; s < subcommand->argument_size; ++s) {
 										jsonelement_t *option_element = ((jsonelement_t **) sc_options_result.element->value)[s];
 										const unsigned int option_type = json_get_val(option_element, "type").value.number;
 										char *option_name = json_get_val(option_element, "name").value.string;
@@ -397,9 +397,9 @@ static void onmessage(const struct WebsocketFrame frame) {
 						}
 					}
 
-					on_interaction_command(client, command);
+					on_interaction_command(&shivers, command);
 
-					for (unsigned char i = 0; i < options_size; ++i) {
+					for (unsigned int i = 0; i < options_size; ++i) {
 						struct InteractionArgument argument = command.arguments[i];
 
 						if (argument.type == SUBCOMMAND_ARGUMENT && argument.value.subcommand.argument_size != 0) {
@@ -412,7 +412,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 			} else if (strsame(event_name, "PRESENCE_UPDATE")) {
 				const char *user_id = json_get_val(data, "d.user.id").value.string;
 				const char *status = json_get_val(data, "d.status").value.string;
-				struct Node *guild_node = get_node(client.guilds, json_get_val(data, "d.guild_id").value.string);
+				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				struct Member *member = get_node(guild->members, user_id)->value;
 
@@ -429,14 +429,14 @@ static void onmessage(const struct WebsocketFrame frame) {
 					else if (strsame(status, "dnd")) member->status = DND;
 				}
 
-				on_presence_update(client, guild_node);
+				on_presence_update(&shivers, guild_node);
 			} else if (strsame(event_name, "VOICE_STATE_UPDATE")) {
 				const char *user_id = json_get_val(data, "d.user_id").value.string;
 				const jsonresult_t channel_id = json_get_val(data, "d.channel_id");
 				const jsonresult_t guild_id = json_get_val(data, "d.guild_id");
 
 				if (guild_id.exist && guild_id.element->type == JSON_STRING) {
-					struct Node *guild_node = get_node(client.guilds, guild_id.value.string);
+					struct Node *guild_node = get_node(shivers.client.guilds, guild_id.value.string);
 					struct Guild *guild = guild_node->value;
 					struct Member *member = get_node(guild->members, user_id)->value;
 
@@ -448,7 +448,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 						member->at_voice = true;
 					}
 
-					on_voice_state_update(client, guild_node);
+					on_voice_state_update(&shivers, guild_node);
 				}
 			}
 
@@ -498,8 +498,8 @@ static void onclose(const short code, const char *reason) {
 	}
 
 	if (code != -2) {
-		for (unsigned int i = 0; i < client.guilds->size; ++i) {
-			struct Node *node = client.guilds->nodes[i];
+		for (unsigned int i = 0; i < shivers.client.guilds->size; ++i) {
+			struct Node *node = shivers.client.guilds->nodes[i];
 
 			if (node != NULL) {
 				while (node) {
@@ -509,8 +509,8 @@ static void onclose(const short code, const char *reason) {
 			}
 		}
 
-		free_hashmap(client.guilds);
-		on_force_close();
+		free_hashmap(shivers.client.guilds);
+		on_force_close(&shivers);
 	}
 }
 

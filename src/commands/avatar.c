@@ -154,14 +154,14 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	free_message_payload(message.payload);
 }
 
-static const struct CommandArgument args[] = {
-	(const struct CommandArgument) {
+static struct CommandArgument args[] = {
+	(struct CommandArgument) {
 		.name = "member",
 		.description = "The mention of a member whose avatar that you want to view",
 		.type = USER_ARGUMENT,
 		.optional = true
 	},
-	(const struct CommandArgument) {
+	(struct CommandArgument) {
 		.name = "id",
 		.description = "The ID of a member whose avatar that you want to view",
 		.type = STRING_ARGUMENT,
@@ -169,9 +169,8 @@ static const struct CommandArgument args[] = {
 	}
 };
 
-const struct Command avatar = {
+struct Command avatar = {
 	.execute = execute,
-	.name = "avatar",
 	.description = "Sends the avatar of the user",
 	.guild_only = false,
 	.args = args,

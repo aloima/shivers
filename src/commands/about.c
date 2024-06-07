@@ -152,9 +152,8 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	free_message_payload(message.payload);
 }
 
-const struct Command about = {
+struct Command about = {
 	.execute = execute,
-	.name = "about",
 	.description = "Gives information about the bot",
 	.guild_only = false
 };

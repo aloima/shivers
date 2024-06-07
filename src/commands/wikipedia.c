@@ -129,7 +129,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	json_free(search_result, false);
 }
 
-const static struct CommandArgument args[] = {
+static struct CommandArgument args[] = {
 	(struct CommandArgument) {
 		.name = "query",
 		.description = "The search query of the page which you want to get information",
@@ -138,9 +138,8 @@ const static struct CommandArgument args[] = {
 	}
 };
 
-const struct Command wikipedia = {
+struct Command wikipedia = {
 	.execute = execute,
-	.name = "wikipedia",
 	.description = "Sends short info from Wikipedia",
 	.guild_only = false,
 	.args = args,
