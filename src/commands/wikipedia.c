@@ -19,8 +19,9 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		.method = "GET"
 	};
 
-	char search_url[512];
-	sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", command.arguments[0].value.string.value);
+	const struct String query = command.arguments[0].value.string;
+	char search_url[61 + query.length];
+	sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", query.value);
 	config.url = search_url;
 
 	struct Response search_response = request(config);
