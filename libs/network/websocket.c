@@ -31,11 +31,12 @@ static void handle_events(struct Websocket *websocket) {
 	if (FD_ISSET(websocket->sockfd, &(websocket->readfds))) {
 		if (websocket->key) {
 			char buffer[4096];
-			unsigned long read_count = s_read(websocket->ssl, websocket->sockfd, buffer, 4095);
+			unsigned int read_count = s_read(websocket->ssl, websocket->sockfd, buffer, 4095);
 			buffer[read_count] = 0;
 
 			if (strncmp(buffer + 9, "101", 3) == 0) {
 				check_response(websocket, buffer, websocket->key);
+				free(websocket->key);
 				websocket->key = NULL;
 
 				if (websocket->methods.onstart) {
@@ -115,7 +116,7 @@ static void handle_events(struct Websocket *websocket) {
 
 			s_write(websocket->ssl, websocket->sockfd, element.data, element.size);
 
-			for (unsigned long i = 0; i < websocket->queue_size; ++i) {
+			for (unsigned int i = 0; i < websocket->queue_size; ++i) {
 				if ((i + 1) != websocket->queue_size) {
 					const struct WebsocketQueueElement new_element = websocket->queue[i + 1];
 					websocket->queue[i].data = allocate(websocket->queue[i].data, -1, new_element.size + 1, sizeof(char));
@@ -147,9 +148,9 @@ static void check_response(struct Websocket *websocket, const char *response, ch
 				const char *value = ltrim(line_splitter.data[1].data);
 
 				const char websocket_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-				const unsigned long key_length = strlen(key);
-				const unsigned long websocket_guid_length = ((sizeof(websocket_guid) / sizeof(char)) - 1);
-				const unsigned long final_length = (key_length + websocket_guid_length);
+				const unsigned int key_length = strlen(key);
+				const unsigned int websocket_guid_length = ((sizeof(websocket_guid) / sizeof(char)) - 1);
+				const unsigned int final_length = (key_length + websocket_guid_length);
 
 				char final[final_length + 1];
 				memcpy(final, key, key_length);
@@ -210,8 +211,8 @@ static void switch_protocols(struct Websocket *websocket) {
 
 void send_websocket_message(struct Websocket *websocket, const char *message) {
 	unsigned char *data = NULL;
-	const unsigned long message_length = strlen(message);
-	unsigned long data_length = message_length;
+	const unsigned int message_length = strlen(message);
+	unsigned int data_length = message_length;
 	unsigned char masking_key[4];
 
 	for (int i = 0; i < 4; ++i) {
@@ -357,7 +358,7 @@ void close_websocket(struct Websocket *websocket, const short code, const char *
 	}
 
 
-	for (unsigned long i = 0; i < websocket->queue_size; ++i) {
+	for (unsigned int i = 0; i < websocket->queue_size; ++i) {
 		free(websocket->queue[i].data);
 	}
 
