@@ -21,7 +21,12 @@ void initialize_fonts() {
 
 	if (FT_New_Face(library, "assets/quicksand.ttf", 0, &fonts.quicksand)) {
 		FT_Done_FreeType(library);
-		throw("initialize_font_library(): arial font initialization problem");
+		throw("initialize_font_library(): quicksand font initialization problem");
+	}
+
+	if (FT_New_Face(library, "assets/josefinsans.ttf", 0, &fonts.josefinsans)) {
+		FT_Done_FreeType(library);
+		throw("initialize_font_library(): josefinsans font initialization problem");
 	}
 }
 
@@ -32,6 +37,7 @@ struct Fonts get_fonts() {
 void free_fonts() {
 	FT_Done_Face(fonts.arial);
 	FT_Done_Face(fonts.quicksand);
+	FT_Done_Face(fonts.josefinsans);
 	FT_Done_FreeType(library);
 }
 

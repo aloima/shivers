@@ -25,13 +25,14 @@
 		unsigned int width;
 		unsigned int height;
 		unsigned char *color;
-		unsigned char color_size;
+		unsigned int color_size;
 		bool fill;
 	};
 
 	struct Fonts {
 		FT_Face arial;
 		FT_Face quicksand;
+		FT_Face josefinsans;
 	};
 
 	struct PNG {
@@ -60,7 +61,7 @@
 	void draw_image(struct PNG *image, const struct PNG data, const unsigned int x, const unsigned int y, const bool as_circle);
 	void draw_circle(struct PNG *png, const struct Circle circle, const unsigned int x, const unsigned int y);
 	void draw_rect(struct PNG *png, const struct Rectangle rectangle, const unsigned int x, const unsigned int y);
-	void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned char color_size);
+	void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned int color_size);
 
 	void palette_to_rgb(struct PNG *png);
 	unsigned char paeth_predictor(const unsigned char a, const unsigned char b, const unsigned char c);

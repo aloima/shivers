@@ -141,35 +141,36 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	initialize_png(&background_image);
 
 	const unsigned char font_color[3] = {255, 255, 255};
-	write_text(&background_image, 518, 184, username, get_fonts().quicksand, font_color, 18, PNG_TEXT_LEFT);
-	write_text(&background_image, 518, 364, level_text, get_fonts().quicksand, font_color, 16, PNG_TEXT_LEFT);
-	write_text(&background_image, 1486, 364, xp_text, get_fonts().quicksand, font_color, 16, PNG_TEXT_RIGHT);
+	write_text(&background_image, 518, 184, username, get_fonts().josefinsans, font_color, 18, PNG_TEXT_LEFT);
+	write_text(&background_image, 518, 364, level_text, get_fonts().josefinsans, font_color, 16, PNG_TEXT_LEFT);
+	write_text(&background_image, 1486, 364, xp_text, get_fonts().josefinsans, font_color, 16, PNG_TEXT_RIGHT);
 
 	if (rank[0] != 0) {
-		write_text(&background_image, 1486, 184, rank, get_fonts().quicksand, font_color, 16, PNG_TEXT_RIGHT);
+		write_text(&background_image, 1486, 184, rank, get_fonts().josefinsans, font_color, 16, PNG_TEXT_RIGHT);
 	}
 
 	unsigned char xp_bar_color[4] = {0, 221, 255, 255};
 	const unsigned short xp_bar_width = (968 * ((double) xp / (factor * level)));
 
 	unsigned char empty_bar_color[4] = {163, 163, 163, 255};
-	const unsigned short empty_bar_width = (968 - xp_bar_width);
-
-	draw_rect(&background_image, (struct Rectangle) {
-		.fill = true,
-		.color = xp_bar_color,
-		.color_size = 4,
-		.height = 64,
-		.width = xp_bar_width
-	}, 518, 236);
 
 	draw_rect(&background_image, (struct Rectangle) {
 		.fill = true,
 		.color = empty_bar_color,
 		.color_size = 4,
 		.height = 64,
-		.width = empty_bar_width
-	}, (518 + xp_bar_width), 236);
+		.width = 968,
+		.border_radius = 15
+	}, 518, 236);
+
+	draw_rect(&background_image, (struct Rectangle) {
+		.fill = true,
+		.color = xp_bar_color,
+		.color_size = 4,
+		.height = 64,
+		.width = xp_bar_width,
+		.border_radius = 15
+	}, 518, 236);
 
 	struct PNG avatar_image = read_png(response.data, response.data_size);
 	palette_to_rgb(&avatar_image);
