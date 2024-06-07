@@ -84,7 +84,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const enu
 
 		const unsigned int loop_index_bound = (splitter.size - 1);
 
-		for (unsigned long i = 0; i < splitter.size; ++i) {
+		for (unsigned int i = 0; i < splitter.size; ++i) {
 			const char *skey = splitter.data[i].data;
 			const unsigned int skey_length = splitter.data[i].length;
 
@@ -104,6 +104,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const enu
 
 					target->type = JSON_ARRAY;
 					target->size = 0;
+					target->value = NULL;
 				}
 
 				if (target->size < (iskey + 1)) {
@@ -134,6 +135,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const enu
 
 					target->type = JSON_OBJECT;
 					target->size = 0;
+					target->value = NULL;
 				}
 
 				long at = -1;
