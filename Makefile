@@ -29,5 +29,5 @@ else
 endif
 
 clean:
-	rm build
+	rm -r build
 	rm shivers
