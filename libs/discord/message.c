@@ -26,7 +26,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
 	if (message_payload.embed_size != 0) {
 		jsonelement_t *embeds_payload = create_empty_json_element(true);
 
-		for (unsigned char i = 0; i < message_payload.embed_size; ++i) {
+		for (unsigned int i = 0; i < message_payload.embed_size; ++i) {
 			struct Embed embed = message_payload.embeds[i];
 			jsonelement_t *embed_payload = create_empty_json_element(false);
 
