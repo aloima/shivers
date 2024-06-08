@@ -67,19 +67,23 @@ void setup_commands(struct Shivers *shivers) {
 						jsonelement_t *sc_arguments_body = create_empty_json_element(true);
 
 						for (unsigned int b = 0; b < argument.arg_size; ++b) {
-							const struct CommandArgument sc_argument = argument.args[b];
-							bool sc_argument_required = !sc_argument.optional;
-							double sc_argument_type = sc_argument.type;
-							jsonelement_t *sc_argument_body = create_empty_json_element(false);
+							const struct CommandArgument subcommand_arg = argument.args[b];
+							char *subcommand_arg_required = !subcommand_arg.optional ? "true" : "false";
 							sprintf(sc_argument_key, "[%d]", b);
 
-							json_set_val(sc_argument_body, "name", (char *) sc_argument.name, JSON_STRING);
-							json_set_val(sc_argument_body, "description", (char *) sc_argument.description, JSON_STRING);
-							json_set_val(sc_argument_body, "type", &sc_argument_type, JSON_NUMBER);
-							json_set_val(sc_argument_body, "required", &sc_argument_required, JSON_BOOLEAN);
+							char subcommand_arg_body[187];
+							sprintf(subcommand_arg_body, (
+								"{"
+									"\"name\":\"%s\","
+									"\"description\":\"%s\","
+									"\"type\":%d,"
+									"\"required\":\"%s\""
+								"}"
+							), subcommand_arg.name, subcommand_arg.description, subcommand_arg.type, subcommand_arg_required);
 
-							json_set_val(sc_arguments_body, sc_argument_key, sc_argument_body, JSON_OBJECT);
-							json_free(sc_argument_body, false);
+							jsonelement_t *json_subcommand_arg = json_parse(subcommand_arg_body);
+							json_set_val(sc_arguments_body, sc_argument_key, json_subcommand_arg, JSON_OBJECT);
+							json_free(json_subcommand_arg, false);
 						}
 
 						json_set_val(argument_body, "options", sc_arguments_body, JSON_ARRAY);
