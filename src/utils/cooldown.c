@@ -1,24 +1,15 @@
+#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 #include <shivers.h>
 #include <utils.h>
+#include <hash.h>
 
-static struct Cooldown *cooldowns = NULL;
-static unsigned int cooldown_size = 0;
-
-void free_cooldowns() {
-	for (unsigned int i = 0; i < cooldown_size; ++i) {
-		free(cooldowns[i].user_id);
-	}
-
-	free(cooldowns);
-}
-
-void run_with_cooldown(const char *user_id, void (*execute)(const struct Client client, const struct InteractionCommand command), const struct Client client, const struct InteractionCommand command) {
-	const unsigned long long target = (get_cooldown(user_id).timestamp + 3000);
-	const unsigned long long current = get_timestamp();
+void run_with_cooldown(const char *user_id, void (*execute)(struct Shivers *shivers, const struct InteractionCommand command), struct Shivers *shivers, const struct InteractionCommand command) {
+	const struct Node *cooldown = get_node(shivers->cooldowns, user_id);
+	unsigned long long target = (cooldown ? (*((unsigned long long *) cooldown->value) + 3000) : 0);
+	unsigned long long current = get_timestamp();
 
 	if (target > current) {
 		char warning[51];
@@ -35,74 +26,14 @@ void run_with_cooldown(const char *user_id, void (*execute)(const struct Client 
 			}
 		};
 
-		send_message(client, message);
+		send_message(shivers->client, message);
 	} else {
-		if (has_cooldown(user_id)) {
-			remove_cooldown(user_id);
+		if (cooldown != NULL) {
+			memcpy(get_node(shivers->cooldowns, user_id)->value, &current, sizeof(unsigned long long));
+		} else {
+			insert_node(shivers->cooldowns, user_id, &current, sizeof(unsigned long long));
 		}
 
-		add_cooldown(user_id);
-		execute(client, command);
+		execute(shivers, command);
 	}
-}
-
-void add_cooldown(const char *user_id) {
-	++cooldown_size;
-	cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
-
-	const unsigned int size_of_user_id = (strlen(user_id) + 1);
-
-	const struct Cooldown cooldown = {
-		.timestamp = get_timestamp(),
-		.user_id = allocate(NULL, -1, size_of_user_id, sizeof(char))
-	};
-
-	memcpy(cooldown.user_id, user_id, size_of_user_id);
-	memcpy(cooldowns + cooldown_size - 1, &cooldown, sizeof(struct Cooldown));
-}
-
-void remove_cooldown(const char *user_id) {
-	unsigned int at = 0;
-
-	for (unsigned int i = 0; i < cooldown_size; ++i) {
-		if (strsame(cooldowns[i].user_id, user_id)) {
-			at = i;
-			break;
-		}
-	}
-
-	for (unsigned int i = (at + 1); i < cooldown_size; ++i) {
-		cooldowns[i - 1].user_id = allocate(cooldowns[i - 1].user_id, -1, strlen(cooldowns[i].user_id) + 1, sizeof(char));
-		memcpy(cooldowns + i - 1, cooldowns + i, sizeof(struct Cooldown));
-	}
-
-	free(cooldowns[cooldown_size - 1].user_id);
-
-	--cooldown_size;
-
-	if (cooldown_size != 0) {
-		cooldowns = allocate(cooldowns, -1, cooldown_size, sizeof(struct Cooldown));
-	}
-}
-
-bool has_cooldown(const char *user_id) {
-	for (unsigned int i = 0; i < cooldown_size; ++i) {
-		if (strsame(cooldowns[i].user_id, user_id)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-struct Cooldown get_cooldown(const char *user_id) {
-	for (unsigned int i = 0; i < cooldown_size; ++i) {
-		const struct Cooldown data = cooldowns[i];
-
-		if (strsame(data.user_id, user_id)) {
-			return data;
-		}
-	}
-
-	return (struct Cooldown) {0};
 }

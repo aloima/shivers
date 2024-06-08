@@ -11,7 +11,7 @@
 #include <hash.h>
 
 void on_force_close(struct Shivers *shivers) {
-	free_cooldowns();
+	free_hashmap(shivers->cooldowns);
 	puts("\nFree'd cooldowns.");
 
 	free_hashmap(shivers->commands);

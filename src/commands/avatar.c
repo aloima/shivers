@@ -8,7 +8,7 @@
 #include <network.h>
 #include <json.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Embed embed = {
 		.color = COLOR
 	};
@@ -35,7 +35,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 					.ephemeral = true
 				};
 
-				send_message(client, message);
+				send_message(shivers->client, message);
 				return;
 			}
 
@@ -44,7 +44,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			char path[27] = "/users/";
 			memcpy(path + 7, user_id, input.length + 1);
 
-			struct Response response = api_request(client.token, path, "GET", NULL, NULL);
+			struct Response response = api_request(shivers->client.token, path, "GET", NULL, NULL);
 			jsonelement_t *user = json_parse((const char *) response.data);
 
 			const jsonresult_t json_discriminator = json_get_val(user, "discriminator");
@@ -85,7 +85,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			.ephemeral = true
 		};
 
-		send_message(client, message);
+		send_message(shivers->client, message);
 		return;
 	} else {
 		const jsonresult_t json_id = json_get_val(command.user, "id");
@@ -150,7 +150,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	}
 
 	add_embed_to_message_payload(embed, &message.payload);
-	send_message(client, message);
+	send_message(shivers->client, message);
 	free_message_payload(message.payload);
 }
 

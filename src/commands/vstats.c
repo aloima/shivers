@@ -8,7 +8,7 @@
 #include <json.h>
 #include <utils.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Embed embed = {
 		.color = COLOR
 	};
@@ -82,14 +82,14 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 		if (input.length > 96) {
 			message.payload.content = "The length of a voice stats channel name must be `lower than or equal to 96`.";
-			send_message(client, message);
+			send_message(shivers->client, message);
 			return;
 		}
 
 		char *channel_name = allocate(NULL, -1, input.length + 1, sizeof(char));
 		memcpy(channel_name, input.value, input.length + 1);
 
-		prepare_voice_stats_channel_name(client, &channel_name, command.guild_id);
+		prepare_voice_stats_channel_name(shivers->client, &channel_name, command.guild_id);
 
 		char request_payload[256];
 		sprintf(request_payload, "{"
@@ -98,7 +98,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		"}", channel_name);
 		free(channel_name);
 
-		struct Response response = api_request(client.token, path, "POST", request_payload, NULL);
+		struct Response response = api_request(shivers->client.token, path, "POST", request_payload, NULL);
 		jsonelement_t *response_data = json_parse((char *) response.data);
 		response_free(response);
 
@@ -106,7 +106,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			json_free(response_data, false);
 
 			message.payload.content = MISSING_MANAGE_CHANNELS;
-			send_message(client, message);
+			send_message(shivers->client, message);
 			return;
 		}
 
@@ -146,7 +146,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 					sprintf(path, "/channels/%s", id);
 
 					database_delete(database_deletion_key);
-					response_free(api_request(client.token, path, "DELETE", NULL, NULL));
+					response_free(api_request(shivers->client.token, path, "DELETE", NULL, NULL));
 					deleted = true;
 
 					message.payload.content = "Channel is deleted.";
@@ -160,7 +160,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		}
 	}
 
-	send_message(client, message);
+	send_message(shivers->client, message);
 	free_message_payload(message.payload);
 }
 

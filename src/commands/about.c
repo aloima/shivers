@@ -21,7 +21,7 @@
 #define HOUR (60 * 60)
 #define MINUTE (60)
 
-static void set_uptime_text(const struct Client client, char uptime_text[]) {
+static void set_uptime_text(struct Client client, char uptime_text[]) {
 	unsigned long long seconds = ((get_timestamp() - client.ready_at) / 1000);
 	const int years = (seconds / YEAR);
 	seconds -= (years * YEAR);
@@ -85,7 +85,7 @@ static void set_uptime_text(const struct Client client, char uptime_text[]) {
 	join(uptime, uptime_text, value, " ");
 }
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Embed embed = {
     .color = COLOR
   };
@@ -114,16 +114,16 @@ static void execute(const struct Client client, const struct InteractionCommand 
 
 	char uptime_text[41];
 	uptime_text[0] = 0;
-	set_uptime_text(client, uptime_text);
+	set_uptime_text(shivers->client, uptime_text);
 
 	char guilds[4];
-	sprintf(guilds, "%u", client.guilds->length);
+	sprintf(guilds, "%u", shivers->client.guilds->length);
 
 	char latency[7];
 	sprintf(latency, "%ums", get_latency());
 
 	char add[110];
-	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(client.user, "id").value.string);
+	sprintf(add, "[Add me!](https://discord.com/api/v10/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", json_get_val(shivers->client.user, "id").value.string);
 
 	embed.description = add;
 
@@ -147,7 +147,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	#endif
 
 	add_embed_to_message_payload(embed, &(message.payload));
-	send_message(client, message);
+	send_message(shivers->client, message);
 	free(embed.fields);
 	free_message_payload(message.payload);
 }

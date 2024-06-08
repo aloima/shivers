@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -105,12 +105,12 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			}
 
 			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(client, message);
+			send_message(shivers->client, message);
 			response_free(image_response);
 			json_free(image_data, false);
 		} else {
 			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(client, message);
+			send_message(shivers->client, message);
 		}
 
 		response_free(info_response);
@@ -123,7 +123,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			.ephemeral = true
 		};
 
-		send_message(client, message);
+		send_message(shivers->client, message);
 	}
 
 	response_free(search_response);

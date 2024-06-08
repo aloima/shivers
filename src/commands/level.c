@@ -8,7 +8,7 @@
 #include <json.h>
 #include <png.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -31,7 +31,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				.ephemeral = true
 			};
 
-			send_message(client, message);
+			send_message(shivers->client, message);
 			return;
 		}
 
@@ -41,7 +41,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				.ephemeral = true
 			};
 
-			send_message(client, message);
+			send_message(shivers->client, message);
 			return;
 		}
 
@@ -192,7 +192,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 	add_file_to_message_payload(&(message.payload), "level.png", (const char *) opng.data, opng.data_size, "image/png");
 	opng_free(opng);
 
-	send_message(client, message);
+	send_message(shivers->client, message);
 	free_message_payload(message.payload);
 }
 

@@ -9,12 +9,7 @@
 
 	struct Shivers {
 		struct Client client;
-		struct HashMap *commands;
-	};
-
-	struct Cooldown {
-		char *user_id;
-		unsigned long long timestamp;
+		struct HashMap *commands, *cooldowns;
 	};
 
 	struct VoiceStatsChannel {
@@ -30,7 +25,7 @@
 	};
 
 	struct Command {
-		void (*execute)(const struct Client client, const struct InteractionCommand command);
+		void (*execute)(struct Shivers *shivers, const struct InteractionCommand command);
 		char *description;
 		bool guild_only;
 		unsigned long permissions;
@@ -40,18 +35,12 @@
 
 	void setup_commands(struct Shivers *shivers);
 
-	void free_cooldowns();
 	void run_with_cooldown(
 		const char *user_id,
-		void (*execute)(const struct Client client, const struct InteractionCommand command),
-		struct Client client,
+		void (*execute)(struct Shivers *shivers, const struct InteractionCommand command),
+		struct Shivers *shivers,
 		const struct InteractionCommand
 	);
-
-	void add_cooldown(const char *user_id);
-	void remove_cooldown(const char *user_id);
-	bool has_cooldown(const char *user_id);
-	struct Cooldown get_cooldown(const char *user_id);
 
 	void update_voice_stats(const struct Client client, const char *guild_id);
 	void prepare_voice_stats_channel_name(const struct Client client, char **channel_name, const char *guild_id);

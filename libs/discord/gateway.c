@@ -457,7 +457,6 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 		case 7: {
 			puts("resume");
-			free_cooldowns();
 			database_save();
 			close_websocket(&websocket, -2, NULL);
 			websocket.connected = true;

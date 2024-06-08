@@ -8,7 +8,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Embed embed = {
 		.color = COLOR
 	};
@@ -49,7 +49,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				.ephemeral = true
 			};
 
-			send_message(client, message);
+			send_message(shivers->client, message);
 		} else {
 			jsonelement_t *user = json_parse((const char *) response.data);
 			const jsonresult_t json_login = json_get_val(user, "login");
@@ -101,7 +101,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			}
 
 			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(client, message);
+			send_message(shivers->client, message);
 
 			free_message_payload(message.payload);
 			json_free(user, false);
@@ -119,7 +119,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 				.ephemeral = true
 			};
 
-			send_message(client, message);
+			send_message(shivers->client, message);
 		} else {
 			jsonelement_t *repository = json_parse((const char *) response.data);
 			jsonresult_t description = json_get_val(repository, "description");
@@ -150,7 +150,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			}
 
 			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(client, message);
+			send_message(shivers->client, message);
 
 			free_message_payload(message.payload);
 			json_free(repository, false);

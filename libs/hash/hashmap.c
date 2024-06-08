@@ -89,11 +89,15 @@ struct Node *get_node(const struct HashMap *map, const char *key) {
 	const unsigned int index = hash(key, map->size);
 	struct Node *node = map->nodes[index];
 
-	while (!strsame(key, node->key)) {
+	while (node && !strsame(key, node->key)) {
 		node = node->next;
 	}
 
-	return node;
+	if (node && strsame(key, node->key)) {
+		return node;
+	} else {
+		return NULL;
+	}
 }
 
 void insert_node(struct HashMap *map, const char *key, void *value, const unsigned int size) {
@@ -153,6 +157,7 @@ void delete_node(struct HashMap *map, const char *key) {
 	}
 
 	--map->length;
+	node->next = NULL;
 	free(node->key);
 	free(node->value);
 	free(node);

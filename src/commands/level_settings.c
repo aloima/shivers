@@ -6,7 +6,7 @@
 #include <utils.h>
 #include <json.h>
 
-static void execute(const struct Client client, const struct InteractionCommand command) {
+static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
 		.target = {
@@ -67,7 +67,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			add_embed_to_message_payload(embed, &(message.payload));
 		}
 
-		send_message(client, message);
+		send_message(shivers->client, message);
 
 		free_message_payload(message.payload);
 		free(embed.fields);
@@ -109,10 +109,10 @@ static void execute(const struct Client client, const struct InteractionCommand 
 			}
 
 			message.payload.content = response;
-			send_message(client, message);
+			send_message(shivers->client, message);
 		} else {
 			message.payload.content = "You must specify at least one argument to use `/level-settings set` command.";
-			send_message(client, message);
+			send_message(shivers->client, message);
 		}
 	} else if (strsame(argument, "help")) {
 		struct Embed embed = {
@@ -142,7 +142,7 @@ static void execute(const struct Client client, const struct InteractionCommand 
 		add_embed_to_message_payload(embed, &(message.payload));
 		free(embed.fields);
 
-		send_message(client, message);
+		send_message(shivers->client, message);
 		free_message_payload(message.payload);
 	}
 }
