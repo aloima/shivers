@@ -136,29 +136,31 @@ void insert_node(struct HashMap *map, const char *key, void *value, const unsign
 
 void delete_node(struct HashMap *map, const char *key) {
 	const unsigned int index = hash(key, map->size);
-	struct Node *node = map->nodes[index];
+	struct Node **node = &map->nodes[index];
 	struct Node *prev = NULL;
 
-	while (!strsame(node->key, key)) {
-		prev = node;
-		node = node->next;
-	}
-
-	if (strsame(node->key, key)) {
-		struct Node *last = NULL;
-		while (node->next) last = node->next;
-
-		if (last) {
-			last->next = prev->next->next;
-			prev->next = last;
+	if (*node != NULL) {
+		while (!strsame((*node)->key, key)) {
+			prev = *node;
+			*node = (*node)->next;
 		}
 
-		--map->count;
-	}
+		if (strsame((*node)->key, key)) {
+			struct Node *last = NULL;
+			while ((*node)->next) last = (*node)->next;
 
-	--map->length;
-	node->next = NULL;
-	free(node->key);
-	free(node->value);
-	free(node);
+			if (last) {
+				last->next = prev->next->next;
+				prev->next = last;
+			}
+
+			--map->count;
+		}
+
+		--map->length;
+		free((*node)->key);
+		free((*node)->value);
+		free(*node);
+		*node = NULL;
+	}
 }
