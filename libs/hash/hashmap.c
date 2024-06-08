@@ -142,7 +142,7 @@ void delete_node(struct HashMap *map, const char *key) {
 	if (*node != NULL) {
 		while (!strsame((*node)->key, key)) {
 			prev = *node;
-			*node = (*node)->next;
+			node = &(*node)->next;
 		}
 
 		if (strsame((*node)->key, key)) {
