@@ -89,11 +89,11 @@ struct Node *get_node(const struct HashMap *map, const char *key) {
 	const unsigned int index = hash(key, map->size);
 	struct Node *node = map->nodes[index];
 
-	while (node && !strsame(key, node->key)) {
+	while (node && !streq(key, node->key)) {
 		node = node->next;
 	}
 
-	if (node && strsame(key, node->key)) {
+	if (node && streq(key, node->key)) {
 		return node;
 	} else {
 		return NULL;
@@ -140,12 +140,12 @@ void delete_node(struct HashMap *map, const char *key) {
 	struct Node *prev = NULL;
 
 	if (*node != NULL) {
-		while (!strsame((*node)->key, key)) {
+		while (!streq((*node)->key, key)) {
 			prev = *node;
 			node = &(*node)->next;
 		}
 
-		if (strsame((*node)->key, key)) {
+		if (streq((*node)->key, key)) {
 			struct Node *last = NULL;
 			while ((*node)->next) last = (*node)->next;
 

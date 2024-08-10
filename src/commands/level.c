@@ -120,7 +120,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 	rank[0] = 0;
 
 	for (unsigned int i = 0; i < sorted_length; ++i) {
-		if (strsame(user_id, ((jsonelement_t *) sorted[i].value)->key)) {
+		if (streq(user_id, ((jsonelement_t *) sorted[i].value)->key)) {
 			sprintf(rank, "#%u", (i + 1));
 			break;
 		}

@@ -40,7 +40,7 @@
 
 	void strtolower(char *source, const char *dest);
 	void strtoupper(char *source, const char *dest);
-	bool strsame(const char *str1, const char *str2);
+	bool streq(const char *str1, const char *str2);
 	void strreplace(char **source, char *target, char *replacement);
 	char *ltrim(const char *src);
 

@@ -269,7 +269,7 @@ struct Response request(struct RequestConfig config) {
 
 		const char *transfer_encoding_value = get_header(response.headers, response.header_size, "transfer-encoding").value;
 
-		if (transfer_encoding_value != NULL && strsame(transfer_encoding_value, "chunked")) {
+		if (transfer_encoding_value != NULL && streq(transfer_encoding_value, "chunked")) {
 			++i;
 
 			while (i < line_splitter.size) {

@@ -81,7 +81,7 @@ void get_avatar_url(char *url, const char *user_id, const char *discriminator, c
 	} else {
 		unsigned int index;
 
-		if (!strsame(discriminator, "0")) {
+		if (!streq(discriminator, "0")) {
 			index = (atoi_s(discriminator, 4) % 5);
 		} else {
 			index = ((atoi_s(user_id, -1) >> 22) % 6);

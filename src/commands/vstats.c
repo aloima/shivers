@@ -25,7 +25,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 	const char *operation = command.arguments[0].name;
 
-	if (strsame(operation, "help")) {
+	if (streq(operation, "help")) {
 		embed.title = "Voice Stats Help Page";
 		embed.description = (
 			"To add a voice channel using voice stats system, use `/vstats add {name}`.\\n"
@@ -39,7 +39,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 		);
 
 		add_embed_to_message_payload(embed, &(message.payload));
-	} else if (strsame(operation, "list")) {
+	} else if (streq(operation, "list")) {
 		char description[4096];
 		description[0] = 0;
 
@@ -74,7 +74,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 			add_embed_to_message_payload(embed, &(message.payload));
 		}
-	} else if (strsame(operation, "add")) {
+	} else if (streq(operation, "add")) {
 		char path[37];
 		sprintf(path, "/guilds/%s/channels", command.guild_id);
 
@@ -122,7 +122,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 		json_free(database_data, false);
 
 		message.payload.content = "Channel is created.";
-	} else if (strsame(operation, "delete")) {
+	} else if (streq(operation, "delete")) {
 		char database_key[27];
 		sprintf(database_key, "%s.vstats", command.guild_id);
 
@@ -140,7 +140,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 				const char *id = json_get_val(data, id_key).value.string;
 
-				if (strsame(id, input.value)) {
+				if (streq(id, input.value)) {
 					char database_deletion_key[30], path[30];
 					sprintf(database_deletion_key, "%s.vstats.%d", command.guild_id, i);
 					sprintf(path, "/channels/%s", id);

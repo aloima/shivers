@@ -144,7 +144,7 @@ static void check_response(struct Websocket *websocket, const char *response, ch
 			char header_name[128];
 			strtolower(header_name, line_splitter.data[0].data);
 
-			if (strsame(header_name, "sec-websocket-accept")) {
+			if (streq(header_name, "sec-websocket-accept")) {
 				const char *value = ltrim(line_splitter.data[1].data);
 
 				const char websocket_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -163,7 +163,7 @@ static void check_response(struct Websocket *websocket, const char *response, ch
 
 				free(key);
 
-				if (!strsame(result, value)) {
+				if (!streq(result, value)) {
 					free(result);
 					split_free(line_splitter);
 					split_free(splitter);
@@ -283,7 +283,7 @@ static void initialize_websocket(struct Websocket *websocket, const char *url) {
 		}
 	#endif
 
-	if (strsame(websocket->url.protocol, "wss")) {
+	if (streq(websocket->url.protocol, "wss")) {
 		SSL_load_error_strings();
 		SSL_library_init();
 

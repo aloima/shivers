@@ -16,7 +16,7 @@ void strtolower(char *source, const char *dest) {
 	source[i] = '\0';
 }
 
-bool strsame(const char *str1, const char *str2) {
+bool streq(const char *str1, const char *str2) {
 	while ((*str1) != '\0') {
 		if ((*str1++) != (*str2++)) {
 			return false;

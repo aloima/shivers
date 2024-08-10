@@ -33,7 +33,7 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 			bool at_cache = false;
 
 			while (v < channel_count) {
-				if (strsame(id.value.string, channels[v].id)) {
+				if (streq(id.value.string, channels[v].id)) {
 					at_cache = true;
 					break;
 				}
@@ -55,7 +55,7 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 				memcpy(channels[v].name, name.value.string, name.element->size + 1);
 				prepare_voice_stats_channel_name(client, &(channels[v].name), guild_id);
 
-				if (strsame(channel_name, channels[v].name)) {
+				if (streq(channel_name, channels[v].name)) {
 					json_free(data, false);
 					continue;
 				} else json_free(data, false);;
@@ -64,7 +64,7 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
 				memcpy(tmp, name.value.string, name.element->size + 1);
 				prepare_voice_stats_channel_name(client, &tmp, guild_id);
 
-				if (strsame(channels[v].name, tmp)) {
+				if (streq(channels[v].name, tmp)) {
 					free(tmp);
 					continue;
 				} else {

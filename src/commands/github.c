@@ -83,7 +83,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 			char name[json_login.element->size + 1];
 			sprintf(name, "@%s", json_login.value.string);
 
-			if (json_name.element->type != JSON_NULL && !strsame(json_login.value.string, json_name.value.string)) {
+			if (json_name.element->type != JSON_NULL && !streq(json_login.value.string, json_name.value.string)) {
 				sprintf(name, "%s (@%s)", json_name.value.string, json_login.value.string);
 			}
 

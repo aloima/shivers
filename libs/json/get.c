@@ -39,7 +39,7 @@ jsonresult_t json_get_val(jsonelement_t *element, const char *search) {
 					for (unsigned int i = 0; i < size; ++i) {
 						jsonelement_t *data = ((jsonelement_t **) element->value)[i];
 
-						if (strsame(data->key, splitter.data[ki].data)) {
+						if (streq(data->key, splitter.data[ki].data)) {
 							element = data;
 							break;
 						} else if (i == last_index) {

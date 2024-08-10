@@ -39,9 +39,9 @@ struct URL parse_url(const char *data) {
 	if (hostname_splitter.size == 2) {
 		url.port = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
 	} else {
-		if (strsame(url.protocol, "https") || strsame(url.protocol, "wss")) {
+		if (streq(url.protocol, "https") || streq(url.protocol, "wss")) {
 			url.port = 443;
-		} else if (strsame(url.protocol, "http") || strsame(url.protocol, "ws")) {
+		} else if (streq(url.protocol, "http") || streq(url.protocol, "ws")) {
 			url.port = 80;
 		} else {
 			url.port = 0;
@@ -118,7 +118,7 @@ struct Header get_header(struct Header *headers, const unsigned int header_size,
 		char current_name[1024];
 		strtolower(current_name, headers[i].name);
 
-		if (strsame(header_name, current_name)) {
+		if (streq(header_name, current_name)) {
 			header = headers[i];
 			break;
 		}
@@ -247,7 +247,7 @@ void add_header_to_formdata_field(struct FormData *formdata, const char *field_n
 	for (unsigned int i = 0; i < field_size; ++i) {
 		struct FormDataField *field = &(formdata->fields[i]);
 
-		if (strsame(field->name, field_name)) {
+		if (streq(field->name, field_name)) {
 			++field->header_size;
 			field->headers = allocate(field->headers, -1, field->header_size, sizeof(struct Header));
 

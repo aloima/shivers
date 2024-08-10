@@ -230,7 +230,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 		case 0: {
 			last_sequence = json_get_val(data, "s").value.number;
 
-			if (strsame(event_name, "READY")) {
+			if (streq(event_name, "READY")) {
 				shivers.client.user = clone_json_element(json_get_val(data, "d.user").element);
 				shivers.client.token = token;
 				shivers.client.ready_at = get_timestamp();
@@ -245,7 +245,7 @@ static void onmessage(const struct WebsocketFrame frame) {
 				ready_guild_size = json_get_val(data, "d.guilds").element->size;
 
 				on_ready(&shivers);
-			} else if (strsame(event_name, "GUILD_CREATE")) {
+			} else if (streq(event_name, "GUILD_CREATE")) {
 				const char *id = json_get_val(data, "d.id").value.string;
 				const jsonresult_t members = json_get_val(data, "d.members");
 				const jsonresult_t presences = json_get_val(data, "d.presences");
@@ -275,14 +275,14 @@ static void onmessage(const struct WebsocketFrame frame) {
 					const char *status = json_get_val(presence, "status").value.string;
 					const char *user_id = json_get_val(presence, "user.id").value.string;
 
-					if (!strsame(status, "offline")) {
+					if (!streq(status, "offline")) {
 						struct Member *member = get_node(guild.members, user_id)->value;
 
-						if (strsame(status, "offline")) member->status = OFFLINE;
+						if (streq(status, "offline")) member->status = OFFLINE;
 						else {
-							if (strsame(status, "online")) member->status = ONLINE;
-							else if (strsame(status, "idle")) member->status = IDLE;
-							else if (strsame(status, "dnd")) member->status = DND;
+							if (streq(status, "online")) member->status = ONLINE;
+							else if (streq(status, "idle")) member->status = IDLE;
+							else if (streq(status, "dnd")) member->status = DND;
 
 							++guild.non_offline_count;
 						}
@@ -307,12 +307,12 @@ static void onmessage(const struct WebsocketFrame frame) {
 				} else {
 					on_guild_create(&shivers);
 				}
-			} else if (strsame(event_name, "GUILD_DELETE")) {
+			} else if (streq(event_name, "GUILD_DELETE")) {
 				const char *id = json_get_val(data, "d.id").value.string;
 				delete_node(shivers.client.guilds, id);
 
 				on_guild_delete(&shivers);
-			} else if (strsame(event_name, "GUILD_MEMBER_ADD")) {
+			} else if (streq(event_name, "GUILD_MEMBER_ADD")) {
 				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				jsonelement_t *user = json_get_val(data, "d.user").element;
@@ -323,17 +323,17 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 				insert_node(guild->members, user_id, &member, sizeof(struct Member));
 				on_guild_member_add(&shivers, guild_node);
-			} else if (strsame(event_name, "GUILD_MEMBER_REMOVE")) {
+			} else if (streq(event_name, "GUILD_MEMBER_REMOVE")) {
 				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				const char *user_id = json_get_val(data, "d.user.id").value.string;
 
 				delete_node(guild->members, user_id);
 				on_guild_member_remove(&shivers, guild_node);
-			} else if (strsame(event_name, "MESSAGE_CREATE")) {
+			} else if (streq(event_name, "MESSAGE_CREATE")) {
 				jsonelement_t *message = json_get_val(data, "d").element;
 				on_message_create(&shivers, message);
-			} else if (strsame(event_name, "INTERACTION_CREATE")) {
+			} else if (streq(event_name, "INTERACTION_CREATE")) {
 				jsonelement_t *interaction = json_get_val(data, "d").element;
 
 				if (json_get_val(interaction, "type").value.number == 2.0) {
@@ -409,14 +409,14 @@ static void onmessage(const struct WebsocketFrame frame) {
 
 					free(command.arguments);
 				}
-			} else if (strsame(event_name, "PRESENCE_UPDATE")) {
+			} else if (streq(event_name, "PRESENCE_UPDATE")) {
 				const char *user_id = json_get_val(data, "d.user.id").value.string;
 				const char *status = json_get_val(data, "d.status").value.string;
 				struct Node *guild_node = get_node(shivers.client.guilds, json_get_val(data, "d.guild_id").value.string);
 				struct Guild *guild = guild_node->value;
 				struct Member *member = get_node(guild->members, user_id)->value;
 
-				if (strsame(status, "offline")) {
+				if (streq(status, "offline")) {
 					--guild->non_offline_count;
 					member->status = OFFLINE;
 				} else {
@@ -424,13 +424,13 @@ static void onmessage(const struct WebsocketFrame frame) {
 						++guild->non_offline_count;
 					}
 
-					if (strsame(status, "online")) member->status = ONLINE;
-					else if (strsame(status, "idle")) member->status = IDLE;
-					else if (strsame(status, "dnd")) member->status = DND;
+					if (streq(status, "online")) member->status = ONLINE;
+					else if (streq(status, "idle")) member->status = IDLE;
+					else if (streq(status, "dnd")) member->status = DND;
 				}
 
 				on_presence_update(&shivers, guild_node);
-			} else if (strsame(event_name, "VOICE_STATE_UPDATE")) {
+			} else if (streq(event_name, "VOICE_STATE_UPDATE")) {
 				const char *user_id = json_get_val(data, "d.user_id").value.string;
 				const jsonresult_t channel_id = json_get_val(data, "d.channel_id");
 				const jsonresult_t guild_id = json_get_val(data, "d.guild_id");

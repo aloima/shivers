@@ -94,7 +94,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const enu
 			strncpy(bwp, skey + 1, bwp_length);
 			const int iskey = atoi_s(bwp, bwp_length);
 
-			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || strsame(bwp, "0"))) {
+			if (skey[0] == '[' && skey[skey_length - 1] == ']' && (iskey > 0 || streq(bwp, "0"))) {
 				if (target->type != JSON_ARRAY) {
 					if (target->type == JSON_OBJECT) {
 						for (unsigned int n = 0; n < target->size; ++n) {
@@ -141,7 +141,7 @@ void json_set_val(jsonelement_t *target, const char *key, void *value, const enu
 				long at = -1;
 
 				for (unsigned int n = 0; n < target->size; ++n) {
-					if (strsame(((jsonelement_t **) target->value)[n]->key, skey)) {
+					if (streq(((jsonelement_t **) target->value)[n]->key, skey)) {
 						at = n;
 						break;
 					}

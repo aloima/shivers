@@ -19,7 +19,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 	const char *argument = command.arguments[0].name;
 
-	if (strsame(argument, "list")) {
+	if (streq(argument, "list")) {
 		struct Embed embed = {
 			.color = COLOR,
 			.title = "Level Settings"
@@ -71,7 +71,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 		free_embed(embed);
 		free_message_payload(message.payload);
-	} else if (strsame(argument, "set")) {
+	} else if (streq(argument, "set")) {
 		const unsigned int options_size = command.arguments[0].value.subcommand.argument_size;
 		char key[43], response[256] = {0};
 
@@ -95,14 +95,14 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 					strcat(response, temp);
 				}
 
-				if (strsame(option_name, "factor")) {
+				if (streq(option_name, "factor")) {
 					double value = option.value.number;
 					sprintf(key, "%s.settings.level.factor", command.guild_id);
 					database_set(key, &value, JSON_NUMBER);
-				} else if (strsame(option_name, "channel")) {
+				} else if (streq(option_name, "channel")) {
 					sprintf(key, "%s.settings.level.channel", command.guild_id);
 					database_set(key, json_get_val(option.value.channel, "id").value.string, JSON_STRING);
-				} else if (strsame(option_name, "message")) {
+				} else if (streq(option_name, "message")) {
 					sprintf(key, "%s.settings.level.message", command.guild_id);
 					database_set(key, option.value.string.value, JSON_STRING);
 				}
@@ -114,7 +114,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 			message.payload.content = "You must specify at least one argument to use `/level-settings set` command.";
 			send_message(shivers->client, message);
 		}
-	} else if (strsame(argument, "help")) {
+	} else if (streq(argument, "help")) {
 		struct Embed embed = {
 			.color = COLOR,
 			.title = "Level settings"

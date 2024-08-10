@@ -26,7 +26,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 	char user_id[20], discriminator[5], hash[33] = {0};
 
 	if (command.argument_size == 1) {
-		if (strsame(command.arguments[0].name, "id")) {
+		if (streq(command.arguments[0].name, "id")) {
 			const struct String input = command.arguments[0].value.string;
 
 			if (!check_snowflake(input.value)) {
