@@ -103,9 +103,9 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(shivers->client, message);
 
+			free_embed(embed);
 			free_message_payload(message.payload);
 			json_free(user, false);
-			free(embed.fields);
 		}
 	} else {
 		sprintf(url, "https://api.github.com/repos/%s", query.value);
@@ -152,9 +152,9 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 			add_embed_to_message_payload(embed, &(message.payload));
 			send_message(shivers->client, message);
 
+			free_embed(embed);
 			free_message_payload(message.payload);
 			json_free(repository, false);
-			free(embed.fields);
 		}
 	}
 

@@ -69,8 +69,8 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 		send_message(shivers->client, message);
 
+		free_embed(embed);
 		free_message_payload(message.payload);
-		free(embed.fields);
 	} else if (strsame(argument, "set")) {
 		const unsigned int options_size = command.arguments[0].value.subcommand.argument_size;
 		char key[43], response[256] = {0};
@@ -140,9 +140,9 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 		), false);
 
 		add_embed_to_message_payload(embed, &(message.payload));
-		free(embed.fields);
-
 		send_message(shivers->client, message);
+
+		free_embed(embed);
 		free_message_payload(message.payload);
 	}
 }

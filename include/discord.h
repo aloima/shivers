@@ -149,6 +149,8 @@
 	void add_field_to_embed(struct Embed *embed, const char *name, const char *value, const bool is_inline);
 	void set_embed_author(struct Embed *embed, const char *name, const char *url, const char *icon_url);
 	void set_embed_footer(struct Embed *embed, const char *text, const char *icon_url);
+	void free_embed(struct Embed embed);
+
 	void add_embed_to_message_payload(const struct Embed embed, struct MessagePayload *message_payload);
 	void add_file_to_message_payload(struct MessagePayload *message_payload, const char *name, const char *data, const unsigned long size, const char *type);
 

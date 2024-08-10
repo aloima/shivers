@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 #if defined(_WIN32)
@@ -81,14 +80,14 @@ static void set_uptime_text(struct Client client, char uptime_text[]) {
 		uptime[value].length = sprintf(uptime[value].data, "%llu secs", seconds);
 	}
 
-  ++value;
+	++value;
 	join(uptime, uptime_text, value, " ");
 }
 
 static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
 	struct Embed embed = {
-    .color = COLOR
-  };
+		.color = COLOR
+	};
 
 	struct Message message = {
 		.target_type = TARGET_INTERACTION_COMMAND,
@@ -148,7 +147,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
 	add_embed_to_message_payload(embed, &(message.payload));
 	send_message(shivers->client, message);
-	free(embed.fields);
+	free_embed(embed);
 	free_message_payload(message.payload);
 }
 

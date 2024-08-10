@@ -249,6 +249,10 @@ void set_embed_footer(struct Embed *embed, const char *text, const char *icon_ur
 	};
 }
 
+void free_embed(struct Embed embed) {
+	free(embed.fields);
+}
+
 void add_embed_to_message_payload(const struct Embed embed, struct MessagePayload *message_payload) {
 	++message_payload->embed_size;
 	message_payload->embeds = allocate(message_payload->embeds, -1, message_payload->embed_size, sizeof(struct Embed));
