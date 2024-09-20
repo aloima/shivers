@@ -25,18 +25,18 @@ make
 
 ## Directories
 + src: Source files
-	+ commands: Command files
-	+ events: Event files
-	+ utils: Utility files which used in source files
+  + commands: Command files
+  + events: Event files
+  + utils: Utility files which used in source files
 
 + libs: Internal libraries
-	+ database: Database library
-	+ discord: Discord library which create connections with Discord
-	+ hash: Hash library, includes HashMap structure
-	+ png: PNG manipulation library
-	+ json: JSON library
-	+ network: Network library that contains websocket part and HTTP request
-	+ utils: Utility library which used in source files or other internal libraries
+  + database: Database library
+  + discord: Discord library which create connections with Discord
+  + hash: Hash library, includes HashMap structure
+  + png: PNG manipulation library
+  + json: JSON library
+  + network: Network library that contains websocket part and HTTP request
+  + utils: Utility library which used in source files or other internal libraries
 
 + include: Header files of everything
 

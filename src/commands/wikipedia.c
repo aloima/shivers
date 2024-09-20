@@ -8,141 +8,141 @@
 #include <json.h>
 
 static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
-	struct Message message = {
-		.target_type = TARGET_INTERACTION_COMMAND,
-		.target = {
-			.interaction_command = command
-		}
-	};
+  struct Message message = {
+    .target_type = TARGET_INTERACTION_COMMAND,
+    .target = {
+      .interaction_command = command
+    }
+  };
 
-	struct RequestConfig config = {
-		.method = "GET"
-	};
+  struct RequestConfig config = {
+    .method = "GET"
+  };
 
-	const struct String query = command.arguments[0].value.string;
-	char search_url[61 + query.length];
-	sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", query.value);
-	config.url = search_url;
+  const struct String query = command.arguments[0].value.string;
+  char search_url[61 + query.length];
+  sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", query.value);
+  config.url = search_url;
 
-	struct Response search_response = request(config);
-	jsonelement_t *search_result = json_parse((const char *) search_response.data);
-	jsonresult_t page_name = json_get_val(search_result, "1.0");
+  struct Response search_response = request(config);
+  jsonelement_t *search_result = json_parse((const char *) search_response.data);
+  jsonresult_t page_name = json_get_val(search_result, "1.0");
 
-	if (page_name.exist) {
-		char url[512];
-		sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
-		config.url = url;
+  if (page_name.exist) {
+    char url[512];
+    sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
+    config.url = url;
 
-		struct Response info_response = request(config);
-		jsonelement_t *info_data = json_parse((const char *) info_response.data);
-		jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
-		jsonresult_t page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
+    struct Response info_response = request(config);
+    jsonelement_t *info_data = json_parse((const char *) info_response.data);
+    jsonelement_t *page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
+    jsonresult_t page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
 
-		if (!page_description.exist) {
-			response_free(info_response);
+    if (!page_description.exist) {
+      response_free(info_response);
 
-			const char *page_id = page_info->key;
-			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
-			config.url = url;
-			json_free(info_data, false);
+      const char *page_id = page_info->key;
+      sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
+      config.url = url;
+      json_free(info_data, false);
 
-			struct Response redirect_response = request(config);
-			jsonelement_t *redirect_result = json_parse((const char *) redirect_response.data);
-			response_free(redirect_response);
+      struct Response redirect_response = request(config);
+      jsonelement_t *redirect_result = json_parse((const char *) redirect_response.data);
+      response_free(redirect_response);
 
-			page_name = json_get_val(redirect_result, "query.redirects.[0].to");
-			sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
-			json_free(redirect_result, false);
+      page_name = json_get_val(redirect_result, "query.redirects.[0].to");
+      sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
+      json_free(redirect_result, false);
 
-			config.url = url;
-			info_response = request(config);
+      config.url = url;
+      info_response = request(config);
 
-			info_data = json_parse((const char *) info_response.data);
-			page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
-			page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
-		}
+      info_data = json_parse((const char *) info_response.data);
+      page_info = ((jsonelement_t **) json_get_val(info_data, "query.pages").element->value)[0];
+      page_description = json_get_val(page_info, "pageprops.wikibase-shortdesc");
+    }
 
-		struct Embed embed = {0};
+    struct Embed embed = {0};
 
-		const char *title = json_get_val(page_info, "title").value.string;
-		char page_url[512], *encoded_page_url = NULL;
-		sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
-		encoded_page_url = percent_encode(page_url);
+    const char *title = json_get_val(page_info, "title").value.string;
+    char page_url[512], *encoded_page_url = NULL;
+    sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
+    encoded_page_url = percent_encode(page_url);
 
-		embed.color = COLOR;
-		embed.description = page_description.value.string;
-		set_embed_author(&embed, title, encoded_page_url, NULL);
+    embed.color = COLOR;
+    embed.description = page_description.value.string;
+    set_embed_author(&embed, title, encoded_page_url, NULL);
 
-		jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
+    jsonresult_t image_name = json_get_val(page_info, "pageprops.page_image_free");
 
-		if (image_name.exist) {
-			char image_url[512];
-			sprintf(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
-			config.url = image_url;
+    if (image_name.exist) {
+      char image_url[512];
+      sprintf(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
+      config.url = image_url;
 
-			struct Response image_response = request(config);
-			jsonelement_t *image_data = json_parse((const char *) image_response.data);
-			jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").element->value)[0];
+      struct Response image_response = request(config);
+      jsonelement_t *image_data = json_parse((const char *) image_response.data);
+      jsonelement_t *image_info = ((jsonelement_t **) json_get_val(image_data, "query.pages").element->value)[0];
 
-			jsonresult_t final_image = json_get_val(image_info, "imageinfo.0.url");
-			char *final_image_url = final_image.value.string;
-			const unsigned short final_image_url_length = final_image.element->size;
+      jsonresult_t final_image = json_get_val(image_info, "imageinfo.0.url");
+      char *final_image_url = final_image.value.string;
+      const unsigned short final_image_url_length = final_image.element->size;
 
-			if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
-				char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
-				char png_url[512];
-				struct Split svg_splitter = split(svg_url, strlen(svg_url), "/");
-				char image_code[32];
-				image_code[0] = 0;
+      if (strncmp(final_image_url + final_image_url_length - 3, "svg", 3) == 0) {
+        char *svg_url = json_get_val(image_info, "imageinfo.0.url").value.string;
+        char png_url[512];
+        struct Split svg_splitter = split(svg_url, strlen(svg_url), "/");
+        char image_code[32];
+        image_code[0] = 0;
 
-				join((const struct Join *) svg_splitter.data + 5, image_code, 2, "/");
-				split_free(svg_splitter);
+        join((const struct Join *) svg_splitter.data + 5, image_code, 2, "/");
+        split_free(svg_splitter);
 
-				sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
-				embed.image_url = png_url;
-			} else {
-				embed.image_url = final_image_url;
-			}
+        sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
+        embed.image_url = png_url;
+      } else {
+        embed.image_url = final_image_url;
+      }
 
-			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(shivers->client, message);
-			response_free(image_response);
-			json_free(image_data, false);
-		} else {
-			add_embed_to_message_payload(embed, &(message.payload));
-			send_message(shivers->client, message);
-		}
+      add_embed_to_message_payload(embed, &(message.payload));
+      send_message(shivers->client, message);
+      response_free(image_response);
+      json_free(image_data, false);
+    } else {
+      add_embed_to_message_payload(embed, &(message.payload));
+      send_message(shivers->client, message);
+    }
 
-		response_free(info_response);
-		free_message_payload(message.payload);
-		json_free(info_data, false);
-		free(encoded_page_url);
-	} else {
-		message.payload = (struct MessagePayload) {
-			.content = "Not found.",
-			.ephemeral = true
-		};
+    response_free(info_response);
+    free_message_payload(message.payload);
+    json_free(info_data, false);
+    free(encoded_page_url);
+  } else {
+    message.payload = (struct MessagePayload) {
+      .content = "Not found.",
+      .ephemeral = true
+    };
 
-		send_message(shivers->client, message);
-	}
+    send_message(shivers->client, message);
+  }
 
-	response_free(search_response);
-	json_free(search_result, false);
+  response_free(search_response);
+  json_free(search_result, false);
 }
 
 static struct CommandArgument args[] = {
-	(struct CommandArgument) {
-		.name = "query",
-		.description = "The search query of the page which you want to get information",
-		.type = STRING_ARGUMENT,
-		.optional = false
-	}
+  (struct CommandArgument) {
+    .name = "query",
+    .description = "The search query of the page which you want to get information",
+    .type = STRING_ARGUMENT,
+    .optional = false
+  }
 };
 
 struct Command wikipedia = {
-	.execute = execute,
-	.description = "Sends short info from Wikipedia",
-	.guild_only = false,
-	.args = args,
-	.arg_size = sizeof(args) / sizeof(struct CommandArgument)
+  .execute = execute,
+  .description = "Sends short info from Wikipedia",
+  .guild_only = false,
+  .args = args,
+  .arg_size = sizeof(args) / sizeof(struct CommandArgument)
 };
