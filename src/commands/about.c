@@ -7,7 +7,11 @@
 #define MINUTE (60)
 
 static void set_uptime_text(struct Client client, char uptime_text[]) {
-  unsigned long long seconds = ((get_timestamp() - client.ready_at) / 1000);
+  const int64_t now = get_timestamp();
+  if (now == -1)
+    throw(GET_TIMESTAMP_ERROR);
+
+  uint64_t seconds = ((now - client.ready_at) / 1000);
   const int years = (seconds / YEAR);
   seconds -= (years * YEAR);
   const int months = (seconds / MONTH);
@@ -63,7 +67,7 @@ static void set_uptime_text(struct Client client, char uptime_text[]) {
     ++value;
 
     uptime[value].data = sseconds;
-    uptime[value].length = sprintf(uptime[value].data, "%llu secs", seconds);
+    uptime[value].length = sprintf(uptime[value].data, "%lu secs", seconds);
   }
 
   ++value;

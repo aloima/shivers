@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // To guarantee code execution
 #define ASSERT(actual, op, expected) do { \
   typeof(actual) __actual_val = (actual);   \
@@ -52,7 +54,8 @@ char *base64_encode(const char *data, const unsigned long data_length);
 
 int char_at(char *data, const char ch);
 
-unsigned long long get_timestamp();
+int64_t get_timestamp();
+#define GET_TIMESTAMP_ERROR ("get_timestamp(): Cannot get current time")
 
 void throw(const char *format, ...);
 

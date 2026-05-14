@@ -50,7 +50,11 @@ static void send_heartbeat() {
     "}", last_sequence);
   }
 
-  heartbeat_sent_at = get_timestamp();
+  const int64_t now = get_timestamp();
+  if (now == -1)
+    throw(GET_TIMESTAMP_ERROR);
+
+  heartbeat_sent_at = now;
   send_websocket_message(&websocket, heartbeat_message);
 }
 
@@ -212,9 +216,13 @@ static void onmessage(const struct WebsocketFrame frame) {
       last_sequence = json_get_val(data, "s").value.number;
 
       if (streq(event_name, "READY")) {
+        const int64_t now = get_timestamp();
+        if (now == -1)
+          throw(GET_TIMESTAMP_ERROR);
+
         shivers.client.user = clone_json_element(json_get_val(data, "d.user").element);
         shivers.client.token = token;
-        shivers.client.ready_at = get_timestamp();
+        shivers.client.ready_at = now;
         shivers.client.guilds = create_hashmap(16);
 
         const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
@@ -459,8 +467,12 @@ static void onmessage(const struct WebsocketFrame frame) {
     }
 
     case 11: {
+      const int64_t now = get_timestamp();
+      if (now == -1)
+        throw(GET_TIMESTAMP_ERROR);
+
       previous_heartbeat_sent_at = heartbeat_sent_at;
-      heartbeat_received_at = get_timestamp();
+      heartbeat_received_at = now;
       break;
     }
   }
