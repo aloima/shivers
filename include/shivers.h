@@ -34,6 +34,7 @@
 #include <zlib.h>         // IWYU pragma: export
 
 #if defined(__WIN32__)
+  #include <psapi.h>      // IWYU pragma: export
   #include <sys/timeb.h>  // IWYU pragma: export
   #include <winsock2.h>   // IWYU pragma: export
   #include <windows.h>    // IWYU pragma: export

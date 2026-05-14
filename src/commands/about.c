@@ -1,16 +1,5 @@
 #include <shivers.h>
 
-#include <stdio.h>
-#include <stdbool.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-  #include <windows.h>
-  #include <psapi.h>
-#elif defined(__linux__)
-  #include <unistd.h>
-#endif
-
 #define YEAR (60 * 60 * 24 * 30 * 12)
 #define MONTH (60 * 60 * 24 * 30)
 #define DAY (60 * 60 * 24)
