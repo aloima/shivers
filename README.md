@@ -43,7 +43,7 @@ Shivers is a Discord bot made for hobby and educational purposes
 * `include`: Header files of everything
 
 ## Code
-This project follows GNU99 standard and tries not to use external libraries, so includes some libraries that developed to use in this project.
+This project follows C23 standard and tries not to use external libraries, so includes some libraries that developed to use in this project.
 
 ## License
 This project is licensed under [BSD-3-Clause](./LICENSE) license.
