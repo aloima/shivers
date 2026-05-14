@@ -1,8 +1,11 @@
 #pragma once
 
-#include <stdbool.h>
-
-#include <sys/time.h>
+// To guarantee code execution
+#define ASSERT(actual, op, expected) do { \
+  typeof(actual) __actual_val = (actual);   \
+  typeof(expected) __expected_val = (expected);   \
+  assert(__actual_val op __expected_val);        \
+} while (0)
 
 struct SplitData {
   char *data;

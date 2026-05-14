@@ -9,6 +9,7 @@
 #include <png.h>          // IWYU pragma: export
 #include <utils.h>        // IWYU pragma: export
 
+#include <assert.h>       // IWYU pragma: export
 #include <ctype.h>        // IWYU pragma: export
 #include <errno.h>        // IWYU pragma: export
 #include <math.h>         // IWYU pragma: export
