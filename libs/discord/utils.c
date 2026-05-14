@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-
-#include <discord.h>
-#include <network.h>
-#include <utils.h>
-#include <json.h>
+#include <shivers.h>
 
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
   char url[1024];

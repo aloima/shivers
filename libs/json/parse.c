@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <json.h>
-#include <utils.h>
+#include <shivers.h>
 
 static void parse_v(jsonelement_t *element, const char *text, const unsigned int length, unsigned int *i);
 static void parse_kv(jsonelement_t *parent, jsonelement_t **element, const char *text, const unsigned int length, unsigned int *i);

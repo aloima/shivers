@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-
-#include <hash.h>
-#include <utils.h>
+#include <shivers.h>
 
 unsigned int hash(const char *key, const unsigned int size) {
   unsigned long hash = 5381;

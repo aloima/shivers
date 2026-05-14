@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <sys/stat.h>
-
-#include <database.h>
-#include <utils.h>
-#include <json.h>
+#include <shivers.h>
 
 static jsonelement_t *data = NULL;
 static char *_filename = NULL;

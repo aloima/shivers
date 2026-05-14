@@ -1,3 +1,5 @@
+#include <shivers.h>
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -8,11 +10,6 @@
 #elif defined(__linux__)
   #include <unistd.h>
 #endif
-
-#include <shivers.h>
-#include <discord.h>
-#include <utils.h>
-#include <json.h>
 
 #define YEAR (60 * 60 * 24 * 30 * 12)
 #define MONTH (60 * 60 * 24 * 30)

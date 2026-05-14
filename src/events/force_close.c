@@ -1,14 +1,9 @@
-#include <stdio.h>
+#include <shivers.h>
 
 #if defined(_WIN32)
   #include <winsock2.h>
   #include <windows.h>
 #endif
-
-#include <database.h>
-#include <shivers.h>
-#include <png.h>
-#include <hash.h>
 
 void on_force_close(struct Shivers *shivers) {
   free_hashmap(shivers->cooldowns);

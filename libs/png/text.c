@@ -1,8 +1,4 @@
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include <png.h>
-#include <utils.h>
+#include <shivers.h>
 
 static FT_Library library;
 static struct Fonts fonts;

@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-
 #include <shivers.h>
-#include <utils.h>
-#include <hash.h>
 
 void run_with_cooldown(const char *user_id, void (*execute)(struct Shivers *shivers, const struct InteractionCommand command), struct Shivers *shivers, const struct InteractionCommand command) {
   const struct Node *cooldown = get_node(shivers->cooldowns, user_id);

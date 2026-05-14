@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-
-#include <utils.h>
+#include <shivers.h>
 
 void *allocate(void *value, const long old_count, const unsigned long new_count, const unsigned char size) {
   if (value == NULL) {

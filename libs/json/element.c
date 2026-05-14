@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-
-#include <utils.h>
-#include <json.h>
+#include <shivers.h>
 
 jsonelement_t *create_empty_json_element(const bool is_array) {
   jsonelement_t *element = allocate(NULL, 0, 1, sizeof(jsonelement_t));

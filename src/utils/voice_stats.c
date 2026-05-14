@@ -1,13 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <database.h>
-#include <network.h>
 #include <shivers.h>
-#include <utils.h>
-#include <json.h>
-#include <hash.h>
 
 struct VoiceStatsChannel *channels = NULL;
 unsigned int channel_count = 0;

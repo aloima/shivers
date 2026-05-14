@@ -1,23 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <errno.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-#elif defined(__linux__)
-  #include <sys/socket.h>
-  #include <unistd.h>
-  #include <arpa/inet.h>
-  #include <netdb.h>
-#endif
-
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-
-#include <network.h>
-#include <utils.h>
+#include <shivers.h>
 
 void response_free(struct Response response) {
   for (unsigned char i = 0; i < response.header_size; ++i) {

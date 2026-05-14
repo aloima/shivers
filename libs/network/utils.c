@@ -1,22 +1,4 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-#elif defined(__linux__)
-  #include <sys/socket.h>
-  #include <fcntl.h>
-  #include <unistd.h>
-  #include <netdb.h>
-#endif
-
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-
-#include <network.h>
-#include <utils.h>
+#include <shivers.h>
 
 struct URL parse_url(const char *data) {
   struct URL url;

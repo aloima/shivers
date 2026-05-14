@@ -1,23 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
-
-#include <pthread.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-  #include <windows.h>
-#elif defined(__linux__)
-  #include <unistd.h>
-#endif
-
 #include <shivers.h>
-#include <discord.h>
-#include <network.h>
-#include <database.h>
-#include <json.h>
-#include <hash.h>
 
 static struct Websocket websocket = {0};
 

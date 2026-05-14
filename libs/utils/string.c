@@ -1,8 +1,4 @@
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-
-#include <utils.h>
+#include <shivers.h>
 
 void strtolower(char *source, const char *dest) {
   unsigned int i = 0;

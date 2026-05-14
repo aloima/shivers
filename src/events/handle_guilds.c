@@ -1,7 +1,4 @@
-#include <stdio.h>
-
 #include <shivers.h>
-#include <discord.h>
 
 void on_handle_guilds(struct Shivers *shivers) {
   puts("Handled all guilds.");

@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include <discord.h>
-#include <network.h>
-#include <json.h>
+#include <shivers.h>
 
 unsigned short send_message(const struct Client client, const struct Message message) {
   const struct MessagePayload message_payload = message.payload;

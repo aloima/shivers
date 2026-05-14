@@ -1,8 +1,4 @@
-#include <string.h>
-#include <ctype.h>
-#include <math.h>
-
-#include <utils.h>
+#include <shivers.h>
 
 char *base64_encode(const char *data, const unsigned long data_length) {
   const char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

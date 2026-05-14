@@ -1,9 +1,4 @@
-#include <stdio.h>
-
 #include <shivers.h>
-#include <database.h>
-#include <utils.h>
-#include <json.h>
 
 void on_message_create(struct Shivers *shivers, jsonelement_t *message) {
   const bool is_webhook = json_get_val(message, "webhook_id").exist;

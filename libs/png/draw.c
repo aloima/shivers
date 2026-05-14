@@ -1,7 +1,4 @@
-#include <string.h>
-#include <stdlib.h>
-
-#include <png.h>
+#include <shivers.h>
 
 void set_pixel(struct PNG *png, const unsigned int x, const unsigned int y, const unsigned char *color, const unsigned int color_size) {
   if (!png->is_interlaced) {

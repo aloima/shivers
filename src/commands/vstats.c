@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
 #include <shivers.h>
-#include <discord.h>
-#include <database.h>
-#include <json.h>
-#include <utils.h>
 
 static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
   struct Embed embed = {

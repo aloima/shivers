@@ -1,9 +1,4 @@
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <png.h>
-#include <utils.h>
+#include <shivers.h>
 
 unsigned char get_byte_size_of_pixel(const unsigned char color_type) {
   unsigned char pixel_count = 0;

@@ -1,7 +1,4 @@
-#include <stdio.h>
-
 #include <shivers.h>
-#include <discord.h>
 
 void on_guild_create(struct Shivers *shivers) {
   char custom_status[12];

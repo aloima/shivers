@@ -1,24 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-#elif defined(__linux__)
-  #include <sys/select.h>
-  #include <sys/socket.h>
-  #include <unistd.h>
-  #include <arpa/inet.h>
-  #include <netdb.h>
-#endif
-
-#include <openssl/ssl.h>
-#include <openssl/sha.h>
-#include <openssl/err.h>
-
-#include <network.h>
-#include <utils.h>
+#include <shivers.h>
 
 static void handle_events(struct Websocket *websocket);
 

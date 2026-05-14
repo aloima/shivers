@@ -1,11 +1,4 @@
-#include <stdio.h>
-
-#include <database.h>
 #include <shivers.h>
-#include <discord.h>
-#include <json.h>
-#include <hash.h>
-#include <png.h>
 
 void on_ready(struct Shivers *shivers) {
   setup_commands(shivers);

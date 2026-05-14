@@ -1,8 +1,4 @@
-#include <string.h>
-#include <stdbool.h>
-
-#include <json.h>
-#include <utils.h>
+#include <shivers.h>
 
 void json_del_val(jsonelement_t *element, const char *search) {
   struct Split splitter = split(search, strlen(search), ".");

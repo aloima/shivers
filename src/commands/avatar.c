@@ -1,12 +1,9 @@
+#include <shivers.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
-
-#include <shivers.h>
-#include <discord.h>
-#include <network.h>
-#include <json.h>
 
 static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
   struct Embed embed = {

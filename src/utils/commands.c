@@ -1,10 +1,4 @@
-#include <string.h>
-#include <stdbool.h>
-
 #include <shivers.h>
-#include <utils.h>
-#include <json.h>
-#include <hash.h>
 
 void setup_commands(struct Shivers *shivers) {
   shivers->commands = create_hashmap(7);

@@ -1,16 +1,4 @@
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#if defined(_WIN32)
-  #include <winsock2.h>
-  #include <windows.h>
-#endif
-
-#include <sys/stat.h>
-
-#include <discord.h>
-#include <utils.h>
+#include <shivers.h>
 
 int main(void) {
   struct stat token_entry;

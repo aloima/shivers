@@ -1,6 +1,4 @@
-#include <stdlib.h>
-
-#include <png.h>
+#include <shivers.h>
 
 void png_free(struct PNG png) {
   free(png.data);

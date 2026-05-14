@@ -1,7 +1,4 @@
-#include <string.h>
-#include <stdbool.h>
-
-#include <utils.h>
+#include <shivers.h>
 
 unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator) {
   unsigned long source_length = (strlen(separator) * (size - 1));

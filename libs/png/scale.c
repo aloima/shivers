@@ -1,8 +1,4 @@
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <png.h>
+#include <shivers.h>
 
 #define RADIUS 2
 

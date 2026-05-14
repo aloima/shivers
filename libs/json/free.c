@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include <json.h>
+#include <shivers.h>
 
 static void free_element(jsonelement_t *element) {
   if (element) {

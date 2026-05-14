@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include <utils.h>
-#include <json.h>
+#include <shivers.h>
 
 static void set_value(jsonelement_t *element, void *value, const unsigned char type) {
   if (element->type == JSON_ARRAY || element->type == JSON_OBJECT) {

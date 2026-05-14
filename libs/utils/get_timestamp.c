@@ -1,12 +1,4 @@
-#if defined(__linux__)
-  #include <stddef.h>
-
-  #include <sys/time.h>
-#elif defined(_WIN32)
-  #include <sys/timeb.h>
-#endif
-
-#include <utils.h>
+#include <shivers.h>
 
 unsigned long long get_timestamp() {
   #if defined(__linux__)

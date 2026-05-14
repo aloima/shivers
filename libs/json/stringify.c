@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-
-#include <json.h>
-#include <utils.h>
+#include <shivers.h>
 
 char *json_stringify(const jsonelement_t *element, const unsigned int fractional_limit) {
   char *result = NULL;

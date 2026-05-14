@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdbool.h>
-
 #include <shivers.h>
-#include <discord.h>
-#include <network.h>
-#include <utils.h>
-#include <json.h>
 
 static void execute(struct Shivers *shivers, const struct InteractionCommand command) {
   struct Message message = {

@@ -1,12 +1,4 @@
-#include <string.h>
-#include <stdlib.h>
-
-#include <zconf.h>
-#include <zlib.h>
-
-#include <png.h>
-#include <network.h>
-#include <utils.h>
+#include <shivers.h>
 
 void initialize_png(struct PNG *png) {
   const unsigned char color_size = get_byte_size_of_pixel(png->color_type);

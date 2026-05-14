@@ -1,7 +1,4 @@
 #include <shivers.h>
-#include <utils.h>
-#include <json.h>
-#include <hash.h>
 
 void on_interaction_command(struct Shivers *shivers, const struct InteractionCommand interaction_command) {
   const char *user_id = json_get_val(interaction_command.user, "id").value.string;
