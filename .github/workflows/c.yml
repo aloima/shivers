@@ -17,5 +17,11 @@ jobs:
         version: latest
         platform: x64
 
-    - name: make
-      run: make
+    - name: Create build directory
+      run: mkdir build
+
+    - name: Run CMake
+      run: cmake -S . -B build
+
+    - name: Build
+      run: cmake --build build -- -j$(nproc)
