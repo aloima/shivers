@@ -73,7 +73,7 @@ static void send_heartbeat() {
   send_websocket_message(&websocket, heartbeat_message);
 }
 
-static void *start_heartbeat_thread() {
+static void *start_heartbeat_thread(void *_) {
   do {
     heartbeat_waiting = true;
 
