@@ -50,7 +50,10 @@ char *ltrim(const char *src);
 
 unsigned long ahtoi(const char *data);
 int atoi_s(const char *str, short length);
+
+
 char *base64_encode(const char *data, const unsigned long data_length);
+#define BASE64_ENCODE_ERROR ("base64_encode(): cannot decode key")
 
 int char_at(char *data, const char ch);
 

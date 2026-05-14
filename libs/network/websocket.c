@@ -137,11 +137,19 @@ static void check_response(struct Websocket *websocket, const char *response, ch
         memcpy(final + key_length, websocket_guid, websocket_guid_length);
         final[final_length] = 0;
 
+        free(key);
+
         unsigned char sha1_hash[SHA_DIGEST_LENGTH + 1];
         SHA1((unsigned char *) final, final_length, sha1_hash);
-        char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
 
-        free(key);
+        char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
+        if (result == NULL) {
+          split_free(line_splitter);
+          split_free(splitter);
+          close_websocket(websocket, -1, NULL);
+
+          throw(BASE64_ENCODE_ERROR);
+        }
 
         if (!streq(result, value)) {
           free(result);
@@ -173,6 +181,10 @@ static void switch_protocols(struct Websocket *websocket) {
   }
 
   websocket->key = base64_encode((char *) key_data, 16);
+  if (websocket->key == NULL) {
+    close_websocket(websocket, -1, NULL);
+    throw(BASE64_ENCODE_ERROR);
+  }
 
   char request_message[512];
 
