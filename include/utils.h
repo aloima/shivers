@@ -48,8 +48,11 @@ bool streq(const char *str1, const char *str2);
 void strreplace(char **source, char *target, char *replacement);
 char *ltrim(const char *src);
 
-unsigned long ahtoi(const char *data);
-int atoi_s(const char *str, short length);
+// Converts hex string to integer, -1 on failure
+int64_t ahtoi(const char *data);
+
+// Converts string to integer safely -1 on failure
+int64_t atoi_s(const char *str, int16_t length);
 
 
 char *base64_encode(const char *data, const unsigned long data_length);

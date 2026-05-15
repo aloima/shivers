@@ -5,7 +5,7 @@ struct URL parse_url(const char *data) {
   struct Split splitter = split(data, strlen(data), "/");
 
   if (splitter.size < 3) {
-    throw("request(): invalid url format");
+    throw("parse_url(): invalid url format");
   }
 
   struct Split hostname_splitter = split(splitter.data[2].data, splitter.data[2].length, ":");
@@ -19,7 +19,11 @@ struct URL parse_url(const char *data) {
   memcpy(url.hostname, hostname_splitter.data[0].data, hostname_size);
 
   if (hostname_splitter.size == 2) {
-    url.port = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
+    const int64_t value = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
+    if (value == -1)
+      throw("parse_url(): invalid port value");
+
+    url.port = value;
   } else {
     if (streq(url.protocol, "https") || streq(url.protocol, "wss")) {
       url.port = 443;
@@ -67,17 +71,16 @@ void throw_network(const char *value, bool tls) {
 
   if (errno != 0) {
     perror(value);
-    exit(EXIT_FAILURE);
   } else if (tls && (tls_error = ERR_get_error()) != 0) {
     char message[1024];
 
     ERR_error_string(tls_error, message);
     fprintf(stderr, "%s: %s\n", value, message);
-    exit(EXIT_FAILURE);
   } else {
     fprintf(stderr, "%s\n", value);
-    exit(EXIT_FAILURE);
   }
+
+  exit(EXIT_FAILURE);
 }
 
 unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count) {

@@ -50,34 +50,36 @@ char *base64_encode(const char *data, const uint64_t data_length) {
   return response;
 }
 
-unsigned long ahtoi(const char *data) {
-  char hex_alphabet[17] = "0123456789ABCDEF";
-  const unsigned int size = strlen(data);
-  unsigned long result = 0;
+int64_t ahtoi(const char *data) {
+  static char hex_alphabet[17] = "0123456789ABCDEF";
+  const size_t size = strlen(data);
+  int64_t result = 0;
 
   for (unsigned int i = 0; i < size; ++i) {
-    unsigned long base = pow(16, (size - i - 1));
-    result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
+    const uint64_t base = pow(16, (size - i - 1));
+    const int position = char_at(hex_alphabet, toupper(data[i]));
+    if (position == -1)
+      return -1;
+
+    result |= (position * ((base == 0) ? 1 : base));
   }
 
   return result;
 }
 
-int atoi_s(const char *str, short length) {
-  if (length == -1) {
+int64_t atoi_s(const char *str, int16_t length) {
+  if (length == -1)
     length = strlen(str);
-  }
 
-  int result = 0;
+  int64_t result = 0;
 
-  for (short i = 0; i < length; ++i) {
+  for (uint16_t i = 0; i < length; ++i) {
     const char ch = str[i];
 
     if (isdigit(ch)) {
       result += ((ch - '0') * pow(10.0, (length - i - 1)));
     } else {
-      result = -1;
-      break;
+      return -1;
     }
   }
 
