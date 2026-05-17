@@ -29,18 +29,18 @@ struct Split {
   unsigned int size;
 };
 
-struct Join {
+typedef struct Join {
   char *data;
   unsigned int length;
-};
+} Join;
 
 struct Split split(const char *text, const unsigned int length, const char *separator);
 void split_free(struct Split value);
 
 void *allocate(void *value, const long old_count, const unsigned long new_count, const unsigned char size);
 
-unsigned long join(const struct Join *value, char *source, unsigned short size, const char *separator);
-unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator);
+uint64_t join(const Join *value, char *source, uint16_t size, const char *separator);
+uint64_t calculate_join(const Join *value, uint16_t size, const char *separator);
 
 void strtolower(char *source, const char *dest);
 void strtoupper(char *source, const char *dest);

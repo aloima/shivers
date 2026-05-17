@@ -1,10 +1,10 @@
 #include <shivers.h>
 
-unsigned long calculate_join(const struct Join *value, unsigned short size, const char *separator) {
-  unsigned long source_length = (strlen(separator) * (size - 1));
+uint64_t calculate_join(const Join *value, uint16_t size, const char *separator) {
+  uint64_t source_length = (strlen(separator) * (size - 1));
 
-  for (unsigned short i = 0; size != 0; ++i) {
-    const unsigned long string_length = value[i].length;
+  for (uint16_t i = 0; size != 0; ++i) {
+    const uint64_t string_length = value[i].length;
 
     if (string_length != 0) {
       source_length += string_length;
@@ -15,19 +15,19 @@ unsigned long calculate_join(const struct Join *value, unsigned short size, cons
   return source_length;
 }
 
-unsigned long join(const struct Join *value, char *source, unsigned short size, const char *separator) {
-  const unsigned long separator_length = strlen(separator);
-  unsigned long source_length = 0;
+uint64_t join(const Join *value, char *source, uint16_t size, const char *separator) {
+  const uint64_t separator_length = strlen(separator);
+  uint64_t source_length = 0;
 
   for (unsigned short i = 0; size != 0; ++i) {
-    const struct Join join_element = value[i];
+    const Join join_element = value[i];
     const bool has_separator = (size != 1);
 
     if (join_element.length != 0) {
-      memcpy(source + source_length, join_element.data, join_element.length);
+      ASSERT(memcpy(source + source_length, join_element.data, join_element.length), !=, NULL);
 
       if (has_separator) {
-        memcpy(source + source_length + join_element.length, separator, separator_length);
+        ASSERT(memcpy(source + source_length + join_element.length, separator, separator_length), !=, NULL);
       }
 
       --size;
@@ -36,6 +36,5 @@ unsigned long join(const struct Join *value, char *source, unsigned short size, 
   }
 
   source[source_length] = 0;
-
   return source_length;
 }
