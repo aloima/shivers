@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-
 #if defined(_WIN32)
   #include <winsock2.h>
   #include <windows.h>
@@ -20,6 +18,10 @@ struct URL {
   char *protocol, *hostname, *path;
   unsigned short port;
 };
+
+typedef enum HTTPStatusCode {
+  HTTP_NO_CONTENT = 204
+} HTTPStatusCode;
 
 struct Header {
   char *name, *value;

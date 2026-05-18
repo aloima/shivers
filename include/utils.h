@@ -3,11 +3,14 @@
 #include <stdint.h>
 
 // To guarantee code execution
-#define ASSERT(actual, op, expected) do { \
-  typeof(actual) __actual_val = (actual);   \
-  typeof(expected) __expected_val = (expected);   \
-  assert(__actual_val op __expected_val);        \
-} while (0)
+#define ASSERT(actual, op, expected) ({         \
+  typeof(actual) __actual_val = (actual);       \
+  typeof(expected) __expected_val = (expected); \
+  assert(__actual_val op __expected_val);       \
+  __actual_val;                                 \
+})
+
+#define SPRINTF_S(__s, __format, ...) ASSERT(sprintf((__s), (__format), __VA_ARGS__), >, 0)
 
 struct SplitData {
   char *data;
