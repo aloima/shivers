@@ -25,12 +25,7 @@ static void handle_exit(int sig) {
   }
 
   pthread_cancel(heartbeat_thread);
-
-  #if defined(__linux__)
-    usleep(250000);
-  #elif defined(_WIN32)
-    Sleep(250);
-  #endif
+  SLEEP(250);
 
   exit(EXIT_SUCCESS);
 }
@@ -61,12 +56,7 @@ static void send_heartbeat() {
 static void *start_heartbeat_thread(void *_) {
   do {
     heartbeat_waiting = true;
-
-    #if defined(__linux__)
-      usleep(heartbeat_interval * 1000);
-    #elif defined(_WIN32)
-      Sleep(heartbeat_interval);
-    #endif
+    SLEEP(heartbeat_interval);
 
     send_heartbeat();
     heartbeat_waiting = false;

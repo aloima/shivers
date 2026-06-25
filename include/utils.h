@@ -12,6 +12,16 @@
 
 #define SPRINTF_S(__s, __format, ...) ASSERT(sprintf((__s), (__format), ##__VA_ARGS__), >, 0)
 
+#if defined(__linux__)
+  #define SLEEP(ms) do {                  \
+    struct timespec req;                  \
+    req.tv_sec = ms / 1000;               \
+    req.tv_nsec = (ms % 1000) * 1000000L; \
+  } while (0)
+#elif defined(__WIN32)
+  #define SLEEP(ms) Sleep(ms)
+#endif
+
 struct SplitData {
   char *data;
   unsigned int length;

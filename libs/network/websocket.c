@@ -325,11 +325,7 @@ void connect_websocket(struct Websocket *websocket) {
         handle_events(websocket);
       }
 
-      #if defined(__linux__)
-        usleep(3000);
-      #elif defined(_WIN32)
-        Sleep(3);
-      #endif
+      SLEEP(3);
     } while (websocket->connected && !websocket->closed);
   } else {
     throw_network("connect()", !!websocket->ssl);
