@@ -107,41 +107,24 @@ static void onstart() {
 }
 
 static void parse_interaction_base_arguments(struct InteractionArgument *argument, jsonelement_t *data, unsigned char type, char *name, jsonresult_t input) {
+  // For zero initialization
+  *argument = (struct InteractionArgument) {
+    .name = name,
+    .type = type
+  };
+
   switch (type) {
     case STRING_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .string = {
-            .value = input.value.string,
-            .length = input.element->size
-          }
-        }
-      };
-
+      argument->value.string.value = input.value.string;
+      argument->value.string.length = input.element->size;
       break;
 
     case INTEGER_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .number = input.value.number
-        }
-      };
-
+      argument->value.number = input.value.number;
       break;
 
     case BOOLEAN_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .boolean = input.value.boolean
-        }
-      };
-
+      argument->value.boolean = input.value.boolean;
       break;
 
     case USER_ARGUMENT: {
@@ -149,18 +132,12 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
       SPRINTF_S(user_search, "resolved.users.%s", input.value.string);
       SPRINTF_S(member_search, "resolved.members.%s", input.value.string);
 
-      jsonresult_t member_result = json_get_val(data, member_search);
+      const jsonresult_t user_result = json_get_val(data, user_search);
+      ASSERT(user_result.exist, ==, true);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .user = {
-            .user_data = json_get_val(data, user_search).element,
-            .member_data = member_result.exist ? member_result.element : NULL
-          }
-        }
-      };
+      const jsonresult_t member_result = json_get_val(data, member_search);
+      argument->value.user.user_data = json_get_val(data, user_search).element;
+      argument->value.user.member_data = member_result.exist ? member_result.element : NULL;
 
       break;
     }
@@ -169,14 +146,10 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
       char search[19 + input.element->size];
       SPRINTF_S(search, "resolved.channels.%s", input.value.string);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .channel = json_get_val(data, search).element
-        }
-      };
+      const jsonresult_t channel_result = json_get_val(data, search);
+      ASSERT(channel_result.exist, ==, true);
 
+      argument->value.channel = channel_result.element;
       break;
     }
 
@@ -184,14 +157,10 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
       char search[16 + input.element->size];
       SPRINTF_S(search, "resolved.roles.%s", input.value.string);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .channel = json_get_val(data, search).element
-        }
-      };
+      const jsonresult_t role_result = json_get_val(data, search);
+      ASSERT(role_result.exist, ==, true);
 
+      argument->value.role = role_result.element;
       break;
     }
   }
