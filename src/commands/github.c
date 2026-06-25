@@ -33,7 +33,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
   struct Response response;
 
   if (char_at(query.value, '/') == -1) {
-    sprintf(url, "https://api.github.com/users/%s", query.value);
+    SPRINTF_S(url, "https://api.github.com/users/%s", query.value);
 
     config.url = url;
     response = request(config);
@@ -52,16 +52,16 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       const jsonresult_t bio = json_get_val(user, "bio");
 
       char following[8];
-      sprintf(following, "%u", (unsigned int) json_get_val(user, "following").value.number);
+      SPRINTF_S(following, "%u", (unsigned int) json_get_val(user, "following").value.number);
 
       char followers[8];
-      sprintf(followers, "%u", (unsigned int) json_get_val(user, "followers").value.number);
+      SPRINTF_S(followers, "%u", (unsigned int) json_get_val(user, "followers").value.number);
 
       char repositories[6];
-      sprintf(repositories, "%u", (unsigned int) json_get_val(user, "public_repos").value.number);
+      SPRINTF_S(repositories, "%u", (unsigned int) json_get_val(user, "public_repos").value.number);
 
       char gists[6];
-      sprintf(gists, "%u", (unsigned int) json_get_val(user, "public_gists").value.number);
+      SPRINTF_S(gists, "%u", (unsigned int) json_get_val(user, "public_gists").value.number);
 
       char joined_at[18];
       const char *joined_at_string = json_get_val(user, "created_at").value.string;
@@ -73,13 +73,13 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       memcpy(month_string, joined_at_string + 5, 2);
       month_string[2] = 0;
 
-      sprintf(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi_s(month_string, -1) - 1], joined_at_string);
+      SPRINTF_S(joined_at, "%.2s %s %.4s", joined_at_string + 8, months[atoi_s(month_string, -1) - 1], joined_at_string);
 
       char name[json_login.element->size + 1];
-      sprintf(name, "@%s", json_login.value.string);
+      SPRINTF_S(name, "@%s", json_login.value.string);
 
       if (json_name.element->type != JSON_NULL && !streq(json_login.value.string, json_name.value.string)) {
-        sprintf(name, "%s (@%s)", json_name.value.string, json_login.value.string);
+        SPRINTF_S(name, "%s (@%s)", json_name.value.string, json_login.value.string);
       }
 
       add_field_to_embed(&embed, "Repositories", repositories, true);
@@ -103,7 +103,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       json_free(user, false);
     }
   } else {
-    sprintf(url, "https://api.github.com/repos/%s", query.value);
+    SPRINTF_S(url, "https://api.github.com/repos/%s", query.value);
 
     config.url = url;
     response = request(config);
@@ -122,13 +122,13 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       jsonresult_t license = json_get_val(repository, "license");
 
       char stars[8];
-      sprintf(stars, "%lu", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
+      SPRINTF_S(stars, "%lu", (unsigned long) json_get_val(repository, "stargazers_count").value.number);
 
       char watchers[8];
-      sprintf(watchers, "%lu", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
+      SPRINTF_S(watchers, "%lu", (unsigned long) json_get_val(repository, "subscribers_count").value.number);
 
       char forks[8];
-      sprintf(forks, "%lu", (unsigned long) json_get_val(repository, "forks_count").value.number);
+      SPRINTF_S(forks, "%lu", (unsigned long) json_get_val(repository, "forks_count").value.number);
 
       add_field_to_embed(&embed, "Stars", stars, true);
       add_field_to_embed(&embed, "Watchers", watchers, true);

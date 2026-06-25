@@ -12,11 +12,11 @@ void on_message_create(struct Shivers *shivers, jsonelement_t *message) {
       const char *guild_id = json_guild_id.value.string;
 
       char xp_key[50], level_key[53], factor_key[42], channel_key[43], message_key[43];
-      sprintf(xp_key, "%s.levels.%s.xp", guild_id, user_id);
-      sprintf(level_key, "%s.levels.%s.level", guild_id, user_id);
-      sprintf(factor_key, "%s.settings.level.factor", guild_id);
-      sprintf(channel_key, "%s.settings.level.channel", guild_id);
-      sprintf(message_key, "%s.settings.level.message", guild_id);
+      SPRINTF_S(xp_key, "%s.levels.%s.xp", guild_id, user_id);
+      SPRINTF_S(level_key, "%s.levels.%s.level", guild_id, user_id);
+      SPRINTF_S(factor_key, "%s.settings.level.factor", guild_id);
+      SPRINTF_S(channel_key, "%s.settings.level.channel", guild_id);
+      SPRINTF_S(message_key, "%s.settings.level.message", guild_id);
 
       const jsonresult_t xp_data = database_get(xp_key);
       const jsonresult_t level_data = database_get(level_key);
@@ -45,9 +45,9 @@ void on_message_create(struct Shivers *shivers, jsonelement_t *message) {
 
           char *username = json_get_val(message, "author.username").value.string;
           char mention[23], old_level[4], new_level[4];
-          sprintf(mention, "<@%s>", user_id);
-          sprintf(old_level, "%.0f", level - 1.0);
-          sprintf(new_level, "%.0f", level);
+          SPRINTF_S(mention, "<@%s>", user_id);
+          SPRINTF_S(old_level, "%.0f", level - 1.0);
+          SPRINTF_S(new_level, "%.0f", level);
           strreplace(&level_message_dup, "{name}", username);
           strreplace(&level_message_dup, "{user}", mention);
           strreplace(&level_message_dup, "{old}", old_level);

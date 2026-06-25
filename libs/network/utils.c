@@ -188,7 +188,7 @@ char *percent_encode(const char *data) {
       result_length += 2;
 
       char hex[4];
-      sprintf(hex, "%%%x", ch);
+      SPRINTF_S(hex, "%%%x", ch);
       strncat(result, hex, 4);
     } else {
       strncat(result, &ch, 1);

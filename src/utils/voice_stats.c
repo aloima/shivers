@@ -5,7 +5,7 @@ unsigned int channel_count = 0;
 
 void update_voice_stats(const struct Client client, const char *guild_id) {
   char database_key[27];
-  sprintf(database_key, "%s.vstats", guild_id);
+  SPRINTF_S(database_key, "%s.vstats", guild_id);
 
   const jsonresult_t data = database_get(database_key);
 
@@ -68,7 +68,7 @@ void update_voice_stats(const struct Client client, const char *guild_id) {
       }
 
       char body[256];
-      sprintf(body, "{\"name\":\"%s\"}", channels[v].name);
+      SPRINTF_S(body, "{\"name\":\"%s\"}", channels[v].name);
 
       response_free(api_request(client.token, path, "PATCH", body, NULL));
     }
@@ -83,10 +83,10 @@ void prepare_voice_stats_channel_name(const struct Client client, char **channel
   char bots[(guild->bot_count / 10) + 2];
   char at_voice[(guild->member_at_voice_count / 10) + 2];
 
-  sprintf(members, "%u", guild->members->length);
-  sprintf(online, "%u", guild->non_offline_count);
-  sprintf(bots, "%u", guild->bot_count);
-  sprintf(at_voice, "%u", guild->member_at_voice_count);
+  SPRINTF_S(members, "%u", guild->members->length);
+  SPRINTF_S(online, "%u", guild->non_offline_count);
+  SPRINTF_S(bots, "%u", guild->bot_count);
+  SPRINTF_S(at_voice, "%u", guild->member_at_voice_count);
 
   strreplace(channel_name, "{members}", members);
   strreplace(channel_name, "{online}", online);

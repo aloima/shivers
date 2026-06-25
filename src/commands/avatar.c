@@ -116,7 +116,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       }
     }
 
-    sprintf(description, (
+    SPRINTF_S(description, (
       "PNG\\n"
       "[0.25x](%s) **|** [0.5x](%s) **|** [1x](%s) **|** [2x](%s) **|** [4x](%s)\\n\\n"
       "GIF\\n"
@@ -137,7 +137,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       }
     }
 
-    sprintf(description, (
+    SPRINTF_S(description, (
       "PNG\\n"
       "[0.25x](%s) **|** [0.5x](%s) **|** 1x **|** [2x](%s) **|** [4x](%s)"
     ), png_avatar_urls[0], png_avatar_urls[1], png_avatar_urls[3], png_avatar_urls[4]);

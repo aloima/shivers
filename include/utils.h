@@ -10,7 +10,7 @@
   __actual_val;                                 \
 })
 
-#define SPRINTF_S(__s, __format, ...) ASSERT(sprintf((__s), (__format), __VA_ARGS__), >, 0)
+#define SPRINTF_S(__s, __format, ...) ASSERT(sprintf((__s), (__format), ##__VA_ARGS__), >, 0)
 
 struct SplitData {
   char *data;

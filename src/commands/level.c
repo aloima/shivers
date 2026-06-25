@@ -76,10 +76,10 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
   }
 
   char xp_key[50], level_key[53], factor_key[42], levels_key[27];
-  sprintf(xp_key, "%s.levels.%s.xp", command.guild_id, user_id);
-  sprintf(level_key, "%s.levels.%s.level", command.guild_id, user_id);
-  sprintf(factor_key, "%s.settings.level.factor", command.guild_id);
-  sprintf(levels_key, "%s.levels", command.guild_id);
+  SPRINTF_S(xp_key, "%s.levels.%s.xp", command.guild_id, user_id);
+  SPRINTF_S(level_key, "%s.levels.%s.level", command.guild_id, user_id);
+  SPRINTF_S(factor_key, "%s.settings.level.factor", command.guild_id);
+  SPRINTF_S(levels_key, "%s.levels", command.guild_id);
 
   const jsonresult_t factor_data = database_get(factor_key);
   const unsigned short factor = (factor_data.exist ? factor_data.value.number : 100);
@@ -109,14 +109,14 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
   const unsigned int level = (level_data.exist ? level_data.value.number : 1);
 
   char xp_text[24], level_text[16], rank[12];
-  sprintf(level_text, "Level %d", level);
-  sprintf(xp_text, "XP %d / %d", xp, (level * factor));
+  SPRINTF_S(level_text, "Level %d", level);
+  SPRINTF_S(xp_text, "XP %d / %d", xp, (level * factor));
 
   rank[0] = 0;
 
   for (unsigned int i = 0; i < sorted_length; ++i) {
     if (streq(user_id, ((jsonelement_t *) sorted[i].value)->key)) {
-      sprintf(rank, "#%u", (i + 1));
+      SPRINTF_S(rank, "#%u", (i + 1));
       break;
     }
   }

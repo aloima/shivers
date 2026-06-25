@@ -21,7 +21,7 @@ void setup_commands(struct Shivers *shivers) {
     while (command_node) {
       struct Command *command = command_node->value;
       jsonelement_t *command_body = create_empty_json_element(false);
-      sprintf(key, "[%d]", stringified_commands);
+      SPRINTF_S(key, "[%d]", stringified_commands);
       ++stringified_commands;
 
       json_set_val(command_body, "name", command_node->key, JSON_STRING);
@@ -39,7 +39,7 @@ void setup_commands(struct Shivers *shivers) {
 
       if (command->permissions != 0) {
         char permissions[21];
-        sprintf(permissions, "%ld", command->permissions);
+        SPRINTF_S(permissions, "%ld", command->permissions);
         json_set_val(command_body, "default_member_permissions", permissions, JSON_STRING);
       }
 
@@ -51,7 +51,7 @@ void setup_commands(struct Shivers *shivers) {
           bool argument_required = !argument.optional;
           double argument_type = argument.type;
           jsonelement_t *argument_body = create_empty_json_element(false);
-          sprintf(argument_key, "[%d]", a);
+          SPRINTF_S(argument_key, "[%d]", a);
 
           json_set_val(argument_body, "name", argument.name, JSON_STRING);
           json_set_val(argument_body, "description", argument.description, JSON_STRING);
@@ -63,10 +63,10 @@ void setup_commands(struct Shivers *shivers) {
             for (unsigned int b = 0; b < argument.arg_size; ++b) {
               const struct CommandArgument subcommand_arg = argument.args[b];
               char *subcommand_arg_required = !subcommand_arg.optional ? "true" : "false";
-              sprintf(sc_argument_key, "[%d]", b);
+              SPRINTF_S(sc_argument_key, "[%d]", b);
 
               char subcommand_arg_body[187];
-              sprintf(subcommand_arg_body, (
+              SPRINTF_S(subcommand_arg_body, (
                 "{"
                   "\"name\":\"%s\","
                   "\"description\":\"%s\","
@@ -105,7 +105,7 @@ void setup_commands(struct Shivers *shivers) {
   json_free(commands_body, false);
 
   char path[42];
-  sprintf(path, "/applications/%s/commands", json_get_val(shivers->client.user, "id").value.string);
+  SPRINTF_S(path, "/applications/%s/commands", json_get_val(shivers->client.user, "id").value.string);
 
   response_free(api_request(shivers->client.token, path, "PUT", body, NULL));
   free(body);

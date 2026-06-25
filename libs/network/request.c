@@ -85,7 +85,7 @@ struct Response request(struct RequestConfig config) {
       unsigned long data_length = 0;
 
       char separator[32];
-      sprintf(separator, "--%s\r\n", boundary);
+      SPRINTF_S(separator, "--%s\r\n", boundary);
 
       const unsigned short field_size = config.body.payload.formdata.field_size;
 
@@ -101,9 +101,9 @@ struct Response request(struct RequestConfig config) {
         memcpy(data + data_length, separator, 4 + boundary_length);
 
         if (field.filename) {
-          sprintf(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
+          SPRINTF_S(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
         } else {
-          sprintf(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
+          SPRINTF_S(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
         }
 
         memcpy(data + data_length + 4 + boundary_length, line, disposition_length);
@@ -112,7 +112,7 @@ struct Response request(struct RequestConfig config) {
 
         for (unsigned char a = 0; a < field_header_size; ++a) {
           const struct Header header = field.headers[a];
-          sprintf(line, "%s: %s\r\n", header.name, header.value);
+          SPRINTF_S(line, "%s: %s\r\n", header.name, header.value);
           line_length = strlen(line);
 
           data = allocate(data, -1, data_length + field_length + line_length + 1, sizeof(char));
@@ -135,11 +135,11 @@ struct Response request(struct RequestConfig config) {
       }
 
       data = allocate(data, -1, 4 + boundary_length + data_length + 1, sizeof(char));
-      sprintf(separator, "--%s--", boundary);
+      SPRINTF_S(separator, "--%s--", boundary);
       memcpy(data + data_length, separator, (4 + boundary_length));
       data_length += (4 + boundary_length);
 
-      sprintf(request_message_information, (
+      SPRINTF_S(request_message_information, (
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
@@ -161,7 +161,7 @@ struct Response request(struct RequestConfig config) {
       const char *body = config.body.payload.data;
       const unsigned long body_length = strlen(body);
 
-      sprintf(request_message_information, (
+      SPRINTF_S(request_message_information, (
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
@@ -177,7 +177,7 @@ struct Response request(struct RequestConfig config) {
       memcpy(request_message + request_message_length, body, body_length);
       request_message_length += body_length;
     } else {
-      sprintf(request_message_information,
+      SPRINTF_S(request_message_information,
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"

@@ -9,7 +9,7 @@ void run_with_cooldown(const char *user_id, void (*execute)(struct Shivers *shiv
 
   if (target > current) {
     char warning[51];
-    sprintf(warning, "You need to wait `%.2f seconds` to use a command.", (target - current) / 1000.0);
+    SPRINTF_S(warning, "You need to wait `%.2f seconds` to use a command.", (target - current) / 1000.0);
 
     struct Message message = {
       .target_type = TARGET_INTERACTION_COMMAND,

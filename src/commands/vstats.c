@@ -36,7 +36,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     description[0] = 0;
 
     char database_key[27];
-    sprintf(database_key, "%s.vstats", command.guild_id);
+    SPRINTF_S(database_key, "%s.vstats", command.guild_id);
 
     const jsonresult_t vstats_data = database_get(database_key);
 
@@ -46,13 +46,13 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
       for (unsigned int i = 0; i < data->size; ++i) {
         char id_key[6], name_key[8];
-        sprintf(id_key, "%d.id", i);
-        sprintf(name_key, "%d.name", i);
+        SPRINTF_S(id_key, "%d.id", i);
+        SPRINTF_S(name_key, "%d.name", i);
 
         const char *id = json_get_val(data, id_key).value.string;
         const char *name = json_get_val(data, name_key).value.string;
 
-        sprintf(line, "%s | <#%s> | %s\\n", id, id, name);
+        SPRINTF_S(line, "%s | <#%s> | %s\\n", id, id, name);
         strcat(description, line);
       }
 
@@ -68,7 +68,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     }
   } else if (streq(operation, "add")) {
     char path[37];
-    sprintf(path, "/guilds/%s/channels", command.guild_id);
+    SPRINTF_S(path, "/guilds/%s/channels", command.guild_id);
 
     const struct String input = command.arguments[0].value.subcommand.arguments[0].value.string;
 
@@ -84,7 +84,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     prepare_voice_stats_channel_name(shivers->client, &channel_name, command.guild_id);
 
     char request_payload[256];
-    sprintf(request_payload, "{"
+    SPRINTF_S(request_payload, "{"
       "\"name\":\"%s\","
       "\"type\":2"
     "}", channel_name);
@@ -108,7 +108,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     json_free(response_data, false);
 
     char database_key[27];
-    sprintf(database_key, "%s.vstats", command.guild_id);
+    SPRINTF_S(database_key, "%s.vstats", command.guild_id);
 
     database_push(database_key, database_data, JSON_OBJECT);
     json_free(database_data, false);
@@ -116,7 +116,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     message.payload.content = "Channel is created.";
   } else if (streq(operation, "delete")) {
     char database_key[27];
-    sprintf(database_key, "%s.vstats", command.guild_id);
+    SPRINTF_S(database_key, "%s.vstats", command.guild_id);
 
     const struct String input = command.arguments[0].value.subcommand.arguments[0].value.string;
     bool deleted = false;
@@ -128,14 +128,14 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
       for (unsigned int i = 0; i < data->size; ++i) {
         char id_key[6];
-        sprintf(id_key, "%d.id", i);
+        SPRINTF_S(id_key, "%d.id", i);
 
         const char *id = json_get_val(data, id_key).value.string;
 
         if (streq(id, input.value)) {
           char database_deletion_key[30], path[30];
-          sprintf(database_deletion_key, "%s.vstats.%d", command.guild_id, i);
-          sprintf(path, "/channels/%s", id);
+          SPRINTF_S(database_deletion_key, "%s.vstats.%d", command.guild_id, i);
+          SPRINTF_S(path, "/channels/%s", id);
 
           database_delete(database_deletion_key);
           response_free(api_request(shivers->client.token, path, "DELETE", NULL, NULL));

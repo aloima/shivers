@@ -188,7 +188,7 @@ static void switch_protocols(struct Websocket *websocket) {
 
   char request_message[512];
 
-  sprintf(request_message,
+  SPRINTF_S(request_message,
     "GET %s HTTP/1.1\r\n"
     "Host: %s:%d\r\n"
     "Upgrade: websocket\r\n"

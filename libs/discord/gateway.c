@@ -39,12 +39,12 @@ static void send_heartbeat() {
   char heartbeat_message[24];
 
   if (last_sequence == -1) {
-    sprintf(heartbeat_message, "{"
+    SPRINTF_S(heartbeat_message, "{"
       "\"op\":1,"
       "\"d\":null"
     "}");
   } else {
-    sprintf(heartbeat_message, "{"
+    SPRINTF_S(heartbeat_message, "{"
       "\"op\":1,"
       "\"d\":%d"
     "}", last_sequence);
@@ -79,7 +79,7 @@ static void *start_heartbeat_thread(void *_) {
 static void send_identify() {
   char identify_message[1024];
 
-  sprintf(identify_message, "{"
+  SPRINTF_S(identify_message, "{"
     "\"op\":2,"
     "\"d\":{"
       "\"token\":\"%s\","
@@ -98,7 +98,7 @@ static void send_identify() {
 static void send_resume() {
   char resume_message[512];
 
-  sprintf(resume_message, "{"
+  SPRINTF_S(resume_message, "{"
     "\"op\":6,"
     "\"d\":{"
       "\"token\":\"%s\","
@@ -155,8 +155,8 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
     case USER_ARGUMENT: {
       char user_search[16 + input.element->size], member_search[18 + input.element->size];
-      sprintf(user_search, "resolved.users.%s", input.value.string);
-      sprintf(member_search, "resolved.members.%s", input.value.string);
+      SPRINTF_S(user_search, "resolved.users.%s", input.value.string);
+      SPRINTF_S(member_search, "resolved.members.%s", input.value.string);
 
       jsonresult_t member_result = json_get_val(data, member_search);
 
@@ -176,7 +176,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
     case CHANNEL_ARGUMENT: {
       char search[19 + input.element->size];
-      sprintf(search, "resolved.channels.%s", input.value.string);
+      SPRINTF_S(search, "resolved.channels.%s", input.value.string);
 
       *argument = (struct InteractionArgument) {
         .name = name,
@@ -191,7 +191,7 @@ static void parse_interaction_base_arguments(struct InteractionArgument *argumen
 
     case ROLE_ARGUMENT: {
       char search[16 + input.element->size];
-      sprintf(search, "resolved.roles.%s", input.value.string);
+      SPRINTF_S(search, "resolved.roles.%s", input.value.string);
 
       *argument = (struct InteractionArgument) {
         .name = name,
@@ -511,7 +511,7 @@ void connect_gateway(const char *bot_token, const char *url, const unsigned int 
   intents = bot_intents;
 
   char connection_url[72];
-  sprintf(connection_url, "%s/?v=10&encoding=json", url);
+  SPRINTF_S(connection_url, "%s/?v=10&encoding=json", url);
 
   websocket = create_websocket(connection_url, (struct WebsocketMethods) {
     .onstart = onstart,
@@ -534,18 +534,18 @@ void set_presence(const char *name, const char *state, const char *details, cons
   char activity[128];
 
   if (state == NULL && details == NULL) {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"type\":%d"
     "}", name, type);
   } else if (state && details == NULL) {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"state\":\"%s\","
       "\"type\":%d"
     "}", name, state, type);
   } else {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"state\":\"%s\","
       "\"details\":\"%s\","
@@ -554,7 +554,7 @@ void set_presence(const char *name, const char *state, const char *details, cons
   }
 
   char presence[256];
-  sprintf(presence, "{"
+  SPRINTF_S(presence, "{"
     "\"op\":3,"
     "\"d\":{"
       "\"since\":null,"
