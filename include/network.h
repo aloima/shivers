@@ -80,16 +80,17 @@ void free_url(struct URL url);
 char *percent_encode(const char *data);
 
 #if defined(_WIN32)
-  unsigned long s_read(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size);
-  unsigned long s_write(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size);
-
-  void close_socket(SOCKET sockfd, SSL *ssl);
+  typedef SOCKET socket_t;
+  #define CLOSE_SOCKET(sockfd) closesocket(sockfd)
 #elif defined(__linux__)
-  unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size);
-  unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size);
-
-  void close_socket(int sockfd, SSL *ssl);
+  typedef int socket_t;
+  #define CLOSE_SOCKET(sockfd) close(sockfd)
 #endif
+
+unsigned long s_read(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size);
+unsigned long s_write(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size);
+
+void close_socket(socket_t sockfd, SSL *ssl);
 
 unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count);
 struct Header get_header(struct Header *headers, const unsigned int header_size, const char *name);
@@ -120,12 +121,7 @@ struct WebsocketMethods {
 };
 
 struct Websocket {
-  #if defined(_WIN32)
-    SOCKET sockfd;
-  #elif defined(__linux__)
-    int sockfd;
-  #endif
-
+  socket_t sockfd;
   fd_set readfds, writefds;
   struct timeval tv;
   SSL *ssl;

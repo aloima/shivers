@@ -13,12 +13,7 @@ void response_free(struct Response response) {
 
 struct Response request(struct RequestConfig config) {
   struct Response response = {0};
-
-  #if defined(_WIN32)
-    SOCKET sockfd;
-  #elif defined(__linux__)
-    int sockfd;
-  #endif
+  socket_t sockfd;
 
   struct sockaddr_in addr;
   struct hostent *host = NULL;

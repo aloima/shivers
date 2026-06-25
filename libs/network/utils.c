@@ -112,12 +112,7 @@ struct Header get_header(struct Header *headers, const unsigned int header_size,
   return header;
 }
 
-#if defined(_WIN32)
-unsigned long s_read(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size) {
-#elif defined(__linux__)
-unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
-#endif
-
+unsigned long s_read(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size) {
   if (ssl != NULL) {
     return SSL_read(ssl, buffer, size);
   } else {
@@ -125,12 +120,7 @@ unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
   }
 }
 
-#if defined(_WIN32)
-unsigned long s_write(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size) {
-#elif defined(__linux)
-unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
-#endif
-
+unsigned long s_write(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size) {
   unsigned long result;
   bool err = false;
 
@@ -149,23 +139,14 @@ unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
   return result;
 }
 
-#if defined(_WIN32)
-void close_socket(SOCKET sockfd, SSL *ssl) {
-#elif defined(__linux)
-void close_socket(int sockfd, SSL *ssl) {
-#endif
-
+void close_socket(socket_t sockfd, SSL *ssl) {
   if (ssl != NULL) {
     SSL_shutdown(ssl);
     SSL_CTX_free(SSL_get_SSL_CTX(ssl));
     SSL_free(ssl);
   }
 
-  #if defined(_WIN32)
-    closesocket(sockfd);
-  #elif defined(__linux__)
-    close(sockfd);
-  #endif
+  CLOSE_SOCKET(sockfd);
 }
 
 char *percent_encode(const char *data) {
@@ -175,6 +156,7 @@ char *percent_encode(const char *data) {
     ')', '*', '+', ',', ';',
     '\0'
   }; // Some of reserved characters are not added because of syntax of URL.
+
   const unsigned int length = strlen(data);
   unsigned int result_length = (length + 1);
   char *result = allocate(NULL, -1, (length + 1), sizeof(char));
