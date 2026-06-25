@@ -1,5 +1,12 @@
 #include <shivers.h>
 
+static inline struct Header create_header(const char *name, const char *value) {
+  return (struct Header) {
+    .name = (char *) name,
+    .value = (char *) value
+  };
+}
+
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
   char url[1024];
   SPRINTF_S(url, "https://discord.com/api/v10%s", path);
@@ -8,10 +15,7 @@ struct Response api_request(const char *token, const char *path, const char *met
   SPRINTF_S(authorization, "Bot %s", token);
 
   struct Header headers[2] = {
-    (struct Header) {
-      .name = "Authorization",
-      .value = authorization
-    }
+    create_header("Authorization", authorization)
   };
 
   struct RequestConfig config = {
@@ -27,10 +31,7 @@ struct Response api_request(const char *token, const char *path, const char *met
     config.body.payload.data = allocate(NULL, -1, body_size, sizeof(char));
     memcpy(config.body.payload.data, body, body_size);
 
-    headers[1] = (struct Header) {
-      .name = "Content-Type",
-      .value = "application/json"
-    };
+    headers[1] = create_header("Content-Type", "application/json");
 
     config.headers = headers;
     config.header_size = 2;
