@@ -25,6 +25,7 @@ static void handle_exit(int sig) {
   }
 
   pthread_cancel(heartbeat_thread);
+  OPENSSL_cleanup();
   SLEEP(250);
 
   exit(EXIT_SUCCESS);
