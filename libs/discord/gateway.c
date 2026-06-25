@@ -51,7 +51,7 @@ static void send_heartbeat() {
     throw(GET_TIMESTAMP_ERROR);
 
   heartbeat_sent_at = now;
-  send_websocket_message(&websocket, heartbeat_message);
+  ASSERT(send_websocket_message(&websocket, heartbeat_message), ==, 0);
 }
 
 static void *start_heartbeat_thread(void *_) {
@@ -83,7 +83,7 @@ static void send_identify() {
     "}"
   "}", token, intents);
 
-  send_websocket_message(&websocket, identify_message);
+  ASSERT(send_websocket_message(&websocket, identify_message), ==, 0);
 }
 
 static void send_resume() {
@@ -99,7 +99,7 @@ static void send_resume() {
   "}", token, session_id, last_sequence);
 
   puts(resume_message);
-  send_websocket_message(&websocket, resume_message);
+  ASSERT(send_websocket_message(&websocket, resume_message), ==, 0);
 }
 
 static void onstart() {

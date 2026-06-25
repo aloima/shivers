@@ -137,4 +137,4 @@ struct Websocket {
 struct Websocket create_websocket(const char *url, const struct WebsocketMethods methods);
 void connect_websocket(struct Websocket *websocket);
 void close_websocket(struct Websocket *websocket, const short code, const char *reason);
-void send_websocket_message(struct Websocket *websocket, const char *message);
+int send_websocket_message(struct Websocket *websocket, const char *message);
