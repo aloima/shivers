@@ -186,7 +186,7 @@ static void onmessage(const struct WebsocketFrame frame) {
         shivers.client.guilds = create_hashmap(16);
 
         const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
-        const jsonresult_t json_session_id= json_get_val(data, "d.session_id");
+        const jsonresult_t json_session_id = json_get_val(data, "d.session_id");
 
         memcpy(resume_gateway_url, json_resume_gateway_url.value.string, json_resume_gateway_url.element->size + 1);
         memcpy(session_id, json_session_id.value.string, json_session_id.element->size + 1);
