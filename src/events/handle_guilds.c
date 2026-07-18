@@ -15,6 +15,6 @@ void on_handle_guilds(struct Shivers *shivers) {
   puts("Updated voice stats of all servers.");
 
   char custom_status[12];
-  sprintf(custom_status, "%u servers", shivers->client.guilds->length);
+  SPRINTF_S(custom_status, "%u servers", shivers->client.guilds->length);
   set_presence("custom", custom_status, NULL, 4, "online");
 }

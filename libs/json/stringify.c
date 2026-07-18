@@ -23,11 +23,11 @@ char *json_stringify(const jsonelement_t *element, const unsigned int fractional
 
     if (fractional != 0.0) {
       result = allocate(NULL, -1, digit_count + fractional_limit + 2, sizeof(char));
-      sprintf(formatter, "%%.0f.%%%d.0f", fractional_limit);
-      sprintf(result, formatter, integer, fractional);
+      SPRINTF_S(formatter, "%%.0f.%%%d.0f", fractional_limit);
+      SPRINTF_S(result, formatter, integer, fractional);
     } else {
       result = allocate(NULL, -1, (digit_count + 1), sizeof(char));
-      sprintf(result, "%.0f", integer);
+      SPRINTF_S(result, "%.0f", integer);
     }
   } else if (element->type == JSON_BOOLEAN) {
     const bool value = *((bool *) element->value);

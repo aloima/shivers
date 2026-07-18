@@ -14,7 +14,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
   const struct String query = command.arguments[0].value.string;
   char search_url[61 + query.length];
-  sprintf(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", query.value);
+  SPRINTF_S(search_url, "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s", query.value);
   config.url = search_url;
 
   struct Response search_response = request(config);
@@ -23,7 +23,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
   if (page_name.exist) {
     char url[512];
-    sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
+    SPRINTF_S(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
     config.url = url;
 
     struct Response info_response = request(config);
@@ -35,7 +35,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       response_free(info_response);
 
       const char *page_id = page_info->key;
-      sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
+      SPRINTF_S(url, "https://en.wikipedia.org/w/api.php?action=query&format=json&pageids=%s&redirects", page_id);
       config.url = url;
       json_free(info_data, false);
 
@@ -44,7 +44,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
       response_free(redirect_response);
 
       page_name = json_get_val(redirect_result, "query.redirects.[0].to");
-      sprintf(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
+      SPRINTF_S(url, "https://en.wikipedia.org/w/api.php?action=query&prop=pageprops&titles=%s&format=json", page_name.value.string);
       json_free(redirect_result, false);
 
       config.url = url;
@@ -59,7 +59,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
     const char *title = json_get_val(page_info, "title").value.string;
     char page_url[512], *encoded_page_url = NULL;
-    sprintf(page_url, "https://en.wikipedia.org/wiki/%s", title);
+    SPRINTF_S(page_url, "https://en.wikipedia.org/wiki/%s", title);
     encoded_page_url = percent_encode(page_url);
 
     embed.color = COLOR;
@@ -70,7 +70,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
 
     if (image_name.exist) {
       char image_url[512];
-      sprintf(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
+      SPRINTF_S(image_url, "https://en.wikipedia.org/w/api.php?action=query&titles=File:%s&prop=imageinfo&iiprop=url&format=json", image_name.value.string);
       config.url = image_url;
 
       struct Response image_response = request(config);
@@ -91,7 +91,7 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
         join((const struct Join *) svg_splitter.data + 5, image_code, 2, "/");
         split_free(svg_splitter);
 
-        sprintf(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
+        SPRINTF_S(png_url, "https://upload.wikimedia.org/wikipedia/commons/thumb/%s/%s/1024px-%s.png", image_code, image_name.value.string, image_name.value.string);
         embed.image_url = png_url;
       } else {
         embed.image_url = final_image_url;

@@ -137,11 +137,19 @@ static void check_response(struct Websocket *websocket, const char *response, ch
         memcpy(final + key_length, websocket_guid, websocket_guid_length);
         final[final_length] = 0;
 
+        free(key);
+
         unsigned char sha1_hash[SHA_DIGEST_LENGTH + 1];
         SHA1((unsigned char *) final, final_length, sha1_hash);
-        char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
 
-        free(key);
+        char *result = base64_encode((char *) sha1_hash, SHA_DIGEST_LENGTH);
+        if (result == NULL) {
+          split_free(line_splitter);
+          split_free(splitter);
+          close_websocket(websocket, -1, NULL);
+
+          throw(BASE64_ENCODE_ERROR);
+        }
 
         if (!streq(result, value)) {
           free(result);
@@ -173,10 +181,14 @@ static void switch_protocols(struct Websocket *websocket) {
   }
 
   websocket->key = base64_encode((char *) key_data, 16);
+  if (websocket->key == NULL) {
+    close_websocket(websocket, -1, NULL);
+    throw(BASE64_ENCODE_ERROR);
+  }
 
   char request_message[512];
 
-  sprintf(request_message,
+  SPRINTF_S(request_message,
     "GET %s HTTP/1.1\r\n"
     "Host: %s:%d\r\n"
     "Upgrade: websocket\r\n"
@@ -189,51 +201,70 @@ static void switch_protocols(struct Websocket *websocket) {
   websocket->connected = true;
 }
 
-void send_websocket_message(struct Websocket *websocket, const char *message) {
-  unsigned char *data = NULL;
-  const unsigned int message_length = strlen(message);
-  unsigned int data_length = message_length;
-  unsigned char masking_key[4];
+int send_websocket_message(struct Websocket *websocket, const char *message) {
+  uint8_t *data = NULL;
+  const uint64_t message_length = strlen(message);
+  uint64_t data_length = message_length;
+  uint8_t masking_key[4];
 
   for (int i = 0; i < 4; ++i) {
     masking_key[i] = ((rand() % 255) + 1);
   }
 
-  if (message_length > 65535) {
+  if (message_length > 65535ULL) {
     data_length += 14;
     data = allocate(NULL, -1, data_length, sizeof(char));
+    if (data == NULL)
+      goto ON_ERROR;
+
     data[1] = 255;
 
-    for (int i = 0; i < 8; ++i) {
+    for (uint8_t i = 0; i < 8; ++i) {
       data[2 + i] = (message_length >> ((7 - i) * 8)) & 0xFF;
     }
-  } else if (message_length > 125) {
+  } else if (message_length > 125ULL) {
     data_length += 8;
     data = allocate(NULL, -1, data_length, sizeof(char));
+    if (data == NULL)
+      goto ON_ERROR;
+
     data[1] = 254;
     data[2] = (message_length >> 8) & 0xFF;
     data[3] = message_length & 0xFF;
   } else {
     data_length += 6;
     data = allocate(NULL, -1, data_length, sizeof(char));
+    if (data == NULL)
+      goto ON_ERROR;
+
     data[1] = 128 + message_length;
   }
 
   data[0] = WEBSOCKET_FRAME_MAGIC;
-  strncpy(((char *) data) + data_length - message_length - 4, (char *) masking_key, 4);
+  ASSERT(strncpy(((char *) data) + data_length - message_length - 4, (char *) masking_key, 4), !=, NULL);
 
   for (int i = 0; i < message_length; ++i) {
     const char ch = (message[i] ^ masking_key[i % 4]);
-    strncpy(((char *) data) + data_length - message_length + i, &ch, 1);
+    ASSERT(strncpy(((char *) data) + data_length - message_length + i, &ch, 1), !=, NULL);
   }
 
   ++websocket->queue_size;
   websocket->queue = allocate(websocket->queue, -1, websocket->queue_size, sizeof(struct WebsocketQueueElement));
-  websocket->queue[websocket->queue_size - 1].data = allocate(NULL, -1, data_length, sizeof(char));
-  websocket->queue[websocket->queue_size - 1].size = data_length;
-  memcpy(websocket->queue[websocket->queue_size - 1].data, data, data_length);
+  
+  struct WebsocketQueueElement *element = &websocket->queue[websocket->queue_size - 1];
+  element->data = allocate(NULL, -1, data_length, sizeof(char));
+  element->size = data_length;
+  ASSERT(memcpy(element->data, data, data_length), !=, NULL);
 
   free(data);
+  return 0;
+
+  ON_ERROR: {
+    if (data != NULL)
+      free(data);
+
+    return -1;
+  }
 }
 
 
@@ -242,7 +273,6 @@ struct Websocket create_websocket(const char *url, const struct WebsocketMethods
   websocket.methods = methods;
 
   initialize_websocket(&websocket, url);
-
   return websocket;
 }
 
@@ -313,11 +343,7 @@ void connect_websocket(struct Websocket *websocket) {
         handle_events(websocket);
       }
 
-      #if defined(__linux__)
-        usleep(3000);
-      #elif defined(_WIN32)
-        Sleep(3);
-      #endif
+      SLEEP(3);
     } while (websocket->connected && !websocket->closed);
   } else {
     throw_network("connect()", !!websocket->ssl);

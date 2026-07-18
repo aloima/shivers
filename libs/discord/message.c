@@ -7,10 +7,10 @@ unsigned short send_message(const struct Client client, const struct Message mes
   char path[512];
 
   if (message.target_type == TARGET_CHANNEL) {
-    sprintf(path, "/channels/%s/messages", message.target.channel_id);
+    SPRINTF_S(path, "/channels/%s/messages", message.target.channel_id);
   } else {
     const struct InteractionCommand interaction_command = message.target.interaction_command;
-    sprintf(path, "/interactions/%s/%s/callback", interaction_command.id, interaction_command.token);
+    SPRINTF_S(path, "/interactions/%s/%s/callback", interaction_command.id, interaction_command.token);
   }
 
   if (message_payload.content) {
@@ -130,7 +130,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
       const struct File file = message_payload.files[i];
       jsonelement_t *attachment = create_empty_json_element(false);
       char *field_name = allocate(NULL, -1, 12, sizeof(char));
-      sprintf(field_name, "files[%u]", i);
+      SPRINTF_S(field_name, "files[%u]", i);
 
       double n = i;
       json_set_val(attachment, "id", &n, JSON_NUMBER);
@@ -173,7 +173,7 @@ unsigned short send_message(const struct Client client, const struct Message mes
     for (unsigned int i = 0; i < message_payload.file_size; ++i) {
       const struct File file = message_payload.files[i];
       char *field_name = allocate(NULL, -1, 12, sizeof(char));
-      sprintf(field_name, "files[%u]", i);
+      SPRINTF_S(field_name, "files[%u]", i);
 
       add_field_to_formdata(&formdata, field_name, file.data, file.size, file.name);
       add_header_to_formdata_field(&formdata, field_name, "Content-Type", file.type);

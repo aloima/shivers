@@ -13,12 +13,7 @@ void response_free(struct Response response) {
 
 struct Response request(struct RequestConfig config) {
   struct Response response = {0};
-
-  #if defined(_WIN32)
-    SOCKET sockfd;
-  #elif defined(__linux__)
-    int sockfd;
-  #endif
+  socket_t sockfd;
 
   struct sockaddr_in addr;
   struct hostent *host = NULL;
@@ -85,7 +80,7 @@ struct Response request(struct RequestConfig config) {
       unsigned long data_length = 0;
 
       char separator[32];
-      sprintf(separator, "--%s\r\n", boundary);
+      SPRINTF_S(separator, "--%s\r\n", boundary);
 
       const unsigned short field_size = config.body.payload.formdata.field_size;
 
@@ -101,9 +96,9 @@ struct Response request(struct RequestConfig config) {
         memcpy(data + data_length, separator, 4 + boundary_length);
 
         if (field.filename) {
-          sprintf(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
+          SPRINTF_S(line, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n", field.name, field.filename);
         } else {
-          sprintf(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
+          SPRINTF_S(line, "Content-Disposition: form-data; name=\"%s\"\r\n", field.name);
         }
 
         memcpy(data + data_length + 4 + boundary_length, line, disposition_length);
@@ -112,7 +107,7 @@ struct Response request(struct RequestConfig config) {
 
         for (unsigned char a = 0; a < field_header_size; ++a) {
           const struct Header header = field.headers[a];
-          sprintf(line, "%s: %s\r\n", header.name, header.value);
+          SPRINTF_S(line, "%s: %s\r\n", header.name, header.value);
           line_length = strlen(line);
 
           data = allocate(data, -1, data_length + field_length + line_length + 1, sizeof(char));
@@ -135,11 +130,11 @@ struct Response request(struct RequestConfig config) {
       }
 
       data = allocate(data, -1, 4 + boundary_length + data_length + 1, sizeof(char));
-      sprintf(separator, "--%s--", boundary);
+      SPRINTF_S(separator, "--%s--", boundary);
       memcpy(data + data_length, separator, (4 + boundary_length));
       data_length += (4 + boundary_length);
 
-      sprintf(request_message_information, (
+      SPRINTF_S(request_message_information, (
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
@@ -161,7 +156,7 @@ struct Response request(struct RequestConfig config) {
       const char *body = config.body.payload.data;
       const unsigned long body_length = strlen(body);
 
-      sprintf(request_message_information, (
+      SPRINTF_S(request_message_information, (
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
@@ -177,7 +172,7 @@ struct Response request(struct RequestConfig config) {
       memcpy(request_message + request_message_length, body, body_length);
       request_message_length += body_length;
     } else {
-      sprintf(request_message_information,
+      SPRINTF_S(request_message_information,
         "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "Accept: */*\r\n"
@@ -219,6 +214,13 @@ struct Response request(struct RequestConfig config) {
     const unsigned long status_message_length = calculate_join((struct Join *) status_splitter.data + 2, status_splitter.size - 2, " ");
 
     response.status.code = atoi_s(status_splitter.data[1].data, status_splitter.data[1].length);
+    if (response.status.code == -1) {
+      split_free(line_splitter);
+      split_free(status_splitter);
+      close_socket(sockfd, ssl);
+      throw_network("request(): invalid http status code", false);
+    }
+
     response.status.message = allocate(NULL, -1, status_message_length + 1, sizeof(char));
     join((struct Join *) status_splitter.data + 2, response.status.message, status_splitter.size - 2, " ");
 
@@ -254,19 +256,24 @@ struct Response request(struct RequestConfig config) {
       ++i;
 
       while (i < line_splitter.size) {
-        const unsigned int hex_length = ahtoi(line_splitter.data[i].data);
         const unsigned int line_length = line_splitter.data[i + 1].length;
+        const int64_t hex_length = ahtoi(line_splitter.data[i].data);
+        if (hex_length == -1) {
+          split_free(line_splitter);
+          free(response_message);
+          close_socket(sockfd, ssl);
+          throw_network("request(): invalid http chunked message", false);
+        }
 
-        if (line_length != 0) {
-          if (line_length == hex_length) {
-            response.data_size += hex_length;
-            response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
-            memcpy(response.data + response.data_size - hex_length, line_splitter.data[i + 1].data, line_length);
-          } else {
-            throw_network("invalid http message encoding", false);
-          }
-        } else {
+        if (line_length == 0)
           break;
+
+        if (line_length == hex_length) {
+          response.data_size += hex_length;
+          response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
+          memcpy(response.data + response.data_size - hex_length, line_splitter.data[i + 1].data, line_length);
+        } else {
+          throw_network("request(): invalid http message encoding", false);
         }
 
         i += 2;
@@ -274,7 +281,16 @@ struct Response request(struct RequestConfig config) {
 
       response.data[response.data_size] = 0;
     } else if (response.status.code != 204) {
-      response.data_size = atoi_s(get_header(response.headers, response.header_size, "content-length").value, -1);
+      const int64_t value = atoi_s(get_header(response.headers, response.header_size, "content-length").value, -1);
+      if (value == -1) {
+        split_free(line_splitter);
+        free(response_message);
+        close_socket(sockfd, ssl);
+
+        throw_network("request(): invalid Content-Length value", false);
+      }
+
+      response.data_size = value;
       response.data = allocate(response.data, -1, response.data_size + 1, sizeof(char));
 
       join((struct Join *) line_splitter.data + i + 1, (char *) response.data, line_splitter.size - i - 1, "\r\n");

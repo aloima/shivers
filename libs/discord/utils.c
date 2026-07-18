@@ -1,17 +1,21 @@
 #include <shivers.h>
 
+static inline struct Header create_header(const char *name, const char *value) {
+  return (struct Header) {
+    .name = (char *) name,
+    .value = (char *) value
+  };
+}
+
 struct Response api_request(const char *token, const char *path, const char *method, const char *body, const struct FormData *formdata) {
   char url[1024];
-  sprintf(url, "https://discord.com/api/v10%s", path);
+  SPRINTF_S(url, "https://discord.com/api/v10%s", path);
 
   char authorization[100];
-  sprintf(authorization, "Bot %s", token);
+  SPRINTF_S(authorization, "Bot %s", token);
 
   struct Header headers[2] = {
-    (struct Header) {
-      .name = "Authorization",
-      .value = authorization
-    }
+    create_header("Authorization", authorization)
   };
 
   struct RequestConfig config = {
@@ -27,10 +31,7 @@ struct Response api_request(const char *token, const char *path, const char *met
     config.body.payload.data = allocate(NULL, -1, body_size, sizeof(char));
     memcpy(config.body.payload.data, body, body_size);
 
-    headers[1] = (struct Header) {
-      .name = "Content-Type",
-      .value = "application/json"
-    };
+    headers[1] = create_header("Content-Type", "application/json");
 
     config.headers = headers;
     config.header_size = 2;
@@ -69,7 +70,7 @@ bool check_snowflake(const char *snowflake) {
 void get_avatar_url(char *url, const char *user_id, const char *discriminator, const char *hash, const bool force_png, const short size) {
   if (hash && hash[0] != 0) {
     const char *extension = ((!force_png && (strncmp(hash, "a_", 2) == 0)) ? "gif" : "png");
-    sprintf(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
+    SPRINTF_S(url, AVATAR_URL "?size=%d", user_id, hash, extension, size);
   } else {
     unsigned int index;
 
@@ -79,6 +80,6 @@ void get_avatar_url(char *url, const char *user_id, const char *discriminator, c
       index = ((atoi_s(user_id, -1) >> 22) % 6);
     }
 
-    sprintf(url, DEFAULT_AVATAR_URL "?size=%d", index, size);
+    SPRINTF_S(url, DEFAULT_AVATAR_URL "?size=%d", index, size);
   }
 }

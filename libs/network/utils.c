@@ -5,7 +5,7 @@ struct URL parse_url(const char *data) {
   struct Split splitter = split(data, strlen(data), "/");
 
   if (splitter.size < 3) {
-    throw("request(): invalid url format");
+    throw("parse_url(): invalid url format");
   }
 
   struct Split hostname_splitter = split(splitter.data[2].data, splitter.data[2].length, ":");
@@ -19,7 +19,11 @@ struct URL parse_url(const char *data) {
   memcpy(url.hostname, hostname_splitter.data[0].data, hostname_size);
 
   if (hostname_splitter.size == 2) {
-    url.port = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
+    const int64_t value = atoi_s(hostname_splitter.data[1].data, hostname_splitter.data[1].length);
+    if (value == -1)
+      throw("parse_url(): invalid port value");
+
+    url.port = value;
   } else {
     if (streq(url.protocol, "https") || streq(url.protocol, "wss")) {
       url.port = 443;
@@ -67,17 +71,16 @@ void throw_network(const char *value, bool tls) {
 
   if (errno != 0) {
     perror(value);
-    exit(EXIT_FAILURE);
   } else if (tls && (tls_error = ERR_get_error()) != 0) {
     char message[1024];
 
     ERR_error_string(tls_error, message);
     fprintf(stderr, "%s: %s\n", value, message);
-    exit(EXIT_FAILURE);
   } else {
     fprintf(stderr, "%s\n", value);
-    exit(EXIT_FAILURE);
   }
+
+  exit(EXIT_FAILURE);
 }
 
 unsigned long combine_bytes(unsigned char *bytes, unsigned long byte_count) {
@@ -109,12 +112,7 @@ struct Header get_header(struct Header *headers, const unsigned int header_size,
   return header;
 }
 
-#if defined(_WIN32)
-unsigned long s_read(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size) {
-#elif defined(__linux__)
-unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
-#endif
-
+unsigned long s_read(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size) {
   if (ssl != NULL) {
     return SSL_read(ssl, buffer, size);
   } else {
@@ -122,12 +120,7 @@ unsigned long s_read(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
   }
 }
 
-#if defined(_WIN32)
-unsigned long s_write(SSL *ssl, SOCKET sockfd, char *buffer, unsigned long size) {
-#elif defined(__linux)
-unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
-#endif
-
+unsigned long s_write(SSL *ssl, socket_t sockfd, char *buffer, unsigned long size) {
   unsigned long result;
   bool err = false;
 
@@ -146,23 +139,14 @@ unsigned long s_write(SSL *ssl, int sockfd, char *buffer, unsigned long size) {
   return result;
 }
 
-#if defined(_WIN32)
-void close_socket(SOCKET sockfd, SSL *ssl) {
-#elif defined(__linux)
-void close_socket(int sockfd, SSL *ssl) {
-#endif
-
+void close_socket(socket_t sockfd, SSL *ssl) {
   if (ssl != NULL) {
     SSL_shutdown(ssl);
     SSL_CTX_free(SSL_get_SSL_CTX(ssl));
     SSL_free(ssl);
   }
 
-  #if defined(_WIN32)
-    closesocket(sockfd);
-  #elif defined(__linux__)
-    close(sockfd);
-  #endif
+  CLOSE_SOCKET(sockfd);
 }
 
 char *percent_encode(const char *data) {
@@ -172,6 +156,7 @@ char *percent_encode(const char *data) {
     ')', '*', '+', ',', ';',
     '\0'
   }; // Some of reserved characters are not added because of syntax of URL.
+
   const unsigned int length = strlen(data);
   unsigned int result_length = (length + 1);
   char *result = allocate(NULL, -1, (length + 1), sizeof(char));
@@ -185,7 +170,7 @@ char *percent_encode(const char *data) {
       result_length += 2;
 
       char hex[4];
-      sprintf(hex, "%%%x", ch);
+      SPRINTF_S(hex, "%%%x", ch);
       strncat(result, hex, 4);
     } else {
       strncat(result, &ch, 1);

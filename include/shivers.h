@@ -9,6 +9,7 @@
 #include <png.h>          // IWYU pragma: export
 #include <utils.h>        // IWYU pragma: export
 
+#include <assert.h>       // IWYU pragma: export
 #include <ctype.h>        // IWYU pragma: export
 #include <errno.h>        // IWYU pragma: export
 #include <math.h>         // IWYU pragma: export
@@ -33,6 +34,7 @@
 #include <zlib.h>         // IWYU pragma: export
 
 #if defined(__WIN32__)
+  #include <psapi.h>      // IWYU pragma: export
   #include <sys/timeb.h>  // IWYU pragma: export
   #include <winsock2.h>   // IWYU pragma: export
   #include <windows.h>    // IWYU pragma: export

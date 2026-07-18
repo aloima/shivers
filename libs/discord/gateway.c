@@ -25,12 +25,8 @@ static void handle_exit(int sig) {
   }
 
   pthread_cancel(heartbeat_thread);
-
-  #if defined(__linux__)
-    usleep(250000);
-  #elif defined(_WIN32)
-    Sleep(250);
-  #endif
+  OPENSSL_cleanup();
+  SLEEP(250);
 
   exit(EXIT_SUCCESS);
 }
@@ -39,30 +35,29 @@ static void send_heartbeat() {
   char heartbeat_message[24];
 
   if (last_sequence == -1) {
-    sprintf(heartbeat_message, "{"
+    SPRINTF_S(heartbeat_message, "{"
       "\"op\":1,"
       "\"d\":null"
     "}");
   } else {
-    sprintf(heartbeat_message, "{"
+    SPRINTF_S(heartbeat_message, "{"
       "\"op\":1,"
       "\"d\":%d"
     "}", last_sequence);
   }
 
-  heartbeat_sent_at = get_timestamp();
-  send_websocket_message(&websocket, heartbeat_message);
+  const int64_t now = get_timestamp();
+  if (now == -1)
+    throw(GET_TIMESTAMP_ERROR);
+
+  heartbeat_sent_at = now;
+  ASSERT(send_websocket_message(&websocket, heartbeat_message), ==, 0);
 }
 
 static void *start_heartbeat_thread(void *_) {
   do {
     heartbeat_waiting = true;
-
-    #if defined(__linux__)
-      usleep(heartbeat_interval * 1000);
-    #elif defined(_WIN32)
-      Sleep(heartbeat_interval);
-    #endif
+    SLEEP(heartbeat_interval);
 
     send_heartbeat();
     heartbeat_waiting = false;
@@ -75,7 +70,7 @@ static void *start_heartbeat_thread(void *_) {
 static void send_identify() {
   char identify_message[1024];
 
-  sprintf(identify_message, "{"
+  SPRINTF_S(identify_message, "{"
     "\"op\":2,"
     "\"d\":{"
       "\"token\":\"%s\","
@@ -88,13 +83,13 @@ static void send_identify() {
     "}"
   "}", token, intents);
 
-  send_websocket_message(&websocket, identify_message);
+  ASSERT(send_websocket_message(&websocket, identify_message), ==, 0);
 }
 
 static void send_resume() {
   char resume_message[512];
 
-  sprintf(resume_message, "{"
+  SPRINTF_S(resume_message, "{"
     "\"op\":6,"
     "\"d\":{"
       "\"token\":\"%s\","
@@ -104,7 +99,7 @@ static void send_resume() {
   "}", token, session_id, last_sequence);
 
   puts(resume_message);
-  send_websocket_message(&websocket, resume_message);
+  ASSERT(send_websocket_message(&websocket, resume_message), ==, 0);
 }
 
 static void onstart() {
@@ -112,91 +107,60 @@ static void onstart() {
 }
 
 static void parse_interaction_base_arguments(struct InteractionArgument *argument, jsonelement_t *data, unsigned char type, char *name, jsonresult_t input) {
+  // For zero initialization
+  *argument = (struct InteractionArgument) {
+    .name = name,
+    .type = type
+  };
+
   switch (type) {
     case STRING_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .string = {
-            .value = input.value.string,
-            .length = input.element->size
-          }
-        }
-      };
-
+      argument->value.string.value = input.value.string;
+      argument->value.string.length = input.element->size;
       break;
 
     case INTEGER_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .number = input.value.number
-        }
-      };
-
+      argument->value.number = input.value.number;
       break;
 
     case BOOLEAN_ARGUMENT:
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .boolean = input.value.boolean
-        }
-      };
-
+      argument->value.boolean = input.value.boolean;
       break;
 
     case USER_ARGUMENT: {
       char user_search[16 + input.element->size], member_search[18 + input.element->size];
-      sprintf(user_search, "resolved.users.%s", input.value.string);
-      sprintf(member_search, "resolved.members.%s", input.value.string);
+      SPRINTF_S(user_search, "resolved.users.%s", input.value.string);
+      SPRINTF_S(member_search, "resolved.members.%s", input.value.string);
 
-      jsonresult_t member_result = json_get_val(data, member_search);
+      const jsonresult_t user_result = json_get_val(data, user_search);
+      ASSERT(user_result.exist, ==, true);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .user = {
-            .user_data = json_get_val(data, user_search).element,
-            .member_data = member_result.exist ? member_result.element : NULL
-          }
-        }
-      };
+      const jsonresult_t member_result = json_get_val(data, member_search);
+      argument->value.user.user_data = json_get_val(data, user_search).element;
+      argument->value.user.member_data = member_result.exist ? member_result.element : NULL;
 
       break;
     }
 
     case CHANNEL_ARGUMENT: {
       char search[19 + input.element->size];
-      sprintf(search, "resolved.channels.%s", input.value.string);
+      SPRINTF_S(search, "resolved.channels.%s", input.value.string);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .channel = json_get_val(data, search).element
-        }
-      };
+      const jsonresult_t channel_result = json_get_val(data, search);
+      ASSERT(channel_result.exist, ==, true);
 
+      argument->value.channel = channel_result.element;
       break;
     }
 
     case ROLE_ARGUMENT: {
       char search[16 + input.element->size];
-      sprintf(search, "resolved.roles.%s", input.value.string);
+      SPRINTF_S(search, "resolved.roles.%s", input.value.string);
 
-      *argument = (struct InteractionArgument) {
-        .name = name,
-        .type = type,
-        .value = {
-          .channel = json_get_val(data, search).element
-        }
-      };
+      const jsonresult_t role_result = json_get_val(data, search);
+      ASSERT(role_result.exist, ==, true);
 
+      argument->value.role = role_result.element;
       break;
     }
   }
@@ -212,13 +176,17 @@ static void onmessage(const struct WebsocketFrame frame) {
       last_sequence = json_get_val(data, "s").value.number;
 
       if (streq(event_name, "READY")) {
+        const int64_t now = get_timestamp();
+        if (now == -1)
+          throw(GET_TIMESTAMP_ERROR);
+
         shivers.client.user = clone_json_element(json_get_val(data, "d.user").element);
         shivers.client.token = token;
-        shivers.client.ready_at = get_timestamp();
+        shivers.client.ready_at = now;
         shivers.client.guilds = create_hashmap(16);
 
         const jsonresult_t json_resume_gateway_url = json_get_val(data, "d.resume_gateway_url");
-        const jsonresult_t json_session_id= json_get_val(data, "d.session_id");
+        const jsonresult_t json_session_id = json_get_val(data, "d.session_id");
 
         memcpy(resume_gateway_url, json_resume_gateway_url.value.string, json_resume_gateway_url.element->size + 1);
         memcpy(session_id, json_session_id.value.string, json_session_id.element->size + 1);
@@ -459,8 +427,12 @@ static void onmessage(const struct WebsocketFrame frame) {
     }
 
     case 11: {
+      const int64_t now = get_timestamp();
+      if (now == -1)
+        throw(GET_TIMESTAMP_ERROR);
+
       previous_heartbeat_sent_at = heartbeat_sent_at;
-      heartbeat_received_at = get_timestamp();
+      heartbeat_received_at = now;
       break;
     }
   }
@@ -499,7 +471,7 @@ void connect_gateway(const char *bot_token, const char *url, const unsigned int 
   intents = bot_intents;
 
   char connection_url[72];
-  sprintf(connection_url, "%s/?v=10&encoding=json", url);
+  SPRINTF_S(connection_url, "%s/?v=10&encoding=json", url);
 
   websocket = create_websocket(connection_url, (struct WebsocketMethods) {
     .onstart = onstart,
@@ -522,18 +494,18 @@ void set_presence(const char *name, const char *state, const char *details, cons
   char activity[128];
 
   if (state == NULL && details == NULL) {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"type\":%d"
     "}", name, type);
   } else if (state && details == NULL) {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"state\":\"%s\","
       "\"type\":%d"
     "}", name, state, type);
   } else {
-    sprintf(activity, "{"
+    SPRINTF_S(activity, "{"
       "\"name\":\"%s\","
       "\"state\":\"%s\","
       "\"details\":\"%s\","
@@ -542,7 +514,7 @@ void set_presence(const char *name, const char *state, const char *details, cons
   }
 
   char presence[256];
-  sprintf(presence, "{"
+  SPRINTF_S(presence, "{"
     "\"op\":3,"
     "\"d\":{"
       "\"since\":null,"

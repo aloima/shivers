@@ -1,92 +1,85 @@
 #include <shivers.h>
 
-char *base64_encode(const char *data, const unsigned long data_length) {
+char *base64_encode(const char *data, const uint64_t data_length) {
   const char base64_alphabet[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  const unsigned char m3 = (data_length % 3);
-  const unsigned long d3 = ((data_length - m3) / 3);
-  const unsigned long loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
+  const uint8_t m3 = (data_length % 3);         // surplus length
+  const uint64_t d3 = ((data_length - m3) / 3); // full parts
+  const uint64_t loop_limit = ((m3 == 0) ? d3 : (d3 + 1));
 
-  unsigned long response_length;
-
-  switch (m3) {
-    case 0:
-      response_length = (d3 * 4);
-      break;
-
-    case 1:
-      response_length = ((d3 + 1) * 4);
-      break;
-
-    case 2:
-      response_length = ((d3 + 1) * 4);
-      break;
-  }
+  const uint64_t response_length = ((d3 + ((uint64_t) (m3 != 0))) * 4);
+  uint64_t response_index = 0;
 
   char *response = allocate(NULL, 0, response_length + 1, sizeof(char));
+  if (response == NULL)
+    return NULL;
 
-  for (unsigned long i = 0; i < loop_limit; ++i) {
-    unsigned long number = 0;
-    const int di = i * 3;
+  for (uint64_t i = 0; i < loop_limit; ++i) {
+    uint64_t number = 0;
+    const uint64_t di = i * 3;
 
     if (m3 == 0 || (i + 1) != loop_limit) {
-      number |= (unsigned char) data[di] << 16;
-      number |= (unsigned char) data[di + 1] << 8;
-      number |= (unsigned char) data[di + 2];
+      number |= (uint8_t) data[di] << 16;
+      number |= (uint8_t) data[di + 1] << 8;
+      number |= (uint8_t) data[di + 2];
 
-      strncat(response, &base64_alphabet[(number >> 18) & 0x3F], 1);
-      strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
-      strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
-      strncat(response, &base64_alphabet[number & 0x3F], 1);
+      response[response_index++] = base64_alphabet[(number >> 18) & 0x3F];
+      response[response_index++] = base64_alphabet[(number >> 12) & 0x3F];
+      response[response_index++] = base64_alphabet[(number >> 6) & 0x3F];
+      response[response_index++] = base64_alphabet[number & 0x3F];
     } else if (m3 == 2) {
-      number |= (unsigned char) data[di] << 8;
-      number |= (unsigned char) data[di + 1];
+      number |= (uint8_t) data[di] << 8;
+      number |= (uint8_t) data[di + 1];
       number = number << 2;
 
-      strncat(response, &base64_alphabet[(number >> 12) & 0x3F], 1);
-      strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
-      strncat(response, &base64_alphabet[number & 0x3F], 1);
-      strcat(response, "=");
+      response[response_index++] = base64_alphabet[(number >> 12) & 0x3F];
+      response[response_index++] = base64_alphabet[(number >> 6) & 0x3F];
+      response[response_index++] = base64_alphabet[number & 0x3F];
+      response[response_index++] = '=';
     } else if (m3 == 1) {
-      number |= (unsigned char) data[di];
+      number |= (uint8_t) data[di];
       number = number << 4;
 
-      strncat(response, &base64_alphabet[(number >> 6) & 0x3F], 1);
-      strncat(response, &base64_alphabet[number & 0x3F], 1);
-      strcat(response, "==");
+      response[response_index++] = base64_alphabet[(number >> 6) & 0x3F];
+      response[response_index++] = base64_alphabet[number & 0x3F];
+      response[response_index++] = '=';
+      response[response_index++] = '=';
     }
   }
 
+  ASSERT(response_length, ==, response_index);
   return response;
 }
 
-unsigned long ahtoi(const char *data) {
-  char hex_alphabet[17] = "0123456789ABCDEF";
-  const unsigned int size = strlen(data);
-  unsigned long result = 0;
+int64_t ahtoi(const char *data) {
+  static char hex_alphabet[17] = "0123456789ABCDEF";
+  const size_t size = strlen(data);
+  int64_t result = 0;
 
   for (unsigned int i = 0; i < size; ++i) {
-    unsigned long base = pow(16, (size - i - 1));
-    result |= (char_at(hex_alphabet, toupper(data[i])) * ((base == 0) ? 1 : base));
+    const uint64_t base = pow(16, (size - i - 1));
+    const int position = char_at(hex_alphabet, toupper(data[i]));
+    if (position == -1)
+      return -1;
+
+    result |= (position * ((base == 0) ? 1 : base));
   }
 
   return result;
 }
 
-int atoi_s(const char *str, short length) {
-  if (length == -1) {
+int64_t atoi_s(const char *str, int16_t length) {
+  if (length == -1)
     length = strlen(str);
-  }
 
-  int result = 0;
+  int64_t result = 0;
 
-  for (short i = 0; i < length; ++i) {
+  for (uint16_t i = 0; i < length; ++i) {
     const char ch = str[i];
 
     if (isdigit(ch)) {
       result += ((ch - '0') * pow(10.0, (length - i - 1)));
     } else {
-      result = -1;
-      break;
+      return -1;
     }
   }
 

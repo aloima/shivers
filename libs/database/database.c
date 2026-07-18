@@ -53,12 +53,12 @@ void database_push(char *key, void *value, const enum JSONType type) {
 
   if (array.exist) {
     char json_key[(array.element->size / 10) + 4];
-    sprintf(json_key, "[%u]", array.element->size);
+    SPRINTF_S(json_key, "[%u]", array.element->size);
 
     json_set_val(array.element, json_key, value, type);
   } else {
     char json_key[5 + strlen(key)];
-    sprintf(json_key, "%s.[0]", key);
+    SPRINTF_S(json_key, "%s.[0]", key);
 
     json_set_val(data, json_key, value, type);
   }

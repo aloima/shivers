@@ -23,33 +23,33 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
     jsonresult_t data;
 
     {
-      sprintf(key, "%s.settings.level.factor", command.guild_id);
+      SPRINTF_S(key, "%s.settings.level.factor", command.guild_id);
       data = database_get(key);
 
       if (!data.exist) {
-        sprintf(factor_text, "Not set (100)");
+        SPRINTF_S(factor_text, "Not set (100)");
       } else {
-        sprintf(factor_text, "%d", (int) data.value.number);
+        SPRINTF_S(factor_text, "%d", (int) data.value.number);
       }
 
       add_field_to_embed(&embed, "Factor", factor_text, true);
     }
 
     {
-      sprintf(key, "%s.settings.level.channel", command.guild_id);
+      SPRINTF_S(key, "%s.settings.level.channel", command.guild_id);
       data = database_get(key);
 
       if (!data.exist) {
-        sprintf(channel_text, "Not set");
+        SPRINTF_S(channel_text, "Not set");
       } else {
-        sprintf(channel_text, "<#%s>", data.value.string);
+        SPRINTF_S(channel_text, "<#%s>", data.value.string);
       }
 
       add_field_to_embed(&embed, "Channel", channel_text, true);
     }
 
     {
-      sprintf(key, "%s.settings.level.message", command.guild_id);
+      SPRINTF_S(key, "%s.settings.level.message", command.guild_id);
       data = database_get(key);
 
       if (!data.exist) {
@@ -78,26 +78,26 @@ static void execute(struct Shivers *shivers, const struct InteractionCommand com
         const char *option_name = option.name;
 
         if (options_size == 1) {
-          sprintf(response, "`%.8s` setting is set.", option_name);
+          SPRINTF_S(response, "`%.8s` setting is set.", option_name);
         } else if (i == last_index) {
-          sprintf(temp, " and `%.8s` settings are set.", option_name);
+          SPRINTF_S(temp, " and `%.8s` settings are set.", option_name);
           strcat(response, temp);
         } else if (i == 0) {
-          sprintf(response, "`%.8s`", option_name);
+          SPRINTF_S(response, "`%.8s`", option_name);
         } else {
-          sprintf(temp, ", `%.8s`", option_name);
+          SPRINTF_S(temp, ", `%.8s`", option_name);
           strcat(response, temp);
         }
 
         if (streq(option_name, "factor")) {
           double value = option.value.number;
-          sprintf(key, "%s.settings.level.factor", command.guild_id);
+          SPRINTF_S(key, "%s.settings.level.factor", command.guild_id);
           database_set(key, &value, JSON_NUMBER);
         } else if (streq(option_name, "channel")) {
-          sprintf(key, "%s.settings.level.channel", command.guild_id);
+          SPRINTF_S(key, "%s.settings.level.channel", command.guild_id);
           database_set(key, json_get_val(option.value.channel, "id").value.string, JSON_STRING);
         } else if (streq(option_name, "message")) {
-          sprintf(key, "%s.settings.level.message", command.guild_id);
+          SPRINTF_S(key, "%s.settings.level.message", command.guild_id);
           database_set(key, option.value.string.value, JSON_STRING);
         }
       }
